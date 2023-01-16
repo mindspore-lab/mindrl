@@ -1,0 +1,3 @@
+env: walker_walk
+env_class: mindspore_rl.environment.dmc_environment
+env_type: DeepMindControlEnvironment

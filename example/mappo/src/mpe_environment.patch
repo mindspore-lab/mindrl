@@ -1,0 +1,145 @@
+diff --color -uNr mpe_origin/core.py mpe/core.py
+--- mpe_origin/core.py	2022-08-31 15:17:53.171604000 +0800
++++ mpe/core.py	2022-08-31 15:16:29.781398776 +0800
+@@ -204,7 +204,7 @@
+             landmark.color = np.array([0.25, 0.25, 0.25])
+ 
+     # update state of the world
+-    def step(self):
++    def step(self, seed):
+         # zoe 20200420
+         self.world_step += 1
+         # set actions for scripted agents
+@@ -213,24 +213,24 @@
+         # gather forces applied to entities
+         p_force = [None] * len(self.entities)
+         # apply agent physical controls
+-        p_force = self.apply_action_force(p_force)
++        p_force = self.apply_action_force(p_force, seed)
+         # apply environment forces
+         p_force = self.apply_environment_force(p_force)
+         # integrate physical state
+         self.integrate_state(p_force)
+         # update agent state
+         for agent in self.agents:
+-            self.update_agent_state(agent)
++            self.update_agent_state(agent, seed)
+         # calculate and store distances between all entities
+         if self.cache_dists:
+             self.calculate_distances()
+ 
+     # gather agent action forces
+-    def apply_action_force(self, p_force):
++    def apply_action_force(self, p_force, seed):
+         # set applied forces
+         for i, agent in enumerate(self.agents):
+             if agent.movable:
+-                noise = np.random.randn(
++                noise = seed.randn(
+                     *agent.action.u.shape) * agent.u_noise if agent.u_noise else 0.0
+                 # force = mass * a * action + n
+                 p_force[i] = (
+@@ -277,12 +277,12 @@
+                                                                       np.square(entity.state.p_vel[1])) * entity.max_speed
+             entity.state.p_pos += entity.state.p_vel * self.dt
+ 
+-    def update_agent_state(self, agent):
++    def update_agent_state(self, agent, seed):
+         # set communication state (directly for now)
+         if agent.silent:
+             agent.state.c = np.zeros(self.dim_c)
+         else:
+-            noise = np.random.randn(*agent.action.c.shape) * \
++            noise = seed.randn(*agent.action.c.shape) * \
+                 agent.c_noise if agent.c_noise else 0.0
+             agent.state.c = agent.action.c + noise
+ 
+diff --color -uNr mpe_origin/environment.py mpe/environment.py
+--- mpe_origin/environment.py	2022-08-31 15:17:53.171604000 +0800
++++ mpe/environment.py	2022-08-31 15:16:46.397069329 +0800
+@@ -33,6 +33,7 @@
+         self.done_callback = done_callback
+ 
+         self.post_step_callback = post_step_callback
++        self.seed_value = np.random.RandomState(1)
+ 
+         # environment parameters
+         # self.discrete_action_space = True
+@@ -108,13 +109,11 @@
+         self._reset_render()
+ 
+     def seed(self, seed=None):
+-        if seed is None:
+-            np.random.seed(1)
+-        else:
+-            np.random.seed(seed)
++        if seed:
++            self.seed_value = np.random.RandomState(seed)
+ 
+     # step  this is  env.step()
+-    def step(self, action_n):
++    def _step(self, action_n):
+         self.current_step += 1
+         obs_n = []
+         reward_n = []
+@@ -125,7 +124,7 @@
+         for i, agent in enumerate(self.agents):
+             self._set_action(action_n[i], agent, self.action_space[i])
+         # advance world state
+-        self.world.step()  # core.step()
++        self.world.step(self.seed_value)  # core.step()
+         # record observation for each agent
+         for i, agent in enumerate(self.agents):
+             obs_n.append(self._get_obs(agent))
+@@ -147,10 +146,10 @@
+ 
+         return obs_n, reward_n, done_n, info_n
+ 
+-    def reset(self):
++    def _reset(self):
+         self.current_step = 0
+         # reset world
+-        self.reset_callback(self.world)
++        self.reset_callback(self.world, self.seed_value)
+         # reset renderer
+         self._reset_render()
+         # record observations for each agent
+diff --color -uNr mpe_origin/scenarios/simple_spread.py mpe/scenarios/simple_spread.py
+--- mpe_origin/scenarios/simple_spread.py	2022-08-31 15:17:53.175604000 +0800
++++ mpe/scenarios/simple_spread.py	2022-08-31 15:16:29.781398776 +0800
+@@ -1,6 +1,6 @@
+ import numpy as np
+-from onpolicy.envs.mpe.core import World, Agent, Landmark
+-from onpolicy.envs.mpe.scenario import BaseScenario
++from mindspore_rl.algorithm.mappo.mpe.core import World, Agent, Landmark
++from mindspore_rl.algorithm.mappo.mpe.scenario import BaseScenario
+ 
+ 
+ class Scenario(BaseScenario):
+@@ -26,10 +26,10 @@
+             landmark.collide = False
+             landmark.movable = False
+         # make initial conditions
+-        self.reset_world(world)
++        self.reset_world(world, np.random.RandomState(1))
+         return world
+ 
+-    def reset_world(self, world):
++    def reset_world(self, world, seed):
+         # random properties for agents
+         world.assign_agent_colors()
+ 
+@@ -37,11 +37,11 @@
+ 
+         # set random initial states
+         for agent in world.agents:
+-            agent.state.p_pos = np.random.uniform(-1, +1, world.dim_p)
++            agent.state.p_pos = seed.uniform(-1, +1, world.dim_p)
+             agent.state.p_vel = np.zeros(world.dim_p)
+             agent.state.c = np.zeros(world.dim_c)
+         for i, landmark in enumerate(world.landmarks):
+-            landmark.state.p_pos = 0.8 * np.random.uniform(-1, +1, world.dim_p)
++            landmark.state.p_pos = 0.8 * seed.uniform(-1, +1, world.dim_p)
+             landmark.state.p_vel = np.zeros(world.dim_p)
+ 
+     def benchmark_data(self, agent, world):

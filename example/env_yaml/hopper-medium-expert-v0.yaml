@@ -1,0 +1,3 @@
+env: hopper-medium-expert-v0
+env_class: mindspore_rl.environment.gym_environment
+env_type: GymEnvironment
