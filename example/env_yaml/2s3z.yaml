@@ -1,0 +1,3 @@
+env: 2s3z
+env_class: mindspore_rl.environment.sc2_environment
+env_type: StarCraft2Environment

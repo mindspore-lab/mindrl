@@ -1,72 +1,73 @@
 # MindSpore Reinforcement
 
-[查看中文](./README_CN.md)
+[View English](./README.md)
 
 [![Python Version](https://img.shields.io/badge/python-3.7%2F3.8%2F3.9-green)](https://pypi.org/project/mindspore-rl/) [![LICENSE](https://img.shields.io/github/license/mindspore-ai/mindspore.svg?style=flat-square)](https://github.com/mindspore-ai/reinforcement/blob/master/LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://gitee.com/mindspore/reinforcement/pulls)
 
 <!-- TOC -->
 
 - [MindSpore Reinforcement](#mindspore-reinforcement)
-    - [Overview](#overview)
-    - [Installation](#installation)
-        - [Version dependency](#version-dependency)
-        - [Installing from pip command](#installing-from-pip-command)
-        - [Installing from source code](#installing-from-source-code)
-        - [Verification](#verification)
-    - [Quick Start](#quick-start)
-    - [Features](#features)
-        - [Algorithm](#algorithm)
-        - [Environment](#environment)
-        - [ReplayBuffer](#replaybuffer)
-    - [Future Roadmap](#future-roadmap)
-    - [Community](#community)
-        - [Governance](#governance)
-        - [Communication](#communication)
-    - [Contributions](#contributions)
-    - [License](#license)
+    - [概述](#概述)
+    - [安装](#安装)
+        - [MindSpore版本依赖关系](#mindspore版本依赖关系)
+        - [pip安装](#pip安装)
+        - [源码编译安装](#源码编译安装)
+        - [验证是否成功安装](#验证是否成功安装)
+    - [快速入门](#快速入门)
+    - [特性](#特性)
+        - [算法](#算法)
+        - [环境](#环境)
+        - [经验回放](#经验回放)
+    - [未来路标](#未来路标)
+    - [社区](#社区)
+        - [治理](#治理)
+        - [交流](#交流)
+    - [贡献](#贡献)
+    - [许可证](#许可证)
 
 <!-- /TOC -->
-## Overview
 
-MindSpore Reinforcement is an open-source reinforcement learning framework that supports the **distributed training** of agents using reinforcement learning algorithms. MindSpore Reinforcement offers a **clean API abstraction** for writing reinforcement learning algorithms, which decouples the algorithm from deployment and execution considerations, including the use of accelerators, the level of parallelism and the distribution of computation across a cluster of workers. MindSpore Reinforcement translates the reinforcement learning algorithm into a series of compiled **computational graphs**, which are then run efficiently by the MindSpore framework on CPUs, GPUs and Ascend AI processors. Its architecture is shown below:
+## 概述
+
+MindSpore Reinforcement是一个开源的强化学习框架，支持使用强化学习算法对agent进行**分布式训练**。MindSpore Reinforcement为编写强化学习算法提供了**干净整洁的API抽象**，它将算法与部署和执行注意事项解耦，包括加速器的使用、并行度和跨worker集群计算的分布。MindSpore Reinforcement将强化学习算法转换为一系列编译后的**计算图**，然后由MindSpore框架在CPU、GPU或Ascend AI处理器上高效运行。MindSpore Reinforcement的架构在如下展示:
 
 ![MindSpore_RL_Architecture](docs/images/mindspore_rl_architecture.png)
 
-## Installation
+## 安装
 
-MindSpore Reinforcement depends on the MindSpore training and inference framework. Therefore, please first install [MindSpore](https://www.mindspore.cn/install/en) following the instruction on the official website, then install MindSpore Reinforcement. You can install from `pip` or source code.
+MindSpore Reinforcement依赖MindSpore训练推理框架，安装完[MindSpore](https://gitee.com/mindspore/mindspore#%E5%AE%89%E8%A3%85)，再安装MindSpore Reinforcement。可以采用pip安装或者源码编译安装两种方式。
 
-### Version dependency
+### MindSpore版本依赖关系
 
-Due the dependency between MindSpore Reinforcement and MindSpore, please follow the table below and install the corresponding MindSpore verision from [MindSpore download page](https://www.mindspore.cn/versions/en).
+由于MindSpore Reinforcement与MindSpore有依赖关系，请按照根据下表中所指示的对应关系，在[MindSpore下载页面](https://www.mindspore.cn/versions)下载并安装对应的whl包。
 
 ```shell
 pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/{MindSpore-Version}/MindSpore/cpu/ubuntu_x86/mindspore-{MindSpore-Version}-cp37-cp37m-linux_x86_64.whl
 ```
 
-| MindSpore Reinforcement Version |                            Branch                            | MindSpore version |
-| :-----------------------------: | :----------------------------------------------------------: | :---------------: |
-|              0.6.0              | [r0.6](https://gitee.com/mindspore/reinforcement/tree/r0.6/) |       2.0.0       |
-|              0.5.0              | [r0.5](https://gitee.com/mindspore/reinforcement/tree/r0.5/) |       1.8.0       |
-|              0.3.0              | [r0.3](https://gitee.com/mindspore/reinforcement/tree/r0.3/) |       1.7.0       |
-|              0.2.0              | [r0.2](https://gitee.com/mindspore/reinforcement/tree/r0.2/) |       1.6.0       |
-|              0.1.0              | [r0.1](https://gitee.com/mindspore/reinforcement/tree/r0.1/) |       1.5.0       |
+| MindSpore Reinforcement |                             分支                             | MindSpore |
+| :---------------------: | :----------------------------------------------------------: | :-------: |
+|          0.6.0          | [r0.6](https://gitee.com/mindspore/reinforcement/tree/r0.6/) |   2.0.0   |
+|          0.5.0          | [r0.5](https://gitee.com/mindspore/reinforcement/tree/r0.5/) |   1.8.0   |
+|          0.3.0          | [r0.3](https://gitee.com/mindspore/reinforcement/tree/r0.3/) |   1.7.0   |
+|          0.2.0          | [r0.2](https://gitee.com/mindspore/reinforcement/tree/r0.2/) |   1.6.0   |
+|          0.1.0          | [r0.1](https://gitee.com/mindspore/reinforcement/tree/r0.1/) |   1.5.0   |
 
-### Installing from pip command
+### pip安装
 
-If you use the pip command, please download the whl package from [MindSpore Reinforcement](https://www.mindspore.cn/versions/en) page and install it.
+使用pip命令安装，请从[MindSpore Reinforcement下载页面](https://www.mindspore.cn/versions)下载并安装whl包。
 
 ```shell
-pip install  https://ms-release.obs.cn-north-4.myhuaweicloud.com/{MindSpore_version}/Reinforcement/any/mindspore_rl-{Reinforcement_version}-py3-none-any.whl --trusted-host ms-release.obs.cn-north-4.myhuaweicloud.com -i https://pypi.tuna.tsinghua.edu.cn/simple
+pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/{MindSpore_version}/Reinforcement/any/mindspore_rl-{Reinforcement_version}-py3-none-any.whl --trusted-host ms-release.obs.cn-north-4.myhuaweicloud.com -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
-> - Installing whl package will download MindSpore Reinforcement dependencies automatically (detail of dependencies is shown in requirement.txt),  other dependencies should install manually.
-> - `{MindSpore_version}` stands for the version of MindSpore. For the version matching relationship between MindSpore and Reinforcement, please refer to [page](https://www.mindspore.cn/versions).
-> - `{Reinforcement_version}` stands for the version of Reinforcement. For example, if you would like to download version 0.1.0, you should fill 1.5.0 in `{MindSpore_version}` and fill 0.1.0 in `{Reinforcement_version}`.
+> - 在联网状态下，安装whl包时会自动下载MindSpore Reinforcement安装包的依赖项（依赖项详情参见requirement.txt），其余情况需自行安装。
+> - `{MindSpore_version}`表示MindSpore版本号，MindSpore和Reinforcement版本配套关系参见[页面](https://www.mindspore.cn/versions)。
+> - `{Reinforcement_version}`表示Reinforcement版本号。例如下载0.1.0版本Reinforcement时，`{MindSpore_version}应写为1.5.0，{Reinforcement_version}`应写为0.1.0。
 
-### Installing from source code
+### 源码编译安装
 
-Download [source code](https://gitee.com/mindspore/reinforcement), then enter the `reinforcement` directory.
+下载[源码](https://gitee.com/mindspore/reinforcement)，下载后进入`reinforcement`目录。
 
 ```shell
 git clone https://gitee.com/mindspore/reinforcement.git
@@ -75,41 +76,41 @@ bash build.sh
 pip install output/mindspore_rl-{Reinforcement_version}-py3-none-any.whl
 ```
 
-`build.sh` is the compiling script in `reinforcement` directory. `Reinforcement_version` is the version of MindSpore Reinforcement.
+其中，`build.sh`为`reinforcement`目录下的编译脚本文件。`{Reinforcement_version}`表示MindSpore Reinforcement版本号。
 
-Install dependencies
+安装依赖项
 
 ```shell
 cd reinforcement && pip install requirements.txt
 ```
 
-### Verification
+### 验证是否成功安装
 
-If you can successfully execute following command, then the installation is completed.
+执行以下命令，验证安装结果。导入Python模块不报错即安装成功：
 
 ```python
 import mindspore_rl
 ```
 
-## Quick Start
+## 快速入门
 
-The algorithm example of mindcore reinforcement is located under `reinforcement/example/`. A simple algorithm [Deep Q-Learning (DQN)](https://www.mindspore.cn/reinforcement/docs/zh-CN/master/dqn.html) is used to demonstrate how to use MindSpore Reinforcement.
+MindSpore Reinforcement的算法示例位于`reinforcement/example/`下，以一个简单的算法[Deep Q-Learning (DQN)](https://www.mindspore.cn/reinforcement/docs/zh-CN/master/dqn.html) 示例，演示MindSpore Reinforcement如何使用。
 
-The first way is using script files to run it directly:
+第一种开箱即用方式，使用脚本文件直接运行:
 
 ```shell
 cd reinforcement/example/dqn/scripts
 bash run_standalone_train.sh
 ```
 
-The second way is to use `config.py` and `train.py` to modify the configuration more flexibly:
+第二种方式，直接使用`config.py`和`train.py`，可以更灵活地修改配置：
 
 ```shell
 cd reinforcement/example/dqn
 python train.py --episode 1000 --device_target GPU
 ```
 
-The first way will generate the logfile `dqn_train_log.txt` in the current directory. The second way prints log information on the screen:
+第一种方式会在当前目录会生成`dqn_train_log.txt`日志文件，第二种在屏幕上打印日志信息：
 
 ```shell
 Episode 0: loss is 0.396, rewards is 42.0
@@ -132,22 +133,22 @@ Evaluate for episode 10 total rewards is 9.600
 <img src=docs/images/cartpole.gif width=400 height=300> <img src=docs/images/episode_rewards_of_dqn.png width=400 height=300>
 </center>
 
-For more details about the installation guide, tutorials, and APIs, see [MindSpore Reinforcement API Docs](https://www.mindspore.cn/reinforcement/docs/en/master/index.html).
+更多有关安装指南、教程和API的详细信息，请参阅[用户文档](https://www.mindspore.cn/reinforcement/docs/zh-CN/master/index.html)。
 
-## Features
+## 特性
 
-### Algorithm
+### 算法
 
 <table align="center">
     <tr>
-        <th rowspan="2" align="center">Algorithm</th>
-        <th rowspan="2" align="center">RL Version</th>
-        <th colspan="2" align="center">Action Space</th>
-        <th colspan="3" align="center">Device</th>
-        <th rowspan="2" align="center">Example Environment</th>
+        <th rowspan="2" align="center">算法</th>
+        <th rowspan="2" align="center">RL版本</th>
+        <th colspan="2" align="center">动作空间</th>
+        <th colspan="3" align="center">设备</th>
+        <th rowspan="2" align="center">示例环境</th>
     </tr>
     <tr>
-        <th align="center">Discrete</th><th          align="center">Continuous</th>
+        <th align="center">离散</th><th          align="center">连续</th>
         <th align="center">CPU</th><th align="center">GPU</th><th align="center">Ascend</th>
     </tr>
     <tr>
@@ -312,78 +313,78 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
     </tr>
 </table>
 
-### Environment
+### 环境
 
-In the field of reinforcement learning, during the interaction between the agent and the environment, the learning strategy maximizes the numerical benefit signal. As a problem to be solved, environment is an important element in reinforcement learning.
+强化学习领域中，智能体与环境交互过程中，学习策略来使得数值化的收益信号最大化。“环境”作为待解决的问题，是强化学习领域中重要的要素。
 
-At present, there are many kinds of environments used for reinforcement learning:[Mujoco](https://github.com/deepmind/mujoco)、[MPE](https://github.com/openai/multiagent-particle-envs)、[Atari](https://github.com/gsurma/atari)、[PySC2](https://www.github.com/deepmind/pysc2)、[SMAC](https://github/oxwhirl/smac)、[TORCS](https://github.com/ugo-nama-kun/gym_torcs)、[Isaac](https://github.com/NVIDIA-Omniverse/IsaacGymEnvs) etc. At present, MindSpore Reinforcement has access to both `Gym` and `Smac` environments. With the enrichment of algorithms, it will gradually access more environments.
+目前强化学习使用的环境种类繁多：[Mujoco](https://github.com/deepmind/mujoco)、[MPE](https://github.com/openai/multiagent-particle-envs)、[Atari](https://github.com/gsurma/atari)、[PySC2](https://www.github.com/deepmind/pysc2)、[SMAC](https://github/oxwhirl/smac)、[TORCS](https://github.com/ugo-nama-kun/gym_torcs)、[Isaac](https://github.com/NVIDIA-Omniverse/IsaacGymEnvs)等，目前MindSpore Reinforcement接入了`Gym`、`SMAC`两个环境，后续随着算法的丰富，还会逐渐接入更多的环境。
 
 <center>
 <img src=docs/images/environment-uml.png width=500 height=350></center>
 
-### ReplayBuffer
+### 经验回放
 
-In reinforcement learning, ReplayBuffer is a commonly used basic data storage method. It is used to store the data obtained by the interaction between the agent and the environment. ReplayBuffer can solve the following problems:
+在强化学习中，ReplayBuffer是一个常用的基本数据存储方式，它的功能在于存放智能体与环境交互得到的数据。 使用ReplayBuffer可以解决以下几个问题：
 
-1. The stored historical experience data can be extracted by sampling or certain priority to break the correlation of the training data and make the sampled data have the characteristics of independent and identical distribution.
+1. 存储的历史经验数据，可以通过采样或一定优先级的方式抽取，以打破训练数据的相关性，使抽样的数据具有独立同分布的特性。
 
-2. It can provide temporary storage of data and improve the utilization rate of data.
+2. 可以提供数据的临时存储，提高数据的利用率。
 
-In general, researchers use native Python data structures or numpy data structures to construct ReplayBuffer, or the general reinforcement learning framework also provides standard API encapsulation. The difference is that MindSpore implements the ReplayBuffer structure on the device. On the one hand, it can reduce the frequent copying of data between the host and the device when using GPU/Ascend hardware. On the other hand, it can express the ReplayBuffer in the form of MindSpore operators, which can build a complete IR graph and enable MindSpore GRAPH_MODE optimization to improve the overall performance.  
+一般情况下，算法人员使用原生的Python数据结构或Numpy的数据结构来构造ReplayBuffer, 或者一般的强化学习框架也提供了标准的API封装。不同的是，MindSpore实现了设备端的ReplayBuffer结构，一方面能在使用GPU/Ascend硬件时减少数据在Host和Device之间的频繁拷贝，另一方面，以MindSpore算子的形式表达ReplayBuffer，可以构建完整的IR图，使能MindSpore GRAPH_MODE的各种图优化，提升整体的性能。
 
 <table>
     <tr>
-        <th rowspan="2">Type</th>
-        <th rowspan="2">Features</th>
-        <th colspan="3" align="center">Device</th>
+        <th rowspan="2">类别</th>
+        <th rowspan="2">特性</th>
+        <th colspan="3" align="center">设备</th>
     </tr>
     <tr>
         <th align="center">CPU</th><th align="center">GPU</th><th align="center">Ascend</th>
     </tr>
     <tr>
         <td align="center"><a href="https://gitee.com/mindspore/reinforcement/blob/master/mindspore_rl/core/uniform_replay_buffer.py">UniformReplayBuffer</a></td>
-        <td align="left">1 FIFO, fist in fist out. <br>2 Support batch input.</a></td>
+        <td align="left">1 FIFO先进先出 <br>2 支持batch 输入</a></td>
         <td align="center">✔️ </td>
         <td align="center">✔️ </td>
         <td align="center">/</td>
     </tr>
     <tr>
         <td align="center"><a href="https://gitee.com/mindspore/reinforcement/blob/master/mindspore_rl/core/priority_replay_buffer.py#L25">PriorityReplayBuffer</a></td>
-        <td align="left">1 Proportional-based priority strategy. <br>2 Using Sum Tree to improve sample performance.</a></td>
+        <td align="left">1 proportional-based优先级策略 <br>2 Sum Tree提升采样效率</a></td>
         <td align="center">✔️ </td>
         <td align="center">✔️ </td>
         <td align="center">✔️ </td>
     </tr>
     <tr>
         <td align="center"><a href="https://gitee.com/mindspore/reinforcement/blob/master/mindspore_rl/core/reservoir_replay_buffer.py#L24">ReservoirReplayBuffer</a></td>
-        <td align="left">keeps an 'unbiased' sample of previous iterations.</a></td>
+        <td align="left">采用无偏采样</a></td>
         <td align="center">✔️ </td>
         <td align="center">✔️ </td>
         <td align="center">✔️ </td>
     </tr>
 </table>
 
-## Future Roadmap
+## 未来路标
 
-This initial release of MindSpore Reinforcement contains a stable API for implementing reinforcement learning algorithms and executing computation using MindSpore's computational graphs.  Now it supports semi-automatic distributed execution of algorithms and multi-agent, but does not support fully automatic distributed capabilities yet. These features will be included in the subsequent version of MindSpore Reinforcement. Please look forward to it.
+MindSpore Reinforcement初始版本包含了一个稳定的API， 用于实现强化学习算法和使用MindSpore的计算图执行计算。现已支持算法并行和半自动分布式执行能力，支持多agent场景，暂不支持自动的分布式能力。MindSpore Reinforcement的后续版本将包含这些功能，敬请期待。
 
-## Community
+## 社区
 
-### Governance
+### 治理
 
-[MindSpore Open Governance](https://gitee.com/mindspore/community/blob/master/governance.md)
+查看MindSpore如何进行[开放治理](https://gitee.com/mindspore/community/blob/master/governance.md)。
 
-### Communication
+### 交流
 
-- [MindSpore Slack](https://join.slack.com/t/mindspore/shared_invite/zt-dgk65rli-3ex4xvS4wHX7UDmsQmfu8w) developer communication platform
-- [MindSpore 论坛](https://bbs.huaweicloud.com/forum/forum-1076-1.html) Welcome to post.
-- [Reinforcement issues](https://gitee.com/mindspore/reinforcement/issues) Welcome to submit issues.
+- [MindSpore Slack](https://join.slack.com/t/mindspore/shared_invite/zt-dgk65rli-3ex4xvS4wHX7UDmsQmfu8w) 开发者交流平台。
+- [MindSpore 论坛](https://bbs.huaweicloud.com/forum/forum-1076-1.html) 欢迎发帖。
+- [Reinforcement issues](https://gitee.com/mindspore/reinforcement/issues) 欢迎提交问题。
 
-## Contributions
+## 贡献
 
-Welcome to MindSpore contribution.
-MindSpore Reinforcement will be updated every 3 months. If you encounter any problems, please inform us in time. We appreciate all contributions and can submit your questions or modifications in the form of issues or prs.
+欢迎参与贡献。
+MindSpore Reinforcement 会按3个月周期更新，如果遇到问题，请及时通知我们。我们感谢所有的贡献，可以通过issue/pr的形式提交您的问题或修改。
 
-## License
+## 许可证
 
 [Apache License 2.0](https://gitee.com/mindspore/reinforcement/blob/master/LICENSE)
