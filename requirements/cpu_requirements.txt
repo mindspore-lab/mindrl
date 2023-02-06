@@ -1,0 +1,10 @@
+pyyaml >= 5.3
+tqdm
+mindspore
+pylint
+pytest
+numpy
+matplotlib
+gym
+pyyaml
+importlib-metadata
