@@ -29,4 +29,4 @@
 
 ## 支持平台
 
-GAIL算法支持GPU。
+GAIL算法支持Ascend, GPU和CPU平台。

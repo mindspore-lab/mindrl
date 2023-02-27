@@ -120,7 +120,7 @@ class GradientPenalty(nn.Cell):
         eps = self.uniform_real((expert_disc_input.shape[0], 1))
         interp_obs = eps * expert_disc_input + (1. - eps) * policy_dict_input
         gradient = self.gradient_op(self.gradient_with_input)(interp_obs)
-        gradient_penalty = ((gradient.norm(1, 2) - 1) ** 2).mean() * self.grad_penalty_weight
+        gradient_penalty = ((gradient.norm(2, 1) - 1) ** 2).mean() * self.grad_penalty_weight
         return gradient_penalty
 
 

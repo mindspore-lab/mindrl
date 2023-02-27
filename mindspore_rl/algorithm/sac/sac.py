@@ -1,4 +1,4 @@
-# Copyright 2022 Huawei Technologies Co., Ltd
+# Copyright 2022-2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ class SACPolicy():
                 model_list.append(hidden_act())
                 in_size = out_size
             self.model = nn.SequentialCell(model_list)
-            self.last_fc = nn.Dense(in_size, output_size)
+            self.last_fc = nn.Dense(in_size, output_size, weight_init='XavierUniform').to_float(compute_type)
 
             self.conditioned_std = conditioned_std
             if self.conditioned_std:
@@ -69,7 +69,7 @@ class SACPolicy():
 
             if self.conditioned_std:
                 log_std = self.last_fc_log_std(h)
-                log_std = log_std.clip(-20, 2)
+                log_std = log_std.clip(-10, 2)
             else:
                 log_std = self.action_log_std.broadcast_to(mean.shape)
             std = self.exp(log_std)
@@ -93,7 +93,7 @@ class SACPolicy():
                 model_list.append(hidden_act())
                 in_size = out_size
             self.model = nn.SequentialCell(model_list)
-            self.last_fc = nn.Dense(in_size, output_size)
+            self.last_fc = nn.Dense(in_size, output_size, weight_init='XavierUniform').to_float(compute_type)
 
         def construct(self, obs, action):
             """predict value"""

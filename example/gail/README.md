@@ -29,4 +29,4 @@ Then start training:
 
 ## Supported Platform
 
-GAIL algorithm currently supports GPU.
+GAIL algorithm currently supports Ascend, GPU and CPU platform.

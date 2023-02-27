@@ -1,5 +1,5 @@
 
-.. py:class:: mindspore_rl.utils.DiscountedReturn(gamma)
+.. py:class:: mindspore_rl.utils.DiscountedReturn(gamma, need_bprop=False)
 
     计算折扣回报。
 
@@ -10,7 +10,7 @@
 
     参数：
         - **gamma** (float) - 折扣系数。
-        - **need_bprop** (bool) - 是否需要计算discounted return的反向
+        - **need_bprop** (bool) - 是否需要计算discounted return的反向，默认值：False。
 
     输入：
         - **reward** (Tensor) - 包含多个episode的奖励序列。 张量的维度 :math:`(Timestep, Batch, ...)`。

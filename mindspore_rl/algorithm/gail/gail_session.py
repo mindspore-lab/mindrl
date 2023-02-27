@@ -62,6 +62,8 @@ class GAILSession(Session):
                                       hid_act=disc_config['disc_hid_act'],
                                       use_bn=disc_config['disc_use_bn'],
                                       clamp_magtitude=disc_config['disc_clamp_magnitude'])
+        discriminator = discriminator.to_float(disc_config['compute_type'])
+
         disc_optim = nn.Adam(discriminator.trainable_params(), learning_rate=disc_config['disc_lr'])
         disc_loss = DiscriminatorLossCell(expert_replay_buffer,
                                           policy_replay_buffer,

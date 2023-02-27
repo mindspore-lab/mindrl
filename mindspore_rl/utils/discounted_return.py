@@ -36,7 +36,7 @@ class DiscountedReturn(nn.Cell):
 
     Args:
         gamma (float): Discounted factor between [0, 1].
-        need_bprop (bool): Whether need to calculate the backpropagation of discounted returns.
+        need_bprop (bool): Whether need to calculate the backpropagation of discounted returns. Default: False.
 
     Inputs:
         - **reward** (Tensor) - The reward sequence contains multi-episode.

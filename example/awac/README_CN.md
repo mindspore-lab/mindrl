@@ -23,7 +23,7 @@ AWAC使用了离线强化学习的一个开源数据[D4RL](https://arxiv.org/abs
 本示例使用[d4rl](https://github.com/Farama-Foundation/d4rl)提供的离线数据，需要安装d4rl:
 
 ```bash
-pip install git+https://github.com/rail-berkeley/d4rl@master#egg=d4rl
+pip install git+https://github.com/Farama-Foundation/d4rl@master#egg=d4rl
 ```
 
 - MindSpore >= 1.9.0

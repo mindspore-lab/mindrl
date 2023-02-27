@@ -15,11 +15,9 @@
 """MAPPO Trainer"""
 #pylint: disable=W0613
 import mindspore as ms
-import mindspore.numpy as mnp
 from mindspore.common.api import ms_function
-from mindspore import Tensor, Parameter, set_seed, vmap
+from mindspore import Tensor, Parameter, set_seed
 from mindspore.ops import operations as P
-from mindspore.ops import functional as F
 
 from mindspore_rl.utils.callback import CallbackParam, CallbackManager
 from mindspore_rl.agent.trainer import Trainer
@@ -40,6 +38,9 @@ class MAPPOTrainer(Trainer):
         self.squeeze = P.Squeeze()
         self.less = P.Less()
         self.reduce_mean = P.ReduceMean()
+
+        self.stack_first = P.Stack(axis=0)
+        self.stack_second = P.Stack(axis=1)
 
         self.reshape = P.Reshape()
         self.squeeze = P.Squeeze()
@@ -77,16 +78,6 @@ class MAPPOTrainer(Trainer):
             (self.num_agent, 128, 1, 64), ms.float32), requires_grad=False)
         self.agent_last_mask = Parameter(
             self.ones((self.num_agent, 128, 1), ms.float32), requires_grad=False)
-
-        self.agent_act = vmap(self.msrl.agent, (None, (1, None, 0, 0, 0, 1, 0, 0, 0, 0, 0)))
-        self.agent_learn = vmap(self.msrl.agent, (None, (0, 0, 0, 0, 0, 0, 0, 0, None, 0)))
-        self.init_loss = self.zeros((self.num_agent), ms.float32)
-        self.samples = [self.agent_last_local_obs, self.agent_last_global_obs, self.agent_last_hn_actor,
-                        self.agent_last_hn_critic, self.agent_last_mask, self.onehot_action,
-                        self.concated_action, self.concated_log_prob, self.concated_ht_actor,
-                        self.concated_value_prediction, self.concated_ht_critic]
-
-        self.zero_reward = self.zeros((self.num_agent, 128, 1), ms.float32)
 
     def train(self, episodes, callbacks=None, ckpt_path=None):
         """
@@ -173,18 +164,8 @@ class MAPPOTrainer(Trainer):
     def train_one_episode(self):
         """the algorithm in one episode"""
         # ----------------------------------------- actor -------------------------------------------
-        self.assign(self.concated_action, self.zeros(
-            (self.num_agent, 128, 1), ms.int32))
-        self.assign(self.concated_log_prob, self.zeros(
-            (self.num_agent, 128, 1), ms.float32))
-        self.assign(self.concated_ht_actor, self.zeros(
-            (self.num_agent, 128, 1, 64), ms.float32))
-        self.assign(self.concated_value_prediction, self.zeros(
-            (self.num_agent, 128, 1), ms.float32))
-        self.assign(self.concated_ht_critic, self.zeros(
-            (self.num_agent, 128, 1, 64), ms.float32))
-        self.assign(self.onehot_action, self.zeros(
-            (128, self.num_agent, 5), ms.float32))
+
+        zero_reward = self.zeros((self.num_agent, 128, 1), ms.float32)
 
         local_replaybuffer = self.msrl.buffers['local_replaybuffer']
         global_replaybuffer = self.msrl.buffers['global_replaybuffer']
@@ -198,17 +179,47 @@ class MAPPOTrainer(Trainer):
                                            self.concated_action[agent_num, :],
                                            self.concated_log_prob[agent_num, :],
                                            self.concated_value_prediction[agent_num, :],
-                                           self.zero_reward[agent_num, :]], self.true)
+                                           zero_reward[agent_num, :]], self.true)
             agent_num += 1
         global_replaybuffer([self.agent_last_global_obs], self.true)
 
         training_reward = self.zero_float
         duration = self.zero
         while self.less(duration, 25):
-            self.agent_act(1, self.samples)
+            num_agent = 0
+            onehot_list = []
+            action_list = []
+            log_prob_list = []
+            ht_actor_list = []
+            value_prediction_list = []
+            ht_critic_list = []
+
+            while num_agent < self.num_agent:
+                samples = [self.agent_last_local_obs[:, num_agent], self.agent_last_global_obs,
+                           self.agent_last_hn_actor[num_agent], self.agent_last_hn_critic[num_agent],
+                           self.agent_last_mask[num_agent]]
+
+                onehot_action, actions, log_prob, ht_actor, \
+                    value_prediction, ht_critic = self.msrl.agent[num_agent](1, samples)
+
+                onehot_list.append(onehot_action)
+                action_list.append(actions)
+                log_prob_list.append(log_prob)
+                ht_actor_list.append(ht_actor)
+                value_prediction_list.append(value_prediction)
+                ht_critic_list.append(ht_critic)
+
+                num_agent += 1
+
+            onehot_list = self.stack_second(onehot_list)
+            action_list = self.stack_first(action_list)
+            log_prob_list = self.stack_first(log_prob_list)
+            ht_actor_list = self.stack_first(ht_actor_list)
+            value_prediction_list = self.stack_first(value_prediction_list)
+            ht_critic_list = self.stack_first(ht_critic_list)
 
             new_local_obs, rewards, dones = self.msrl.collect_environment.step(
-                (self.onehot_action).astype(ms.int32))
+                (onehot_list).astype(ms.int32))
 
             dones = self.reshape(
                 (1-dones).astype(ms.float32), (self.num_agent, 128, 1, 1))
@@ -216,8 +227,8 @@ class MAPPOTrainer(Trainer):
             new_global_obs = self.reshape(
                 new_local_obs, (128, self.global_obs_dim))
 
-            masked_concated_ht_actor = self.concated_ht_actor * dones
-            masked_concated_ht_critic = self.concated_ht_critic * dones
+            masked_concated_ht_actor = ht_actor_list * dones
+            masked_concated_ht_critic = ht_critic_list * dones
             episode_masks = self.ones((self.num_agent, 128, 1), ms.float32)
             episode_masks = episode_masks * dones.squeeze(-1)
 
@@ -227,9 +238,9 @@ class MAPPOTrainer(Trainer):
                                                masked_concated_ht_actor[agent_num, :],
                                                masked_concated_ht_critic[agent_num, :],
                                                episode_masks[agent_num, :],
-                                               self.concated_action[agent_num, :],
-                                               self.concated_log_prob[agent_num, :],
-                                               self.concated_value_prediction[agent_num, :],
+                                               action_list[agent_num, :],
+                                               log_prob_list[agent_num, :],
+                                               value_prediction_list[agent_num, :],
                                                rewards[:, agent_num]], self.true)
                 agent_num += 1
             global_replaybuffer([new_global_obs], self.true)
@@ -243,8 +254,26 @@ class MAPPOTrainer(Trainer):
             duration += 1
 
         # ----------------------------------------- learner -------------------------------------------
-        training_reward, loss_ac = self._learn()
+        dummy = [self.agent_last_local_obs[:, 0],
+                 self.concated_ht_actor[0, :],
+                 self.concated_ht_critic[0, :],
+                 self.agent_last_mask[0, :],
+                 self.concated_action[0, :],
+                 self.concated_log_prob[0, :],
+                 self.concated_value_prediction[0, :],
+                 zero_reward[0, :]]
+        dummy_2 = [self.agent_last_global_obs]
 
+        agent_id = 0
+        loss_ac = self.zero_float
+        global_obs_exp = global_replaybuffer(dummy_2, self.false)
+        while agent_id < self.num_agent:
+            buffer = local_replaybuffer[agent_id](dummy, self.false)
+            new_buffer = buffer + global_obs_exp
+            output_loss = self.msrl.agent[agent_id](2, new_buffer)
+            loss_ac += output_loss
+            agent_id += 1
+            training_reward = self.reduce_mean(buffer[-1]) * 25
         return loss_ac, training_reward, duration
 
     def trainable_variables(self):
@@ -253,58 +282,3 @@ class MAPPOTrainer(Trainer):
 
     def evaluate(self):
         return
-
-    def _learn(self):
-        """Learner."""
-        dummy = [self.agent_last_local_obs[:, 0],
-                 self.concated_ht_actor[0, :],
-                 self.concated_ht_critic[0, :],
-                 self.agent_last_mask[0, :],
-                 self.concated_action[0, :],
-                 self.concated_log_prob[0, :],
-                 self.concated_value_prediction[0, :],
-                 self.zero_reward[0, :]]
-        dummy_2 = [self.agent_last_global_obs]
-
-        agent_id = 0
-        global_obs_exp = self.msrl.buffers['global_replaybuffer'](dummy_2, self.false)
-        agent_last_local_obs_list = []
-        concated_ht_actor_list = []
-        concated_ht_critic_list = []
-        agent_last_mask_list = []
-        concated_action_list = []
-        concated_log_prob_list = []
-        concated_value_prediction_list = []
-        reward_list = []
-
-        while agent_id < self.num_agent:
-            agent_last_local_obs, concated_ht_actor, concated_ht_critic, agent_last_mask, concated_action, \
-            concated_log_prob, concated_value_prediction, reward = \
-                self.msrl.buffers['local_replaybuffer'][agent_id](dummy, self.false)
-            agent_last_local_obs_list.append(agent_last_local_obs)
-            concated_ht_actor_list.append(concated_ht_actor)
-            concated_ht_critic_list.append(concated_ht_critic)
-            agent_last_mask_list.append(agent_last_mask)
-            concated_action_list.append(concated_action)
-            concated_log_prob_list.append(concated_log_prob)
-            concated_value_prediction_list.append(concated_value_prediction)
-            reward_list.append(reward)
-            agent_id += 1
-
-        batch_agent_last_local_obs = F.stack(agent_last_local_obs_list)
-        batch_concated_ht_actor = F.stack(concated_ht_actor_list)
-        batch_concated_ht_critic = F.stack(concated_ht_critic_list)
-        batch_agent_last_mask = F.stack(agent_last_mask_list)
-        batch_concated_action = F.stack(concated_action_list)
-        batch_concated_log_prob = F.stack(concated_log_prob_list)
-        batch_concated_value_prediction = F.stack(concated_value_prediction_list)
-        batch_reward = F.stack(reward_list)
-
-        training_reward = self.reduce_mean(reward_list[-1]) * 25
-        new_buffer = (batch_agent_last_local_obs, batch_concated_ht_actor, batch_concated_ht_critic,
-                      batch_agent_last_mask, batch_concated_action, batch_concated_log_prob,
-                      batch_concated_value_prediction, batch_reward) + global_obs_exp + (self.init_loss,)
-
-        output_loss = self.agent_learn(2, new_buffer)
-        loss_ac = mnp.sum(output_loss)
-        return training_reward, loss_ac

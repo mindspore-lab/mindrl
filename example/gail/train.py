@@ -20,6 +20,7 @@ SAC training example.
 import argparse
 import math
 from mindspore import context
+from mindspore import dtype as mstype
 from mindspore_rl.environment.gym_environment import GymEnvironment
 from mindspore_rl.algorithm.sac.sac import SACPolicy
 from mindspore_rl.algorithm.sac.sac import SACLearner
@@ -31,6 +32,8 @@ parser = argparse.ArgumentParser(description='MindSpore Reinforcement GAIL')
 parser.add_argument('--episode', type=int, default=500, help='total episode numbers.')
 parser.add_argument('--device_target', type=str, default='Auto', choices=['Ascend', 'CPU', 'GPU', 'Auto'],
                     help='Choose a device to run the sac example(Default: Auto).')
+parser.add_argument('--precision_mode', type=str, default='fp32', choices=['fp32', 'fp16'],
+                    help='Precision mode')
 parser.add_argument('--expert_data_path', type=str,
                     default='./mujoco-experts/HalfCheetah/seed-0/exp_trajs_sac_50.pkl',
                     help='expert data path.')
@@ -46,6 +49,10 @@ def train(episode=args.episode):
 
     context.set_context(mode=context.GRAPH_MODE)
 
+    compute_type = mstype.float32 if args.precision_mode == 'fp32' else mstype.float16
+    if compute_type == mstype.float16 and args.device_target != 'Ascend':
+        raise ValueError("Fp16 mode is supported by Ascend backend.")
+
     # These objects will be instance by MSRL latter.
     collect_environment = GymEnvironment({'name': 'HalfCheetah-v2', 'seed': 0})
     eval_environment = GymEnvironment({'name': 'HalfCheetah-v2', 'seed': 0})
@@ -56,7 +63,8 @@ def train(episode=args.episode):
         'state_space_dim': obs_space.shape[0],
         'action_space_dim': action_space.shape[0],
         'hidden_sizes': [256, 256],
-        'conditioned_std': True
+        'conditioned_std': True,
+        'compute_type': compute_type
     }
     sac_policy = SACPolicy(policy_params)
 
@@ -94,6 +102,7 @@ def train(episode=args.episode):
     disc_config['use_grad_pen'] = True
     disc_config['grad_pen_weight'] = 0.5
     disc_config['disc_focal_loss_gamma'] = 0.0
+    disc_config['compute_type'] = compute_type
 
     gail_learn_config = {}
     gail_learn_config['num_update_loops_per_train_call'] = 1000

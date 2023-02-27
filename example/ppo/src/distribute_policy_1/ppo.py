@@ -117,7 +117,7 @@ ppo_algorithm_config = {
     },
 }
 
-deploy_config = {'distributed': True, 'parallel': False, 'worker_num': 2,
+deploy_config = {'auto_distribution': True, 'worker_num': 2, 'distribution_policy': 'MultiActorLearner',
                  'config': {'0': {'ip': 'tcp://0.0.0.0:4243', 'type': 'learner_with_action'}}}
 
 

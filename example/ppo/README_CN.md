@@ -80,7 +80,7 @@ Evaluate result is 6000.300, checkpoint file in /path/ckpt/actor_net/actor_net_9
 
 ### 分布式训练
 
-PPO提供了三种分布式训练模式(仅支持GPU)，分别存于`example/ppo/src/`下的`distribute_policy_3`，`distribute_policy_1`和`distribute_policy_2`，需要具备一定的分布式运行知识，参考[分布式样例](https://www.mindspore.cn/tutorials/experts/zh-CN/master/parallel/train_gpu.html)和[分布式配置](https://www.mindspore.cn/docs/zh-CN/master/faq/distributed_configure.html)。
+PPO提供了三种分布式训练模式(仅支持GPU)，分别存于`example/ppo/src/`下的`distribute_policy_3`，`distribute_policy_1`和`distribute_policy_2`，需要具备一定的分布式运行知识，参考[分布式样例](https://www.mindspore.cn/tutorials/experts/zh-CN/master/parallel/train_gpu.html)和[分布式配置](https://www.mindspore.cn/docs/zh-CN/master/faq/distributed_parallel.html)。
 
 PPO样例提供了预设的脚本，可以直接运行单机多卡的用例，`example/ppo/scripts/*_local.sh`；也可以运行多机多卡用例，仅需在 `example/ppo/scripts`下，新建hostfile文件。hostfile中描述了多机器运行的ip和可用GPU卡数。如：
 

@@ -94,4 +94,4 @@ Average evaluate result is 7896.422, checkpoint file in ./ckpt/actor_net/actor_n
 
 ## 支持平台
 
-TD3算法支持GPU和CPU，且在GPU环境下取得较好的性能。
+TD3算法支持Ascend，GPU和CPU。

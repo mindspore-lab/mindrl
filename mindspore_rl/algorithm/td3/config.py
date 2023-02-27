@@ -93,7 +93,7 @@ algorithm_config = {
 }
 
 summary_config = {
-    'mindinsight_on': True,
+    'mindinsight_on': False,
     'base_dir': './summary',
     'collect_interval': 10
 }
