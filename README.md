@@ -310,6 +310,16 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center">/</td>
         <td align="center"><a href="https://github.com/deepmind/dm_control">Walker-walk</a></td>
     </tr>
+    <tr>
+        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/iql">IQL</a></td>
+        <td align="center">>= 0.6</td>
+        <td align="center">/</td>
+        <td align="center">✔️</td>
+        <td align="center">✔️</td>
+        <td align="center">✔️</td>
+        <td align="center">/</td>
+        <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/walker2d/">Walker2d-v2</a></td>
+    </tr>
 </table>
 
 ### Environment
