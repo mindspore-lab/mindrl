@@ -15,8 +15,10 @@
 """
 Implementation of the session class.
 """
-from mindspore_rl.core import MSRL
+import sys
 from mindspore.communication import init, get_rank
+from mindspore_rl.core import MSRL
+from mindspore_rl.distribution import fragment_generation
 
 
 class _Workers():
@@ -60,11 +62,13 @@ class Session():
         self.params = params
         self.callbacks = callbacks
         self.dist = False
+        self.alg_config = alg_config
         if deploy_config:
-            if deploy_config['distributed']:
-                self.dist = True
-                self.worker_num = deploy_config['worker_num']
-                self.config = deploy_config['config']
+            self.dist = True
+            self.worker_num = deploy_config['worker_num']
+            self.config = deploy_config['config']
+            self.dist_policy = deploy_config['distribution_policy']
+            self.is_auto = deploy_config['auto_distribution']
 
     def run(self, class_type=None, is_train=True, episode=0, duration=0):
         """
@@ -79,8 +83,12 @@ class Session():
 
         if self.dist:
             init("nccl")
-            from fragments import get_all_fragments
-            fragment_list = get_all_fragments(self.msrl.num_actors)
+            algorithm = sys.argv[0]
+            if self.is_auto:
+                fragment_list = fragment_generation(algorithm, self.alg_config, self.dist_policy)
+            else:
+                from fragments import get_all_fragments
+                fragment_list = get_all_fragments(self.msrl.num_actors)
             workers = _Workers(self.msrl, fragment_list, duration, episode)
             workers.run()
         else:

@@ -80,7 +80,7 @@ Evaluate result is 6000.300, checkpoint file in /path/ckpt/actor_net/actor_net_9
 
 ### Distributed training
 
-We provides three distributed training modes for PPO(only GPU is supported), which are stored in `distribute_policy_3`, `distribute_policy_1` and `distribute_policy_2` under `example/ppo/src/` respectively. It requires a certain knowledge of distributed training, please refer to [Distributed training demo](https://www.mindspore.cn/tutorials/experts/en/master/parallel/train_gpu.html)和[Distributed configuration](https://www.mindspore.cn/docs/en/master/faq/distributed_configure.html)。
+We provides three distributed training modes for PPO(only GPU is supported), which are stored in `distribute_policy_3`, `distribute_policy_1` and `distribute_policy_2` under `example/ppo/src/` respectively. It requires a certain knowledge of distributed training, please refer to [Distributed training demo](https://www.mindspore.cn/tutorials/experts/en/master/parallel/train_gpu.html) and [Distributed configuration](https://www.mindspore.cn/docs/en/master/faq/distributed_parallel.html)。
 
 We provides preset scripts that can directly run the single machine with multi-cards, `example/ppo/scripts/*_local.sh`；You can also run the multi-machines with multi-cards by creating a new `hostfile` under `example/ppo/scripts/`. The `hostfile` describes the IP and the number of GPU cards available for multi machines. For example:
 

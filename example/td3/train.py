@@ -24,7 +24,7 @@ from mindspore import context
 from mindspore import dtype as mstype
 
 parser = argparse.ArgumentParser(description='MindSpore Reinforcement TD3')
-parser.add_argument('--episode', type=int, default=500, help='total episode numbers.')
+parser.add_argument('--episode', type=int, default=1000, help='total episode numbers.')
 parser.add_argument('--device_target', type=str, default='Auto', choices=['Ascend', 'CPU', 'GPU', 'Auto'],
                     help='Choose a device to run the td3 example(Default: Auto).')
 parser.add_argument('--precision_mode', type=str, default='fp32', choices=['fp32', 'fp16'],

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
+#pylint: disable=C0103
 """
 Implementation of Agent base class.
 """
@@ -25,12 +25,21 @@ from mindspore.ops import operations as P
 import mindspore as ms
 import mindspore.nn.probability.distribution as msd
 from mindspore.ops import composite as C
+from mindspore.ops import functional as F
 from mindspore.common.initializer import initializer, Orthogonal
-import mindspore.numpy as msnp
+import mindspore.ops as ops
 
 from mindspore_rl.agent.actor import Actor
 from mindspore_rl.agent.learner import Learner
 from mindspore_rl.network import GruNet
+
+
+def _reshape(x, N, L):
+    return x.reshape(N, L, *x.shape[1:])
+
+
+def _cast1(x):
+    return F.transpose(x, (1, 0, 2)).reshape((-1, x.shape[2]))
 
 
 class MAPPOPolicy():
@@ -42,35 +51,35 @@ class MAPPOPolicy():
             super().__init__()
             state_space_dim = params['state_space_dim']
             action_space_dim = params['action_space_dim']
+            self.compute_type = params.get('compute_type', ms.float32)
             self.linear1_actor = nn.Dense(state_space_dim,
                                           64,
                                           weight_init=initializer(Orthogonal(
                                               gain=5/3), [64, state_space_dim]),
                                           bias_init=0,
-                                          activation=nn.Tanh())
+                                          activation=nn.Tanh()).to_float(self.compute_type)
 
             self.linear2_actor = nn.Dense(64,
                                           64,
                                           weight_init=initializer(
                                               Orthogonal(gain=5/3), [64, 64]),
                                           bias_init=0,
-                                          activation=nn.Tanh())
+                                          activation=nn.Tanh()).to_float(self.compute_type)
             self.layer_norm_input = nn.LayerNorm(
-                normalized_shape=(state_space_dim,), epsilon=1e-5)
+                normalized_shape=(state_space_dim,), epsilon=1e-5).to_float(self.compute_type)
             self.layer_norm_hidden1 = nn.LayerNorm(
-                normalized_shape=(64,), epsilon=1e-5)
+                normalized_shape=(64,), epsilon=1e-5).to_float(self.compute_type)
             self.layer_norm_hidden2 = nn.LayerNorm(
-                normalized_shape=(64,), epsilon=1e-5)
+                normalized_shape=(64,), epsilon=1e-5).to_float(self.compute_type)
             self.layer_norm_hidden3 = nn.LayerNorm(
-                normalized_shape=(64,), epsilon=1e-5)
+                normalized_shape=(64,), epsilon=1e-5).to_float(self.compute_type)
             self.linear3_actor = nn.Dense(64,
                                           action_space_dim,
                                           weight_init=initializer(Orthogonal(gain=0.01), [action_space_dim, 64]),
-                                          bias_init=0)
+                                          bias_init=0).to_float(self.compute_type)
             self.ones_like = P.OnesLike()
             self.gru = GruNet(input_size=64,
-                              hidden_size=64,
-                              enable_fusion=False)
+                              hidden_size=64).to_float(self.compute_type)
             self.expand_dims = P.ExpandDims()
             self.transpose = P.Transpose()
             self.reshape = P.Reshape()
@@ -79,9 +88,13 @@ class MAPPOPolicy():
             self.stack = P.Stack()
             self.reduce_sum = P.ReduceSum(keep_dims=False)
             self.zeros = P.Zeros()
+            self.cast = P.Cast()
 
         def construct(self, x, hn, masks):
             """The forward calculation of actor net"""
+            x = self.cast(x, self.compute_type)
+            hn = self.cast(hn, self.compute_type)
+            masks = self.cast(masks, self.compute_type)
             # Feature Extraction
             x = self.layer_norm_input(x)
             x = self.linear1_actor(x)
@@ -99,7 +112,7 @@ class MAPPOPolicy():
                 x = self.reshape(x, (10, 320, 64))
                 masks = self.reshape(masks, (10, 320))
                 hn = hn.transpose(1, 0, 2)
-                rnn_output = self.zeros((10, 320, 64), ms.float32)
+                rnn_output = []
 
                 has_zero_index = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
                 for i in range(len(has_zero_index) - 1):
@@ -107,7 +120,9 @@ class MAPPOPolicy():
                     end_idx = has_zero_index[i + 1]
                     temp = (hn * self.reshape(masks[start_idx], (1, -1, 1)))
                     rnn_out, hn = self.gru(x[start_idx:end_idx], temp)
-                    rnn_output[i] = rnn_out[0]
+                    rnn_output.append(rnn_out[0])
+
+                rnn_output = self.stack(rnn_output)
 
                 x = rnn_output.reshape(3200, -1)
                 hn = hn.transpose(1, 0, 2)
@@ -116,7 +131,9 @@ class MAPPOPolicy():
 
             # output layer for categorical
             x = self.linear3_actor(x)
-            return x, hn
+            out_x = self.cast(x, ms.float32)
+            out_hn = self.cast(hn, ms.float32)
+            return out_x, out_hn
 
     class MAPPOCriticNet(nn.Cell):
         """This is the critic net definition"""
@@ -124,35 +141,35 @@ class MAPPOPolicy():
         def __init__(self, params):
             super().__init__()
             global_dim = params['environment_config']['global_observation_dim']
+            self.compute_type = params.get('compute_type', ms.float32)
             self.linear1_critic = nn.Dense(global_dim,
                                            64,
                                            weight_init=initializer(
                                                Orthogonal(gain=5/3), [64, global_dim]),
                                            bias_init=0,
-                                           activation=nn.Tanh())
+                                           activation=nn.Tanh()).to_float(self.compute_type)
 
             self.linear2_critic = nn.Dense(64,
                                            64,
                                            weight_init=initializer(
                                                Orthogonal(gain=5/3), [64, 64]),
                                            bias_init=0,
-                                           activation=nn.Tanh())
+                                           activation=nn.Tanh()).to_float(self.compute_type)
             self.layer_norm_input_critic = nn.LayerNorm(
-                normalized_shape=(global_dim,), epsilon=1e-5)
+                normalized_shape=(global_dim,), epsilon=1e-5).to_float(self.compute_type)
             self.layer_norm_hidden1_critic = nn.LayerNorm(
-                normalized_shape=(64,), epsilon=1e-5)
+                normalized_shape=(64,), epsilon=1e-5).to_float(self.compute_type)
             self.layer_norm_hidden2_critic = nn.LayerNorm(
-                normalized_shape=(64,), epsilon=1e-5)
+                normalized_shape=(64,), epsilon=1e-5).to_float(self.compute_type)
             self.layer_norm_hidden3_critic = nn.LayerNorm(
-                normalized_shape=(64,), epsilon=1e-5)
+                normalized_shape=(64,), epsilon=1e-5).to_float(self.compute_type)
             self.linear3_critic = nn.Dense(64,
                                            1,
                                            weight_init=initializer(
                                                Orthogonal(gain=0.01), [1, 64]),
-                                           bias_init=0)
+                                           bias_init=0).to_float(self.compute_type)
             self.gru_critic = GruNet(input_size=64,
-                                     hidden_size=64,
-                                     enable_fusion=False)
+                                     hidden_size=64).to_float(self.compute_type)
             self.expand_dims = P.ExpandDims()
             self.transpose = P.Transpose()
             self.stack = P.Stack()
@@ -164,6 +181,9 @@ class MAPPOPolicy():
 
         def construct(self, x, hn, masks):
             """The forward calculation of critic net"""
+            x = self.cast(x, self.compute_type)
+            hn = self.cast(hn, self.compute_type)
+            masks = self.cast(masks, self.compute_type)
             # Feature Extraction
             x = self.layer_norm_input_critic(x)
             x = self.linear1_critic(x)
@@ -181,7 +201,7 @@ class MAPPOPolicy():
                 x = self.reshape(x, (10, 320, 64))
                 masks = self.reshape(masks, (10, 320))
                 hn = hn.transpose(1, 0, 2)
-                rnn_output = self.zeros((10, 320, 64), ms.float32)
+                rnn_output = []
 
                 has_zero_index = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
                 for i in range(len(has_zero_index) - 1):
@@ -189,7 +209,9 @@ class MAPPOPolicy():
                     end_idx = has_zero_index[i + 1]
                     temp = (hn * self.reshape(masks[start_idx], (1, -1, 1)))
                     rnn_out, hn = self.gru_critic(x[start_idx:end_idx], temp)
-                    rnn_output[i] = rnn_out[0]
+                    rnn_output.append(rnn_out[0])
+
+                rnn_output = self.stack(rnn_output)
 
                 x = rnn_output.reshape(3200, -1)
                 hn = hn.transpose(1, 0, 2)
@@ -198,7 +220,9 @@ class MAPPOPolicy():
 
             # output layer for categorical
             x = self.linear3_critic(x)
-            return x, hn
+            out_x = self.cast(x, ms.float32)
+            out_hn = self.cast(hn, ms.float32)
+            return out_x, out_hn
 
     class CollectPolicy(nn.Cell):
         """The collect policy of MAPPO"""
@@ -262,6 +286,7 @@ class MAPPOAgent(nn.Cell):
 #pylint: disable=W0223
 class MAPPOActor(Actor):
     """This is the actor class of MAPPO, which is used to obtain the actions of each agent"""
+
     def __init__(self, params):
         super().__init__()
         self.collect_policy = params['collect_policy']
@@ -275,22 +300,16 @@ class MAPPOActor(Actor):
     #pylint: disable=W0221
     def act(self, inputs_data):
         """Use collect policy to calculate the action"""
-        local_obs, global_obs, hn_actor, hn_critic, masks, onehot_action, concated_action, \
-        concated_log_prob, concated_ht_actor, concated_value_prediction, concated_ht_critic = inputs_data
+        local_obs, global_obs, hn_actor, hn_critic, masks = inputs_data
 
         collect_data = (local_obs, hn_actor, masks)
         actions, log_prob, ht_actor = self.collect_policy(collect_data)
-        value_prediction, ht_critic = self.critic_net(global_obs, hn_critic, masks)
+        value_prediction, ht_critic = self.critic_net(
+            global_obs, hn_critic, masks)
 
-        temp_onehot_action = self.onehot(actions, 5, self.one_float, self.zero_float).squeeze(1)
-        self.assign(onehot_action, temp_onehot_action)
-        self.assign(concated_action, actions)
-        self.assign(concated_log_prob, log_prob)
-        self.assign(concated_ht_actor, ht_actor)
-        self.assign(concated_value_prediction, value_prediction)
-        self.assign(concated_ht_critic, ht_critic)
+        onehot_action = self.onehot(actions, 5, self.one_float, self.zero_float).squeeze(1)
 
-        return self.true
+        return onehot_action, actions, log_prob, ht_actor, value_prediction, ht_critic
 
 
 class MAPPOLearner(Learner):
@@ -418,11 +437,9 @@ class MAPPOLearner(Learner):
         self.concat = P.Concat()
         self.value_normalizer = ValueNormalizer()
         actor_optimizer = nn.Adam(self.actor_net.trainable_params(),
-                                  learning_rate=params['learning_rate'],
-                                  use_amsgrad=True)
+                                  learning_rate=params['learning_rate'])
         critic_optimizer = nn.Adam(self.critic_net.trainable_params(),
-                                   learning_rate=params['learning_rate'],
-                                   use_amsgrad=True)
+                                   learning_rate=params['learning_rate'])
         actor_loss_cell = self.MAPPOActorLossCell(self.actor_net)
         self.actor_train = nn.TrainOneStepCell(
             actor_loss_cell, actor_optimizer)
@@ -438,7 +455,7 @@ class MAPPOLearner(Learner):
     #pylint: disable=W0221
     def learn(self, samples):
         """The learn method of MAPPO, it will calculate the loss and update the neural network"""
-        local_obs, hn_actor, hn_critic, mask, actions, log_prob, value, reward, global_obs, init_loss = samples
+        local_obs, hn_actor, hn_critic, mask, actions, log_prob, value, reward, global_obs = samples
 
         def reshape_tensor_2d(tensor):
             reshaped_tensor = self.reshape(tensor.transpose(
@@ -464,6 +481,7 @@ class MAPPOLearner(Learner):
         temp_2 = self.value_normalizer.denormalize(last_value_prediction)
         delta = reward[-1] + self.gamma * temp_1 * last_episode_mask - temp_2
         gae = delta + weighted_discount * last_episode_mask * gae
+
         discounted_r[-1] = gae + \
             self.value_normalizer.denormalize(last_value_prediction)
 
@@ -492,12 +510,32 @@ class MAPPOLearner(Learner):
         value = reshape_tensor_2d(value[1:])
         norm_advantage = reshape_tensor_2d(norm_advantage)
         discounted_r = reshape_tensor_2d(discounted_r[1:])
-        ind = msnp.arange(0, 3200, 10)
-        hn_actor = self.gather(hn_actor, ind, 0)
-        hn_critic = self.gather(hn_critic, ind, 0)
+
+        L, N = 10, 320
+        indices = ops.Randperm(N)(Tensor([N], ms.int32))
+        global_obs = F.gather(_reshape(global_obs, N, L), indices, 0)
+        local_obs = F.gather(_reshape(local_obs, N, L), indices, 0)
+        hn_actor = F.gather(hn_actor, indices, 0)
+        hn_critic = F.gather(hn_critic, indices, 0)
+        actions = F.gather(_reshape(actions, N, L), indices, 0)
+        value = F.gather(_reshape(value, N, L), indices, 0)
+        discounted_r = F.gather(_reshape(discounted_r, N, L), indices, 0)
+        mask = F.gather(_reshape(mask, N, L), indices, 0)
+        log_prob = F.gather(_reshape(log_prob, N, L), indices, 0)
+        norm_advantage = F.gather(_reshape(norm_advantage, N, L), indices, 0)
+
+        global_obs = _cast1(global_obs)
+        local_obs = _cast1(local_obs)
+        actions = _cast1(actions)
+        value = _cast1(value)
+        discounted_r = _cast1(discounted_r)
+        mask = _cast1(mask)
+        log_prob = _cast1(log_prob)
+        norm_advantage = _cast1(norm_advantage)
+
         iter_learn_time = self.zero
-        actor_loss = init_loss
-        critic_loss = init_loss
+        actor_loss = self.zero
+        critic_loss = self.zero
 
         while iter_learn_time < self.iter_time:
             actor_loss += self.actor_train(actions, local_obs,

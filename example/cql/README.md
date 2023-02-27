@@ -24,7 +24,7 @@ Before running CQL, you should first install [MindSpore](https://www.mindspore.c
 This example uses the offline data provided by [d4rl](https://github.com/Farama-Foundation/d4rl) , you need to install d4rl:
 
 ```bash
-pip install git+https://github.com/rail-berkeley/d4rl@master#egg=d4rl
+pip install git+https://github.com/Farama-Foundation/d4rl@master#egg=d4rl
 ```
 
 - MindSpore >= 1.9.0

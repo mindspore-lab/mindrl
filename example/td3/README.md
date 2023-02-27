@@ -94,4 +94,4 @@ Average evaluate result is 7896.422, checkpoint file in ./ckpt/actor_net/actor_n
 
 ## Supported Platform
 
-TD3 algorithm supports GPU and CPU platform and achieves better performance in GPU environment.
+TD3 algorithm supports Ascend, GPU and CPU platform.

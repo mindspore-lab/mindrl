@@ -1,4 +1,4 @@
-# Copyright 2022 Huawei Technologies Co., Ltd
+# Copyright 2022-2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ DQN session.
 """
 from mindspore_rl.core import Session
 from mindspore_rl.utils.utils import update_config
-from mindspore_rl.utils.callback import CheckpointCallback, LossCallback, EvaluateCallback
+from mindspore_rl.utils.callback import CheckpointCallback, LossCallback, EvaluateCallback, TimeCallback
 from mindspore_rl.algorithm.dqn import config
 from mindspore import context
 from mindspore import dtype as mstype
@@ -42,5 +42,6 @@ class DQNSession(Session):
         ckpt_cb = CheckpointCallback(config.trainer_params.get('save_per_episode'),
                                      config.trainer_params.get('ckpt_path'))
         eval_cb = EvaluateCallback(config.trainer_params.get('eval_per_episode'))
-        cbs = [loss_cb, ckpt_cb, eval_cb]
+        time_cb = TimeCallback()
+        cbs = [loss_cb, ckpt_cb, eval_cb, time_cb]
         super().__init__(config.algorithm_config, None, params=params, callbacks=cbs)

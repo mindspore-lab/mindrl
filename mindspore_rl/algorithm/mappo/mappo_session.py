@@ -17,7 +17,7 @@ MAPPO session.
 """
 from mindspore_rl.core import Session
 from mindspore_rl.utils.utils import update_config
-from mindspore_rl.utils.callback import LossCallback
+from mindspore_rl.utils.callback import LossCallback, TimeCallback
 from mindspore_rl.algorithm.mappo import config
 
 
@@ -42,6 +42,7 @@ class MAPPOSession(Session):
         global_buffer_config['data_shape'] = [(env_num, agent_num * agent_num * 6)]
         global_buffer_config['data_type'] = [obs_dtype]
         loss_cb = LossCallback()
-        cbs = [loss_cb]
+        time_cb = TimeCallback()
+        cbs = [time_cb, loss_cb]
         params = config.trainer_params
         super().__init__(config.algorithm_config, None, params=params, callbacks=cbs)

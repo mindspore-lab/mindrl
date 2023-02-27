@@ -207,7 +207,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center">/</td>
         <td align="center">✔️</td>
         <td align="center">✔️</td>
-        <td align="center">/</td>
+        <td align="center">✔️</td>
         <td align="center"><a href="https://github.com/oxwhirl/smac/">SMAC</a></td>
     </tr>
     <tr>
@@ -227,7 +227,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center">✔️</td>
         <td align="center">✔️</td>
         <td align="center">✔️</td>
-        <td align="center">/</td>
+        <td align="center">✔️</td>
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/half_cheetah/">HalfCheetah-v2</a></td>
     </tr>
     <tr>
@@ -267,7 +267,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center">/</td>
         <td align="center">✔️</td>
         <td align="center">✔️</td>
-        <td align="center">/</td>
+        <td align="center">✔️</td>
         <td align="center"><a href="https://github.com/openai/multiagent-particle-envs">Simple Spread</a></td>
     </tr>
     <tr>
@@ -277,7 +277,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center">✔️</td>
         <td align="center">✔️</td>
         <td align="center">✔️</td>
-        <td align="center">/</td>
+        <td align="center">✔️</td>
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/half_cheetah/">HalfCheetah-v2</a></td>
     </tr>
     <tr>

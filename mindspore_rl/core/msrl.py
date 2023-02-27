@@ -99,7 +99,7 @@ class MSRL(nn.Cell):
         if deploy_config is not None:
             # Need to compute the number of process per worker.
             self.proc_num = deploy_config['worker_num']
-            self.distributed = deploy_config['distributed']
+            self.distributed = True
         self.init(alg_config)
 
     def _compulsory_items_check(self, config, compulsory_item, position):

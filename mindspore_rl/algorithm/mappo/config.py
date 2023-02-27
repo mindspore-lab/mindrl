@@ -16,9 +16,16 @@
 MAPPO config.
 """
 #pylint: disable=E0402
-from .mappo import MAPPOAgent, MAPPOActor, MAPPOLearner, MAPPOPolicy
+import mindspore as ms
+from mindspore import context
+
 from .mappo_replaybuffer import MAPPOReplayBuffer
 from .mpe_environment import MPEMultiEnvironment
+if context.get_context('device_target') in ['Ascend']:
+    from .mappo import MAPPOAgent, MAPPOActor, MAPPOLearner, MAPPOPolicy
+else:
+    from .mappo_vmap import MAPPOAgent, MAPPOActor, MAPPOLearner, MAPPOPolicy
+
 
 NUM_AGENT = 3
 collect_env_params = {'name': 'simple_spread', 'proc_num': 32, 'num': 128, 'num_agent': NUM_AGENT}
@@ -28,6 +35,7 @@ policy_params = {
     'state_space_dim': 0,
     'action_space_dim': 0,
     'hidden_size': 64,
+    'compute_type': ms.float32
 }
 
 learner_params = {

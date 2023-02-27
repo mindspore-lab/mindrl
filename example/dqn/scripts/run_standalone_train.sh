@@ -16,6 +16,7 @@
 
 script_self=$(readlink -f "$0")
 self_path=$(dirname "${script_self}")
+PRECISION="fp32"
 if [ $# == 0 ]; then
   DEVICE="Auto"
   EPISODE=1000
@@ -25,9 +26,14 @@ elif [ $# == 1 ]; then
 elif [ $# == 2 ]; then
   EPISODE=$1
   DEVICE=$2
+elif [ $# == 3 ]; then
+  EPISODE=$1
+  DEVICE=$2
+  PRECISION=$3
 else
-  echo "Usage: bash run_standalone_train.sh [CKPT_PATH](optional) [DEVICE_TARGET](optional)."
+  echo "Usage: bash run_standalone_train.sh [CKPT_PATH](optional) [DEVICE_TARGET](optional) [PRECISION](optional)."
   echo "Example: bash run_standalone_train.sh"
 fi
 export OMP_NUM_THREADS=10
-python -s ${self_path}/../train.py --episode $EPISODE --device_target=$DEVICE > dqn_train_log.txt 2>&1 &
+python -s ${self_path}/../train.py --episode $EPISODE --device_target=$DEVICE \
+--precision_mode=$PRECISION > dqn_train_log.txt 2>&1 &

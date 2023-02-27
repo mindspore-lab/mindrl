@@ -17,6 +17,7 @@ PPO training example.
 """
 
 #pylint: disable=C0413
+import os
 import argparse
 from mindspore_rl.algorithm.ppo import config
 from mindspore_rl.algorithm.ppo.ppo_trainer import PPOTrainer
@@ -43,6 +44,8 @@ def train(episode=options.episode):
         context.set_context(device_target=options.device_target)
     if context.get_context('device_target') in ['CPU']:
         context.set_context(enable_graph_kernel=True)
+    if context.get_context('device_target') in ['Ascend']:
+        os.environ['GRAPH_OP_RUN'] = "1"
 
     compute_type = mstype.float32 if options.precision_mode == 'fp32' else mstype.float16
     config.algorithm_config['policy_and_network']['params']['compute_type'] = compute_type
