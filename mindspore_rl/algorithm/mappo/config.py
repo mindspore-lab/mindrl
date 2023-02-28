@@ -20,7 +20,7 @@ import mindspore as ms
 from mindspore import context
 
 from .mappo_replaybuffer import MAPPOReplayBuffer
-from .mpe_environment import MPEMultiEnvironment
+from .mpe_environment import MultiAgentParticleEnvironment
 if context.get_context('device_target') in ['Ascend']:
     from .mappo import MAPPOAgent, MAPPOActor, MAPPOLearner, MAPPOPolicy
 else:
@@ -28,8 +28,8 @@ else:
 
 
 NUM_AGENT = 3
-collect_env_params = {'name': 'simple_spread', 'proc_num': 32, 'num': 128, 'num_agent': NUM_AGENT}
-eval_env_params = {'name': 'simple_spread', 'proc_num': 1, 'num': 1}
+collect_env_params = {'name': 'simple_spread', 'num_agent': NUM_AGENT, 'auto_reset': True, 'seed': 1}
+eval_env_params = {'name': 'simple_spread', 'num_agent': NUM_AGENT, 'auto_reset': True}
 
 policy_params = {
     'state_space_dim': 0,
@@ -92,11 +92,15 @@ algorithm_config = {
     },
 
     'collect_environment': {
-        'type': MPEMultiEnvironment,
+        'number': 128,
+        'num_parallel': 32,
+        'type': MultiAgentParticleEnvironment,
         'params': collect_env_params
     },
     'eval_environment': {
-        'type': MPEMultiEnvironment,
+        'number': 1,
+        'num_parallel': 1,
+        'type': MultiAgentParticleEnvironment,
         'params': eval_env_params
     },
 }

@@ -208,7 +208,7 @@ class MAPPOTrainer(Trainer):
             self.agent_act(1, self.samples)
 
             new_local_obs, rewards, dones = self.msrl.collect_environment.step(
-                (self.onehot_action).astype(ms.int32))
+                (self.concated_action.transpose(1, 0, 2)).astype(ms.int32))
 
             dones = self.reshape(
                 (1-dones).astype(ms.float32), (self.num_agent, 128, 1, 1))
