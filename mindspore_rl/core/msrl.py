@@ -200,7 +200,7 @@ class MSRL(nn.Cell):
         config['eval_environment']['params']['num_agent'] = num_agent
 
         if self.num_collect_env > 1:
-            collect_env = self._create_batch_env(config['eval_environment'], self.num_collect_env, collect_proc_num)
+            collect_env = self._create_batch_env(config['collect_environment'], self.num_collect_env, collect_proc_num)
             eval_env = self._create_batch_env(config['eval_environment'], num_eval_env, eval_proc_num)
         else:
             collect_env = self._create_instance(config['collect_environment'], None)

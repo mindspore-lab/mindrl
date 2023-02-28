@@ -219,7 +219,7 @@ class MAPPOTrainer(Trainer):
             ht_critic_list = self.stack_first(ht_critic_list)
 
             new_local_obs, rewards, dones = self.msrl.collect_environment.step(
-                (onehot_list).astype(ms.int32))
+                (action_list.transpose(1, 0, 2)).astype(ms.int32))
 
             dones = self.reshape(
                 (1-dones).astype(ms.float32), (self.num_agent, 128, 1, 1))

@@ -18,13 +18,12 @@
 #pylint: disable=W0212
 from multiprocessing import Queue
 import numpy as np
-
+import mindspore.nn as nn
 from mindspore.ops import operations as P
 from mindspore_rl.environment.env_process import EnvironmentProcess
-from mindspore_rl.environment import Environment
 
 
-class MultiEnvironmentWrapper(Environment):
+class MultiEnvironmentWrapper(nn.Cell):
     """
     The MultiEnvironmentWrapper is a wrapper for multi environment scenario. User implements
     their single environment class and set the environment number larger than 1 in configuration
