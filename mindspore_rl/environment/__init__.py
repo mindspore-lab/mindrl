@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2021-2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,8 +27,9 @@ from mindspore_rl.environment.multi_environment_wrapper import MultiEnvironmentW
 from mindspore_rl.environment.sc2_environment import StarCraft2Environment
 from mindspore_rl.environment.tic_tac_toe_environment import TicTacToeEnvironment
 from mindspore_rl.environment.dmc_environment import DeepMindControlEnvironment
+from mindspore_rl.environment.petting_zoo_mpe_environment import PettingZooMPEEnvironment
 
 __all__ = ["GymEnvironment", "MultiEnvironmentWrapper", "Environment", "Space", "MsEnvironment", "EnvironmentProcess",
-           "StarCraft2Environment", "TicTacToeEnvironment", "DeepMindControlEnvironment"]
+           "StarCraft2Environment", "TicTacToeEnvironment", "DeepMindControlEnvironment", "PettingZooMPEEnvironment"]
 
 ms_register('Tag', TagEnvironment)
