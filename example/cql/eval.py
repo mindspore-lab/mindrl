@@ -22,7 +22,7 @@ from mindspore_rl.algorithm.cql import CQLSession
 from mindspore import context
 
 parser = argparse.ArgumentParser(description='MindSpore Reinforcement CQL')
-parser.add_argument('--device_target', type=str, default='Auto', choices=['CPU', 'GPU', 'Auto'],
+parser.add_argument('--device_target', type=str, default='Auto', choices=['CPU', 'GPU', 'Ascend', 'Auto'],
                     help='Choose a device to run the cql example(Default: Auto).')
 parser.add_argument('--ckpt_path', type=str, default=None, help='The ckpt file in eval.')
 parser.add_argument('--env_yaml', type=str, default='../env_yaml/hopper-medium-expert-v0.yaml',

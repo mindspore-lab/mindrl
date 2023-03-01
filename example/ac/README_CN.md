@@ -66,4 +66,4 @@ Evaluate result is 170.300, checkpoint file in /path/ckpt/actor_net/actor_net_95
 
 ## 支持平台
 
-AC算法支持GPU和CPU。
+AC算法支持GPU, CPU 和 Ascend。

@@ -78,4 +78,4 @@ eval end
 
 ## Supported Platform
 
-IQL algorithm supports GPU and CPU platform.
+IQL algorithm supports GPU CPU and Ascend platform.

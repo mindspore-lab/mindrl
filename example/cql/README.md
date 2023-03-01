@@ -94,4 +94,4 @@ eval end
 
 ## Supported Platform
 
-CQL algorithm supports GPU and CPU platform.
+CQL algorithm supports GPU, CPU and Ascend platform.

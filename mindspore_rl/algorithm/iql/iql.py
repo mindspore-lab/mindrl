@@ -43,13 +43,15 @@ class IQLPolicyAndNetwork(SACPolicy):
                 model_list.append(hidden_act())
                 in_size = out_size
             self.model = nn.SequentialCell(model_list)
-            self.last_fc = nn.Dense(in_size, output_size)
+            self.last_fc = nn.Dense(in_size, output_size).to_float(compute_type)
+            self.cast = ops.Cast()
 
         def construct(self, obs):
             """predict state value"""
             x = obs
             y = self.model(x)
             y = self.last_fc(y)
+            y = self.cast(y, mindspore.float32)
             return y
 
     def __init__(self, params):
@@ -86,6 +88,8 @@ class IQLActor(Actor):
     def act(self, phase, state):
         '''act with environment'''
         _, _, logstd, mean_tanh = self.policy(state)
+        logstd = self.cast(logstd, mindspore.float32)
+        mean_tanh = self.cast(mean_tanh, mindspore.float32)
         logstd = self.sigmoid(logstd)
         logstd = self.min_ + logstd * (self.max_ - self.min_)
         std = logstd.exp()
@@ -124,6 +128,7 @@ class IQLLearner(Learner):
             self.one = Tensor(1.0, mindspore.float32)
             self.mse_loss = nn.MSELoss(reduction='none')
             self.sigmoid = ops.Sigmoid()
+            self.cast = ops.Cast()
             self.max_ = Tensor(0., mindspore.float32)
             self.min_ = Tensor(-6., mindspore.float32)
             self.alpha = Tensor([1e-20], mindspore.float32)
@@ -131,6 +136,8 @@ class IQLLearner(Learner):
         def sample(self, obs):
             '''sample an action'''
             _, _, logstd, act_mean = self.policy(obs)
+            logstd = self.cast(logstd, mindspore.float32)
+            act_mean = self.cast(act_mean, mindspore.float32)
             esp = ops.standard_normal(act_mean.shape)
             logstd = self.sigmoid(logstd)
             logstd = self.min_ + logstd * (self.max_ - self.min_)
@@ -171,11 +178,13 @@ class IQLLearner(Learner):
 
             self.softmax = ops.Softmax(axis=0)
             self.sigmoid = ops.Sigmoid()
+            self.cast = ops.Cast()
             self.max_ = Tensor(0., mindspore.float32)
             self.min_ = Tensor(-6., mindspore.float32)
 
         def get_std(self, obs):
             _, _, logstd, _ = self.policy(obs)
+            logstd = self.cast(logstd, mindspore.float32)
             logstd = self.sigmoid(logstd)
             logstd = self.min_ + logstd * (self.max_ - self.min_)
             std = logstd.exp()
@@ -195,6 +204,8 @@ class IQLLearner(Learner):
 
             # action distribution
             _, _, logstd, act_mean = self.policy(obs)
+            logstd = self.cast(logstd, mindspore.float32)
+            act_mean = self.cast(act_mean, mindspore.float32)
 
             logstd = self.sigmoid(logstd)
             logstd = self.min_ + logstd * (self.max_ - self.min_)

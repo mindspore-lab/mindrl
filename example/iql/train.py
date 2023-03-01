@@ -18,14 +18,18 @@ IQL training example.
 
 #pylint: disable=C0413
 import argparse
+from mindspore_rl.algorithm.iql import config
 from mindspore_rl.algorithm.iql.iql_trainer import IQLTrainer
 from mindspore_rl.algorithm.iql.iql_session import IQLSession
 from mindspore import context
+from mindspore import dtype as mstype
 
 parser = argparse.ArgumentParser(description='MindSpore Reinforcement IQL')
 parser.add_argument('--episode', type=int, default=500, help='total episode numbers.')
-parser.add_argument('--device_target', type=str, default='Auto', choices=['CPU', 'GPU', 'Auto'],
+parser.add_argument('--device_target', type=str, default='Auto', choices=['CPU', 'GPU', 'Ascend', 'Auto'],
                     help='Choose a device to run the iql example(Default: Auto).')
+parser.add_argument('--precision_mode', type=str, default='fp32', choices=['fp32', 'fp16'],
+                    help='Precision mode')
 parser.add_argument('--env_yaml', type=str, default='../env_yaml/walker2d-medium-v2.yaml',
                     help='Choose an environment yaml to update (Default: walker2d-medium-v2.yaml).')
 parser.add_argument('--algo_yaml', type=str, default=None,
@@ -37,7 +41,12 @@ def train(episode=options.episode):
     """start to train iql algorithm"""
     if options.device_target != 'Auto':
         context.set_context(device_target=options.device_target)
-    context.set_context(enable_graph_kernel=True)
+    if context.get_context('device_target') in ['CPU', 'GPU']:
+        context.set_context(enable_graph_kernel=True)
+    compute_type = mstype.float32 if options.precision_mode == 'fp32' else mstype.float16
+    config.algorithm_config['policy_and_network']['params']['compute_type'] = compute_type
+    if compute_type == mstype.float16 and options.device_target != 'Ascend':
+        raise ValueError("Fp16 mode is supported by Ascend backend.")
     context.set_context(mode=context.GRAPH_MODE)
     iql_session = IQLSession(options.env_yaml, options.algo_yaml)
     iql_session.run(class_type=IQLTrainer, episode=episode)

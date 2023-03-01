@@ -86,4 +86,4 @@ eval end
 
 ## Supported Platform
 
-AWAC algorithm supports GPU and CPU platform.
+AWAC algorithm supports GPU, CPU and Ascend platform.
