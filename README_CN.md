@@ -209,7 +209,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center">✔️</td>
         <td align="center">✔️</td>
         <td align="center">/</td>
-        <td align="center"><a href="https://github.com/oxwhirl/smac/">SMAC</a></td>
+        <td align="center"><a href="https://github.com/oxwhirl/smac/">SMAC</a>, <a href="https://github.com/openai/multiagent-particle-envs">Simple Spread</a></td>
     </tr>
     <tr>
         <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/sac">SAC</a></td>

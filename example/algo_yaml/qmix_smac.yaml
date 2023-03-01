@@ -1,0 +1,5 @@
+learner_class: mindspore_rl.algorithm.qmix.qmix
+learner_type: QMIXSMACLearner
+policy_params: {'env_name': 'StarCraft2Environment'}
+learner_params: {'lr': 0.0005}
+trainer_params: {'save_per_episode': 50}

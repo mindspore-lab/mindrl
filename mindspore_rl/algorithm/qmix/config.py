@@ -1,4 +1,4 @@
-# Copyright 2022 Huawei Technologies Co., Ltd
+# Copyright 2022-2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,15 +18,14 @@ QMIX config.
 
 # pylint: disable=E0402
 import mindspore
-from mindspore_rl.environment import StarCraft2Environment
+from mindspore_rl.algorithm.mappo.mpe_environment import MultiAgentParticleEnvironment
 from mindspore_rl.core.uniform_replay_buffer import UniformReplayBuffer
-from .qmix import QMIXActor, QMIXLearner, QMIXPolicy
+from .qmix import QMIXActor, QMIXMPELearner, QMIXPolicy
 
 BATCH_SIZE = 32
-collect_env_params = {'sc2_args': {'map_name': '2s3z',
-                                   'seed': 1}}
-
-eval_env_params = {'sc2_args': {'map_name': '2s3z'}}
+NUM_AGENT = 3
+collect_env_params = {'name': 'simple_spread', 'num_agent': NUM_AGENT, 'seed': 1}
+eval_env_params = {'name': 'simple_spread', 'num_agent': NUM_AGENT}
 
 policy_params = {
     'epsi_high': 1.0,
@@ -40,10 +39,11 @@ policy_params = {
     'time_length': 50000,
     'batch_size': BATCH_SIZE,
     'compute_type': mindspore.float32,
+    'env_name': "MultiAgentParticleEnvironment",
 }
 
 learner_params = {
-    'lr': 0.0005,
+    'lr': 7e-4,
     'gamma': 0.99,
     'optim_alpha': 0.99,
     'epsilon': 1e-5,
@@ -53,7 +53,7 @@ learner_params = {
 trainer_params = {
     'batch_size': BATCH_SIZE,
     'ckpt_path': './ckpt',
-    'save_per_episode': 50,
+    'save_per_episode': 5000,
 }
 
 algorithm_config = {
@@ -64,9 +64,9 @@ algorithm_config = {
     },
     'learner': {
         'number': 1,
-        'type': QMIXLearner,
+        'type': QMIXMPELearner,
         'params': learner_params,
-        'networks': ['policy_net', 'mixer_net']
+        'networks': ['policy_net', 'mixer_net', 'target_policy_net', 'target_mixer_net']
     },
     'policy_and_network': {
         'type': QMIXPolicy,
@@ -74,12 +74,12 @@ algorithm_config = {
     },
     'collect_environment': {
         'number': 1,
-        'type': StarCraft2Environment,
+        'type': MultiAgentParticleEnvironment,
         'params': collect_env_params
     },
     'eval_environment': {
         'number': 1,
-        'type': StarCraft2Environment,
+        'type': MultiAgentParticleEnvironment,
         'params': eval_env_params
     },
     'replay_buffer': {

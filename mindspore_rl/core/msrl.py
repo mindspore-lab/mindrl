@@ -1,4 +1,4 @@
-# Copyright 2021-2022 Huawei Technologies Co., Ltd
+# Copyright 2021-2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -195,9 +195,6 @@ class MSRL(nn.Cell):
             config['collect_environment']['params'] = {}
         if not config['eval_environment'].get('params'):
             config['eval_environment']['params'] = {}
-
-        config['collect_environment']['params']['num_agent'] = num_agent
-        config['eval_environment']['params']['num_agent'] = num_agent
 
         if self.num_collect_env > 1:
             collect_env = self._create_batch_env(config['collect_environment'], self.num_collect_env, collect_proc_num)
