@@ -75,4 +75,4 @@ eval end
 
 ## 支持的平台
 
-IQL算法支持CPU, GPU。
+IQL算法支持CPU, GPU 和 Ascend。

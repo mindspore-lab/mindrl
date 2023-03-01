@@ -94,4 +94,4 @@ eval end
 
 ## 支持平台
 
-CQL算法支持CPU, GPU。
+CQL算法支持CPU, GPU, Ascend。

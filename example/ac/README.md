@@ -66,4 +66,4 @@ Evaluate result is 170.300, checkpoint file in /path/ckpt/actor_net/actor_net_95
 
 ## Supported Platform
 
-AC algorithm supports GPU and CPU platform.
+AC algorithm supports GPU, CPU and Ascend platform.

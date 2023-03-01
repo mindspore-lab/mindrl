@@ -95,6 +95,7 @@ class AWACLearner(Learner):
             self.policy = policy
             self.gamma = gamma
             self.dist = msd.Normal()
+            self.cast = ops.Cast()
             self.one = Tensor(1.0, mindspore.float32)
             self.mse_loss = nn.MSELoss(reduction='none')
             self.sigmoid = ops.Sigmoid()
@@ -105,6 +106,8 @@ class AWACLearner(Learner):
         def sample(self, obs):
             '''sample an action'''
             _, _, logstd, act_mean = self.policy(obs)
+            logstd = self.cast(logstd, mindspore.float32)
+            act_mean = self.cast(act_mean, mindspore.float32)
             esp = ops.standard_normal(act_mean.shape)
             logstd = self.sigmoid(logstd)
             logstd = self.min_ + logstd * (self.max_ - self.min_)
@@ -145,6 +148,7 @@ class AWACLearner(Learner):
             self.dist = msd.Normal()
             self.softmax = ops.Softmax(axis=0)
             self.sigmoid = ops.Sigmoid()
+            self.cast = ops.Cast()
             self.max_ = Tensor(0., mindspore.float32)
             self.min_ = Tensor(-6., mindspore.float32)
 
@@ -159,6 +163,8 @@ class AWACLearner(Learner):
             '''Calculate actor loss'''
             # sample
             _, _, logstd, mean_tanh = self.policy(obs)
+            logstd = self.cast(logstd, mindspore.float32)
+            mean_tanh = self.cast(mean_tanh, mindspore.float32)
             esp = ops.standard_normal(mean_tanh.shape)
 
             logstd = self.sigmoid(logstd)

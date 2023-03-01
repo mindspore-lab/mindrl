@@ -177,7 +177,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center">/</td>
         <td align="center">✔️</td>
         <td align="center">✔️</td>
-        <td align="center">/</td>
+        <td align="center">✔️</td>
         <td align="center"><a href="https://www.gymlibrary.dev/environments/classic_control/cart_pole/">CartPole-v0</a></td>
     </tr>
     <tr>
@@ -257,7 +257,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center">✔️</td>
         <td align="center">✔️</td>
         <td align="center">✔️</td>
-        <td align="center">/</td>
+        <td align="center">✔️</td>
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/hopper">Hopper-v0</a></td>
     </tr>
     <tr>
@@ -297,7 +297,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center">✔️</td>
         <td align="center">✔️</td>
         <td align="center">✔️</td>
-        <td align="center">/</td>
+        <td align="center">✔️</td>
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/ant">Ant-v2</a></td>
     </tr>
     <tr>
@@ -317,7 +317,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center">✔️</td>
         <td align="center">✔️</td>
         <td align="center">✔️</td>
-        <td align="center">/</td>
+        <td align="center">✔️</td>
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/walker2d/">Walker2d-v2</a></td>
     </tr>
 </table>

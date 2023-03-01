@@ -86,4 +86,4 @@ eval end
 
 ## 支持平台
 
-AWAC算法支持CPU, GPU。
+AWAC算法支持CPU, GPU, Ascend。
