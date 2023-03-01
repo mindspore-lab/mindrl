@@ -16,7 +16,6 @@
 The PettingZooMPEEnvironment base class.
 """
 
-import pettingzoo.mpe as mpe
 from gym import spaces
 import numpy as np
 from mindspore.ops import operations as P
@@ -56,12 +55,18 @@ class PettingZooMPEEnvironment(Environment):
 
     def __init__(self, params, env_id=0):
         super(PettingZooMPEEnvironment, self).__init__()
+        try:
+            import pettingzoo.mpe as mpe
+        except ImportError as error:
+            raise ImportError(
+                "pettingzoo[mpe] is not installed.\n"
+                "please pip install pettingzoo[mpe]==1.17.0"
+            ) from error
         self.params = params
         self._name = params.get('name')
         self._num = params.get('num')
         self._continuous_actions = params.get('continuous_actions')
         self._seed = params.get('seed') + env_id * 1000
-
         supported_env_list = ['simple_spread']
         assert self._name in supported_env_list, 'Env {} not supported, choose from {}'.format(
             self._name, supported_env_list)
