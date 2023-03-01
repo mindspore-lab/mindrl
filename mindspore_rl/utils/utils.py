@@ -1,4 +1,4 @@
-# Copyright 2022 Huawei Technologies Co., Ltd
+# Copyright 2022-2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,21 +22,22 @@ import yaml
 
 def _update_dict(dest, src) -> None:
     """update config dict"""
-    for key in src:
-        if key in dest.keys() and isinstance(dest.get(key), dict):
-            if isinstance(src.get(key), dict):
-                for v in src.get(key):
-                    if isinstance(src.get(key).get(v), dict) and v in dest.get(key) and \
-                        isinstance(dest.get(key).get(v), dict):
-                        _update_dict(dest[key], src[key])
-                    elif isinstance(dest.get(key).get(v), dict):
-                        dest[key][v].update(src.get(key).get(v))
-                    else:
-                        dest[key][v] = src.get(key).get(v)
+    if src is not None:
+        for key in src:
+            if key in dest.keys() and isinstance(dest.get(key), dict):
+                if isinstance(src.get(key), dict):
+                    for v in src.get(key):
+                        if isinstance(src.get(key).get(v), dict) and v in dest.get(key) and \
+                                isinstance(dest.get(key).get(v), dict):
+                            _update_dict(dest[key], src[key])
+                        elif isinstance(dest.get(key).get(v), dict):
+                            dest[key][v].update(src.get(key).get(v))
+                        else:
+                            dest[key][v] = src.get(key).get(v)
+                else:
+                    dest[key].update(src[key])
             else:
-                dest[key].update(src[key])
-        else:
-            dest[key] = src[key]
+                dest[key] = src[key]
 
 
 def update_config(config, env_yaml, algo_yaml) -> None:
@@ -54,6 +55,8 @@ def update_config(config, env_yaml, algo_yaml) -> None:
                 data = yaml.safe_load(f)
                 config.collect_env_params['name'] = data.get('env')
                 config.eval_env_params['name'] = data.get('env')
+                _update_dict(config.collect_env_params, data.get('collect_env_params'))
+                _update_dict(config.eval_env_params, data.get('eval_env_params'))
                 if data.get('env_class') and data.get('env_type'):
                     try:
                         env_class = import_module(data.get('env_class'))
@@ -77,6 +80,13 @@ def update_config(config, env_yaml, algo_yaml) -> None:
                     _update_dict(config.trainer_params, data.get('trainer_params'))
                 if data.get('learner_params'):
                     _update_dict(config.learner_params, data.get('learner_params'))
+                    if data.get('learner_class') and data.get('learner_type'):
+                        try:
+                            learner_class = import_module(data.get('learner_class'))
+                            learner_type = getattr(learner_class, data.get('learner_type'))
+                            config.algorithm_config['learner']['type'] = learner_type
+                        except:
+                            raise ValueError(f"Import {data.get('learner_class')} failed")
         else:
             print(f"File {algo_yaml} is not exiddsts.")
             return

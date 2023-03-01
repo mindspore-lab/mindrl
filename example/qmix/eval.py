@@ -16,7 +16,6 @@
 qmix eval example.
 """
 import argparse
-from mindspore_rl.algorithm.qmix.qmix_trainer import QMIXTrainer
 from mindspore_rl.algorithm.qmix import config
 from mindspore_rl.algorithm.qmix.qmix_session import QMIXSession
 from mindspore import context
@@ -38,6 +37,13 @@ def qmix_eval():
     context.set_context(mode=context.GRAPH_MODE)
     qmix_session = QMIXSession(args.env_yaml, args.algo_yaml)
     config.trainer_params.update({'ckpt_path': args.ckpt_path})
+    env_name = qmix_session.msrl.collect_environment.__class__.__name__
+    if env_name == "MultiAgentParticleEnvironment":
+        from mindspore_rl.algorithm.qmix.qmix_mpe_trainer import QMIXTrainer
+    elif env_name == "StarCraft2Environment":
+        from mindspore_rl.algorithm.qmix.qmix_smac_trainer import QMIXTrainer
+    else:
+        raise ValueError(f"The input environment {env_name} does not support yet")
     qmix_session.run(class_type=QMIXTrainer, is_train=False)
 
 
