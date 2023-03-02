@@ -2,7 +2,7 @@
 
 [View English](./README.md)
 
-[![Python Version](https://img.shields.io/badge/python-3.7%2F3.8%2F3.9-green)](https://pypi.org/project/mindspore-rl/) [![LICENSE](https://img.shields.io/github/license/mindspore-ai/mindspore.svg?style=flat-square)](https://github.com/mindspore-ai/reinforcement/blob/master/LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://gitee.com/mindspore/reinforcement/pulls)
+[![Python Version](https://img.shields.io/badge/python-3.7%2F3.8%2F3.9-green)](https://pypi.org/project/mindspore-rl/) [![LICENSE](https://img.shields.io/github/license/mindspore-ai/mindspore.svg?style=flat-square)](https://github.com/mindspore-ai/reinforcement/blob/master/LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/mindspore-lab/mindrl/pulls)
 
 <!-- TOC -->
 
@@ -67,21 +67,21 @@ pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/{MindSpore_versi
 
 ### 源码编译安装
 
-下载[源码](https://gitee.com/mindspore/reinforcement)，下载后进入`reinforcement`目录。
+下载[源码](https://github.com/mindspore-lab/mindrl)，下载后进入`mindrl`目录。
 
 ```shell
-git clone https://gitee.com/mindspore/reinforcement.git
-cd reinforcement/
+git clone https://github.com/mindspore-lab/mindrl.git
+cd mindrl/
 bash build.sh
 pip install output/mindspore_rl-{Reinforcement_version}-py3-none-any.whl
 ```
 
-其中，`build.sh`为`reinforcement`目录下的编译脚本文件。`{Reinforcement_version}`表示MindSpore Reinforcement版本号。
+其中，`build.sh`为`mindrl`目录下的编译脚本文件。`{Reinforcement_version}`表示MindSpore Reinforcement版本号。
 
 安装依赖项
 
 ```shell
-cd reinforcement && pip install requirements.txt
+cd mindrl && pip install requirements.txt
 ```
 
 ### 验证是否成功安装
@@ -94,19 +94,19 @@ import mindspore_rl
 
 ## 快速入门
 
-MindSpore Reinforcement的算法示例位于`reinforcement/example/`下，以一个简单的算法[Deep Q-Learning (DQN)](https://www.mindspore.cn/reinforcement/docs/zh-CN/master/dqn.html) 示例，演示MindSpore Reinforcement如何使用。
+MindSpore Reinforcement的算法示例位于`mindrl/example/`下，以一个简单的算法[Deep Q-Learning (DQN)](https://www.mindspore.cn/reinforcement/docs/zh-CN/master/dqn.html) 示例，演示MindSpore Reinforcement如何使用。
 
 第一种开箱即用方式，使用脚本文件直接运行:
 
 ```shell
-cd reinforcement/example/dqn/scripts
+cd mindrl/example/dqn/scripts
 bash run_standalone_train.sh
 ```
 
 第二种方式，直接使用`config.py`和`train.py`，可以更灵活地修改配置：
 
 ```shell
-cd reinforcement/example/dqn
+cd mindrl/example/dqn
 python train.py --episode 1000 --device_target GPU
 ```
 
@@ -152,7 +152,7 @@ Evaluate for episode 10 total rewards is 9.600
         <th align="center">CPU</th><th align="center">GPU</th><th align="center">Ascend</th>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/dqn">DQN</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/dqn">DQN</a></td>
         <td align="center">>= 0.1</td>
         <td align="center">✔️</td>
         <td align="center">/</td>
@@ -162,7 +162,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center"><a href="https://www.gymlibrary.dev/environments/classic_control/cart_pole/">CartPole-v0</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/ppo">PPO</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/ppo">PPO</a></td>
         <td align="center">>= 0.1</td>
         <td align="center">/</td>
         <td align="center">✔️</td>
@@ -172,7 +172,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/half_cheetah/">HalfCheetah-v2</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/ac">AC</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/ac">AC</a></td>
         <td align="center">>= 0.1</td>
         <td align="center">✔️</td>
         <td align="center">/</td>
@@ -182,7 +182,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center"><a href="https://www.gymlibrary.dev/environments/classic_control/cart_pole/">CartPole-v0</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/a2c">A2C</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/a2c">A2C</a></td>
         <td align="center">>= 0.2</td>
         <td align="center">✔️</td>
         <td align="center">/</td>
@@ -192,7 +192,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center"><a href="https://www.gymlibrary.dev/environments/classic_control/cart_pole/">CartPole-v0</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/ddpg">DDPG</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/ddpg">DDPG</a></td>
         <td align="center">>= 0.3</td>
         <td align="center">/</td>
         <td align="center">✔️</td>
@@ -202,7 +202,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/half_cheetah/">HalfCheetah-v2</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/qmix">QMIX</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/qmix">QMIX</a></td>
         <td align="center">>= 0.5</td>
         <td align="center">✔️</td>
         <td align="center">/</td>
@@ -212,7 +212,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center"><a href="https://github.com/oxwhirl/smac/">SMAC</a>, <a href="https://github.com/openai/multiagent-particle-envs">Simple Spread</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/sac">SAC</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/sac">SAC</a></td>
         <td align="center">>= 0.5</td>
         <td align="center">/</td>
         <td align="center">✔️</td>
@@ -222,7 +222,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/half_cheetah/">HalfCheetah-v2</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/td3">TD3</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/td3">TD3</a></td>
         <td align="center">>= 0.6</td>
         <td align="center">/</td>
         <td align="center">✔️</td>
@@ -232,7 +232,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/half_cheetah/">HalfCheetah-v2</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/c51">C51</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/c51">C51</a></td>
         <td align="center">>= 0.6</td>
         <td align="center">✔️</td>
         <td align="center">/</td>
@@ -242,7 +242,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center"><a href="https://www.gymlibrary.dev/environments/classic_control/cart_pole/">CartPole-v0</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/a3c">A3C</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/a3c">A3C</a></td>
         <td align="center">>= 0.6</td>
         <td align="center">✔️</td>
         <td align="center">/</td>
@@ -252,7 +252,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center"><a href="https://www.gymlibrary.dev/environments/classic_control/cart_pole/">CartPole-v0</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/cql">CQL</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/cql">CQL</a></td>
         <td align="center">>= 0.6</td>
         <td align="center">/</td>
         <td align="center">✔️</td>
@@ -262,7 +262,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/hopper">Hopper-v0</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/mappo">MAPPO</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/mappo">MAPPO</a></td>
         <td align="center">>= 0.6</td>
         <td align="center">✔️</td>
         <td align="center">/</td>
@@ -272,7 +272,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center"><a href="https://github.com/openai/multiagent-particle-envs">Simple Spread</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/gail">GAIL</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/gail">GAIL</a></td>
         <td align="center">>= 0.6</td>
         <td align="center">/</td>
         <td align="center">✔️</td>
@@ -282,7 +282,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/half_cheetah/">HalfCheetah-v2</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/mcts">MCTS</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/mcts">MCTS</a></td>
         <td align="center">>= 0.6</td>
         <td align="center">✔️</td>
         <td align="center">/</td>
@@ -292,7 +292,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center"><a href="https://gitee.com/mindspore/reinforcement/blob/master/mindspore_rl/environment/tic_tac_toe_environment.py">Tic-Tac-Toe</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/awac">AWAC</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/awac">AWAC</a></td>
         <td align="center">>= 0.6</td>
         <td align="center">/</td>
         <td align="center">✔️</td>
@@ -302,7 +302,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/ant">Ant-v2</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/dreamer">Dreamer</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/dreamer">Dreamer</a></td>
         <td align="center">>= 0.6</td>
         <td align="center">/</td>
         <td align="center">✔️</td>
@@ -312,7 +312,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center"><a href="https://github.com/deepmind/dm_control">Walker-walk</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/iql">IQL</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/iql">IQL</a></td>
         <td align="center">>= 0.6</td>
         <td align="center">/</td>
         <td align="center">✔️</td>
@@ -321,13 +321,23 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center">✔️</td>
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/walker2d/">Walker2d-v2</a></td>
     </tr>
+    <tr>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/maddpg">MADDPG</a></td>
+        <td align="center">>= 0.6</td>
+        <td align="center">✔️</td>
+        <td align="center">/</td>
+        <td align="center">✔️</td>
+        <td align="center">✔️</td>
+        <td align="center">✔️</td>
+        <td align="center"><a href="https://pettingzoo.farama.org/environments/mpe/simple_spread/">simple_spread</a></td>
+    </tr>
 </table>
 
 ### 环境
 
 强化学习领域中，智能体与环境交互过程中，学习策略来使得数值化的收益信号最大化。“环境”作为待解决的问题，是强化学习领域中重要的要素。
 
-目前强化学习使用的环境种类繁多：[Mujoco](https://github.com/deepmind/mujoco)、[MPE](https://github.com/openai/multiagent-particle-envs)、[Atari](https://github.com/gsurma/atari)、[PySC2](https://www.github.com/deepmind/pysc2)、[SMAC](https://github/oxwhirl/smac)、[TORCS](https://github.com/ugo-nama-kun/gym_torcs)、[Isaac](https://github.com/NVIDIA-Omniverse/IsaacGymEnvs)等，目前MindSpore Reinforcement接入了`Gym`、`SMAC`两个环境，后续随着算法的丰富，还会逐渐接入更多的环境。
+目前强化学习使用的环境种类繁多：[Mujoco](https://github.com/deepmind/mujoco)、[MPE](https://github.com/openai/multiagent-particle-envs)、[Atari](https://github.com/gsurma/atari)、[PySC2](https://www.github.com/deepmind/pysc2)、[SMAC](https://github/oxwhirl/smac)、[TORCS](https://github.com/ugo-nama-kun/gym_torcs)、[Isaac](https://github.com/NVIDIA-Omniverse/IsaacGymEnvs)等，目前MindSpore Reinforcement接入了`Gym`、`SMAC`，`MPE`, `Mujoco`等环境，后续随着算法的丰富，还会逐渐接入更多的环境。
 
 <center>
 <img src=docs/images/environment-uml.png width=500 height=350></center>
@@ -352,21 +362,21 @@ Evaluate for episode 10 total rewards is 9.600
         <th align="center">CPU</th><th align="center">GPU</th><th align="center">Ascend</th>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/blob/master/mindspore_rl/core/uniform_replay_buffer.py">UniformReplayBuffer</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/core/uniform_replay_buffer.py">UniformReplayBuffer</a></td>
         <td align="left">1 FIFO先进先出 <br>2 支持batch 输入</a></td>
         <td align="center">✔️ </td>
         <td align="center">✔️ </td>
         <td align="center">/</td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/blob/master/mindspore_rl/core/priority_replay_buffer.py#L25">PriorityReplayBuffer</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/core/priority_replay_buffer.py#L25">PriorityReplayBuffer</a></td>
         <td align="left">1 proportional-based优先级策略 <br>2 Sum Tree提升采样效率</a></td>
         <td align="center">✔️ </td>
         <td align="center">✔️ </td>
         <td align="center">✔️ </td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/blob/master/mindspore_rl/core/reservoir_replay_buffer.py#L24">ReservoirReplayBuffer</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/core/reservoir_replay_buffer.py#L24">ReservoirReplayBuffer</a></td>
         <td align="left">采用无偏采样</a></td>
         <td align="center">✔️ </td>
         <td align="center">✔️ </td>
@@ -388,7 +398,7 @@ MindSpore Reinforcement初始版本包含了一个稳定的API， 用于实现�
 
 - [MindSpore Slack](https://join.slack.com/t/mindspore/shared_invite/zt-dgk65rli-3ex4xvS4wHX7UDmsQmfu8w) 开发者交流平台。
 - [MindSpore 论坛](https://bbs.huaweicloud.com/forum/forum-1076-1.html) 欢迎发帖。
-- [Reinforcement issues](https://gitee.com/mindspore/reinforcement/issues) 欢迎提交问题。
+- [Reinforcement issues](https://github.com/mindspore-lab/mindrl/issues) 欢迎提交问题。
 
 ## 贡献
 

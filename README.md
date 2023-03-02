@@ -2,7 +2,7 @@
 
 [查看中文](./README_CN.md)
 
-[![Python Version](https://img.shields.io/badge/python-3.7%2F3.8%2F3.9-green)](https://pypi.org/project/mindspore-rl/) [![LICENSE](https://img.shields.io/github/license/mindspore-ai/mindspore.svg?style=flat-square)](https://github.com/mindspore-ai/reinforcement/blob/master/LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://gitee.com/mindspore/reinforcement/pulls)
+[![Python Version](https://img.shields.io/badge/python-3.7%2F3.8%2F3.9-green)](https://pypi.org/project/mindspore-rl/) [![LICENSE](https://img.shields.io/github/license/mindspore-ai/mindspore.svg?style=flat-square)](https://github.com/mindspore-ai/reinforcement/blob/master/LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/mindspore-lab/mindrl/pulls)
 
 <!-- TOC -->
 
@@ -66,21 +66,21 @@ pip install  https://ms-release.obs.cn-north-4.myhuaweicloud.com/{MindSpore_vers
 
 ### Installing from source code
 
-Download [source code](https://gitee.com/mindspore/reinforcement), then enter the `reinforcement` directory.
+Download [source code](https://github.com/mindspore-lab/mindrl), then enter the `mindrl` directory.
 
 ```shell
-git clone https://gitee.com/mindspore/reinforcement.git
-cd reinforcement/
+git clone https://github.com/mindspore-lab/mindrl.git
+cd mindrl/
 bash build.sh
 pip install output/mindspore_rl-{Reinforcement_version}-py3-none-any.whl
 ```
 
-`build.sh` is the compiling script in `reinforcement` directory. `Reinforcement_version` is the version of MindSpore Reinforcement.
+`build.sh` is the compiling script in `mindrl` directory. `Reinforcement_version` is the version of MindSpore Reinforcement.
 
 Install dependencies
 
 ```shell
-cd reinforcement && pip install requirements.txt
+cd mindrl && pip install requirements.txt
 ```
 
 ### Verification
@@ -151,7 +151,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <th align="center">CPU</th><th align="center">GPU</th><th align="center">Ascend</th>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/dqn">DQN</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/dqn">DQN</a></td>
         <td align="center">>= 0.1</td>
         <td align="center">✔️</td>
         <td align="center">/</td>
@@ -161,7 +161,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center"><a href="https://www.gymlibrary.dev/environments/classic_control/cart_pole/">CartPole-v0</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/ppo">PPO</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/ppo">PPO</a></td>
         <td align="center">>= 0.1</td>
         <td align="center">/</td>
         <td align="center">✔️</td>
@@ -171,7 +171,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/half_cheetah/">HalfCheetah-v2</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/ac">AC</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/ac">AC</a></td>
         <td align="center">>= 0.1</td>
         <td align="center">✔️</td>
         <td align="center">/</td>
@@ -181,7 +181,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center"><a href="https://www.gymlibrary.dev/environments/classic_control/cart_pole/">CartPole-v0</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/a2c">A2C</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/a2c">A2C</a></td>
         <td align="center">>= 0.2</td>
         <td align="center">✔️</td>
         <td align="center">/</td>
@@ -191,7 +191,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center"><a href="https://www.gymlibrary.dev/environments/classic_control/cart_pole/">CartPole-v0</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/ddpg">DDPG</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/ddpg">DDPG</a></td>
         <td align="center">>= 0.3</td>
         <td align="center">/</td>
         <td align="center">✔️</td>
@@ -201,7 +201,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/half_cheetah/">HalfCheetah-v2</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/qmix">QMIX</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/qmix">QMIX</a></td>
         <td align="center">>= 0.5</td>
         <td align="center">✔️</td>
         <td align="center">/</td>
@@ -211,7 +211,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center"><a href="https://github.com/oxwhirl/smac/">SMAC</a>, <a href="https://github.com/openai/multiagent-particle-envs">Simple Spread</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/sac">SAC</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/sac">SAC</a></td>
         <td align="center">>= 0.5</td>
         <td align="center">/</td>
         <td align="center">✔️</td>
@@ -221,7 +221,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/half_cheetah/">HalfCheetah-v2</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/td3">TD3</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/td3">TD3</a></td>
         <td align="center">>= 0.6</td>
         <td align="center">/</td>
         <td align="center">✔️</td>
@@ -231,7 +231,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/half_cheetah/">HalfCheetah-v2</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/c51">C51</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/c51">C51</a></td>
         <td align="center">>= 0.6</td>
         <td align="center">✔️</td>
         <td align="center">/</td>
@@ -241,7 +241,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center"><a href="https://www.gymlibrary.dev/environments/classic_control/cart_pole/">CartPole-v0</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/a3c">A3C</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/a3c">A3C</a></td>
         <td align="center">>= 0.6</td>
         <td align="center">✔️</td>
         <td align="center">/</td>
@@ -251,7 +251,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center"><a href="https://www.gymlibrary.dev/environments/classic_control/cart_pole/">CartPole-v0</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/cql">CQL</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/cql">CQL</a></td>
         <td align="center">>= 0.6</td>
         <td align="center">/</td>
         <td align="center">✔️</td>
@@ -261,7 +261,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/hopper">Hopper-v0</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/mappo">MAPPO</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/mappo">MAPPO</a></td>
         <td align="center">>= 0.6</td>
         <td align="center">✔️</td>
         <td align="center">/</td>
@@ -271,7 +271,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center"><a href="https://github.com/openai/multiagent-particle-envs">Simple Spread</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/gail">GAIL</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/gail">GAIL</a></td>
         <td align="center">>= 0.6</td>
         <td align="center">/</td>
         <td align="center">✔️</td>
@@ -281,7 +281,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/half_cheetah/">HalfCheetah-v2</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/mcts">MCTS</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/mcts">MCTS</a></td>
         <td align="center">>= 0.6</td>
         <td align="center">✔️</td>
         <td align="center">/</td>
@@ -291,7 +291,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center"><a href="https://gitee.com/mindspore/reinforcement/blob/master/mindspore_rl/environment/tic_tac_toe_environment.py">Tic-Tac-Toe</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/awac">AWAC</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/awac">AWAC</a></td>
         <td align="center">>= 0.6</td>
         <td align="center">/</td>
         <td align="center">✔️</td>
@@ -301,7 +301,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/ant">Ant-v2</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/dreamer">Dreamer</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/dreamer">Dreamer</a></td>
         <td align="center">>= 0.6</td>
         <td align="center">/</td>
         <td align="center">✔️</td>
@@ -311,7 +311,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center"><a href="https://github.com/deepmind/dm_control">Walker-walk</a></td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/tree/master/example/iql">IQL</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/iql">IQL</a></td>
         <td align="center">>= 0.6</td>
         <td align="center">/</td>
         <td align="center">✔️</td>
@@ -320,13 +320,23 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center">✔️</td>
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/walker2d/">Walker2d-v2</a></td>
     </tr>
+    <tr>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/maddpg">MADDPG</a></td>
+        <td align="center">>= 0.6</td>
+        <td align="center">✔️</td>
+        <td align="center">/</td>
+        <td align="center">✔️</td>
+        <td align="center">✔️</td>
+        <td align="center">✔️</td>
+        <td align="center"><a href="https://pettingzoo.farama.org/environments/mpe/simple_spread/">simple_spread</a></td>
+    </tr>
 </table>
 
 ### Environment
 
 In the field of reinforcement learning, during the interaction between the agent and the environment, the learning strategy maximizes the numerical benefit signal. As a problem to be solved, environment is an important element in reinforcement learning.
 
-At present, there are many kinds of environments used for reinforcement learning:[Mujoco](https://github.com/deepmind/mujoco)、[MPE](https://github.com/openai/multiagent-particle-envs)、[Atari](https://github.com/gsurma/atari)、[PySC2](https://www.github.com/deepmind/pysc2)、[SMAC](https://github/oxwhirl/smac)、[TORCS](https://github.com/ugo-nama-kun/gym_torcs)、[Isaac](https://github.com/NVIDIA-Omniverse/IsaacGymEnvs) etc. At present, MindSpore Reinforcement has access to both `Gym` and `Smac` environments. With the enrichment of algorithms, it will gradually access more environments.
+At present, there are many kinds of environments used for reinforcement learning:[Mujoco](https://github.com/deepmind/mujoco)、[MPE](https://github.com/openai/multiagent-particle-envs)、[Atari](https://github.com/gsurma/atari)、[PySC2](https://www.github.com/deepmind/pysc2)、[SMAC](https://github/oxwhirl/smac)、[TORCS](https://github.com/ugo-nama-kun/gym_torcs)、[Isaac](https://github.com/NVIDIA-Omniverse/IsaacGymEnvs) etc. At present, MindSpore Reinforcement has access to `Gym`, `Smac`, `MPE`, `Mujoco` environments. With the enrichment of algorithms, it will gradually access more environments.
 
 <center>
 <img src=docs/images/environment-uml.png width=500 height=350></center>
@@ -351,21 +361,21 @@ In general, researchers use native Python data structures or numpy data structur
         <th align="center">CPU</th><th align="center">GPU</th><th align="center">Ascend</th>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/blob/master/mindspore_rl/core/uniform_replay_buffer.py">UniformReplayBuffer</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/core/uniform_replay_buffer.py">UniformReplayBuffer</a></td>
         <td align="left">1 FIFO, fist in fist out. <br>2 Support batch input.</a></td>
         <td align="center">✔️ </td>
         <td align="center">✔️ </td>
         <td align="center">/</td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/blob/master/mindspore_rl/core/priority_replay_buffer.py#L25">PriorityReplayBuffer</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/core/priority_replay_buffer.py#L25">PriorityReplayBuffer</a></td>
         <td align="left">1 Proportional-based priority strategy. <br>2 Using Sum Tree to improve sample performance.</a></td>
         <td align="center">✔️ </td>
         <td align="center">✔️ </td>
         <td align="center">✔️ </td>
     </tr>
     <tr>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/blob/master/mindspore_rl/core/reservoir_replay_buffer.py#L24">ReservoirReplayBuffer</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/core/reservoir_replay_buffer.py#L24">ReservoirReplayBuffer</a></td>
         <td align="left">keeps an 'unbiased' sample of previous iterations.</a></td>
         <td align="center">✔️ </td>
         <td align="center">✔️ </td>
@@ -387,7 +397,7 @@ This initial release of MindSpore Reinforcement contains a stable API for implem
 
 - [MindSpore Slack](https://join.slack.com/t/mindspore/shared_invite/zt-dgk65rli-3ex4xvS4wHX7UDmsQmfu8w) developer communication platform
 - [MindSpore 论坛](https://bbs.huaweicloud.com/forum/forum-1076-1.html) Welcome to post.
-- [Reinforcement issues](https://gitee.com/mindspore/reinforcement/issues) Welcome to submit issues.
+- [Reinforcement issues](https://github.com/mindspore-lab/mindrl/issues) Welcome to submit issues.
 
 ## Contributions
 

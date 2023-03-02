@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # encoding: utf-8
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,7 +28,8 @@ setup(
     install_requires=['numpy>=1.17.0',
                       'matplotlib>=3.1.3',
                       'gym>=0.18.3, <=0.21.0',
-                      'importlib-metadata == 4.11.3'],
+                      'importlib-metadata == 4.11.3',
+                      'pyyaml == 6.0'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
