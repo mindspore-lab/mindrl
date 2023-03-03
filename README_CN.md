@@ -335,26 +335,32 @@ Evaluate for episode 10 total rewards is 9.600
 
 ### 环境
 
-强化学习领域中，智能体与环境交互过程中，学习策略来使得数值化的收益信号最大化。“环境”作为待解决的问题，是强化学习领域中重要的要素。
+强化学习领域中，智能体与环境交互过程中，学习策略来使得数值化的收益信号最大化。“环境”作为待解决的问题，是强化学习领域中重要的要素。当前已支持的环境如下表所示：
 
 <table>
     <tr>
         <th>环境</th>
+        <th>版本</th>
     </tr>
     <tr>
         <td align="center"><a href="https://github.com/openai/gym">Gym</a></td>
+        <td align="center">>= v0.1</td>
     </tr>
     <tr>
         <td align="center"><a href="https://mujoco.org">MuJoCo</a></td>
+        <td align="center">>= v0.1</td>
     </tr>
     <tr>
         <td align="center"><a href="https://github.com/openai/multiagent-particle-envs">MPE</a></td>
+        <td align="center">>= v0.6</td>
     </tr>
     <tr>
         <td align="center"><a href="https://github/oxwhirl/smac">SMAC</a></td>
+        <td align="center">>= v0.5</td>
     </tr>
     <tr>
         <td align="center"><a href="https://www.deepmind.com/open-source/deepmind-control-suite">DMC</a></td>
+        <td align="center">>= v0.6</td>
     </tr>
 </table>
 

@@ -334,26 +334,32 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
 
 ### Environment
 
-In the field of reinforcement learning, during the interaction between the agent and the environment, the learning strategy maximizes the numerical benefit signal. As a problem to be solved, environment is an important element in reinforcement learning.
+In the field of reinforcement learning, during the interaction between the agent and the environment, the learning strategy maximizes the numerical benefit signal. As a problem to be solved, environment is an important element in reinforcement learning. The currently supported environments are shown in the table below:
 
 <table>
     <tr>
         <th>Environments</th>
+        <th>Version</th>
     </tr>
     <tr>
         <td align="center"><a href="https://github.com/openai/gym">Gym</a></td>
+        <td align="center">>= v0.1</td>
     </tr>
     <tr>
         <td align="center"><a href="https://mujoco.org">MuJoCo</a></td>
+        <td align="center">>= v0.1</td>
     </tr>
     <tr>
         <td align="center"><a href="https://github.com/openai/multiagent-particle-envs">MPE</a></td>
+        <td align="center">>= v0.6</td>
     </tr>
     <tr>
         <td align="center"><a href="https://github/oxwhirl/smac">SMAC</a></td>
+        <td align="center">>= v0.5</td>
     </tr>
     <tr>
         <td align="center"><a href="https://www.deepmind.com/open-source/deepmind-control-suite">DMC</a></td>
+        <td align="center">>= v0.6</td>
     </tr>
 </table>
 
