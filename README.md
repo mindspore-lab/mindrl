@@ -336,10 +336,28 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
 
 In the field of reinforcement learning, during the interaction between the agent and the environment, the learning strategy maximizes the numerical benefit signal. As a problem to be solved, environment is an important element in reinforcement learning.
 
-At present, there are many kinds of environments used for reinforcement learning:[Mujoco](https://github.com/deepmind/mujoco)、[MPE](https://github.com/openai/multiagent-particle-envs)、[Atari](https://github.com/gsurma/atari)、[PySC2](https://www.github.com/deepmind/pysc2)、[SMAC](https://github/oxwhirl/smac)、[TORCS](https://github.com/ugo-nama-kun/gym_torcs)、[Isaac](https://github.com/NVIDIA-Omniverse/IsaacGymEnvs) etc. At present, MindSpore Reinforcement has access to `Gym`, `Smac`, `MPE`, `Mujoco` environments. With the enrichment of algorithms, it will gradually access more environments.
+<table>
+    <tr>
+        <th>Environments</th>
+    </tr>
+    <tr>
+        <td align="center"><a href="https://github.com/openai/gym">Gym</a></td>
+    </tr>
+    <tr>
+        <td align="center"><a href="https://mujoco.org">MuJoCo</a></td>
+    </tr>
+    <tr>
+        <td align="center"><a href="https://github.com/openai/multiagent-particle-envs">MPE</a></td>
+    </tr>
+    <tr>
+        <td align="center"><a href="https://github/oxwhirl/smac">SMAC</a></td>
+    </tr>
+    <tr>
+        <td align="center"><a href="https://www.deepmind.com/open-source/deepmind-control-suite">DMC</a></td>
+    </tr>
+</table>
 
-<center>
-<img src=docs/images/environment-uml.png width=500 height=350></center>
+<center><img src=docs/images/environment-uml.png width=500 height=350></center>
 
 ### ReplayBuffer
 
@@ -396,7 +414,7 @@ This initial release of MindSpore Reinforcement contains a stable API for implem
 ### Communication
 
 - [MindSpore Slack](https://join.slack.com/t/mindspore/shared_invite/zt-dgk65rli-3ex4xvS4wHX7UDmsQmfu8w) developer communication platform
-- [MindSpore 论坛](https://bbs.huaweicloud.com/forum/forum-1076-1.html) Welcome to post.
+- [MindSpore Forum](https://bbs.huaweicloud.com/forum/forum-1076-1.html) Welcome to post.
 - [Reinforcement issues](https://github.com/mindspore-lab/mindrl/issues) Welcome to submit issues.
 
 ## Contributions
