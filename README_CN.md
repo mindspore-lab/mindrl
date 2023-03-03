@@ -208,7 +208,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center">/</td>
         <td align="center">✔️</td>
         <td align="center">✔️</td>
-        <td align="center">/</td>
+        <td align="center">✔️</td>
         <td align="center"><a href="https://github.com/oxwhirl/smac/">SMAC</a>, <a href="https://github.com/openai/multiagent-particle-envs">Simple Spread</a></td>
     </tr>
     <tr>
@@ -228,7 +228,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center">✔️</td>
         <td align="center">✔️</td>
         <td align="center">✔️</td>
-        <td align="center">/</td>
+        <td align="center">✔️</td>
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/half_cheetah/">HalfCheetah-v2</a></td>
     </tr>
     <tr>
@@ -268,7 +268,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center">/</td>
         <td align="center">✔️</td>
         <td align="center">✔️</td>
-        <td align="center">/</td>
+        <td align="center">✔️</td>
         <td align="center"><a href="https://github.com/openai/multiagent-particle-envs">Simple Spread</a></td>
     </tr>
     <tr>
@@ -278,7 +278,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center">✔️</td>
         <td align="center">✔️</td>
         <td align="center">✔️</td>
-        <td align="center">/</td>
+        <td align="center">✔️</td>
         <td align="center"><a href="https://www.gymlibrary.dev/environments/mujoco/half_cheetah/">HalfCheetah-v2</a></td>
     </tr>
     <tr>
@@ -337,10 +337,28 @@ Evaluate for episode 10 total rewards is 9.600
 
 强化学习领域中，智能体与环境交互过程中，学习策略来使得数值化的收益信号最大化。“环境”作为待解决的问题，是强化学习领域中重要的要素。
 
-目前强化学习使用的环境种类繁多：[Mujoco](https://github.com/deepmind/mujoco)、[MPE](https://github.com/openai/multiagent-particle-envs)、[Atari](https://github.com/gsurma/atari)、[PySC2](https://www.github.com/deepmind/pysc2)、[SMAC](https://github/oxwhirl/smac)、[TORCS](https://github.com/ugo-nama-kun/gym_torcs)、[Isaac](https://github.com/NVIDIA-Omniverse/IsaacGymEnvs)等，目前MindSpore Reinforcement接入了`Gym`、`SMAC`，`MPE`, `Mujoco`等环境，后续随着算法的丰富，还会逐渐接入更多的环境。
+<table>
+    <tr>
+        <th>环境</th>
+    </tr>
+    <tr>
+        <td align="center"><a href="https://github.com/openai/gym">Gym</a></td>
+    </tr>
+    <tr>
+        <td align="center"><a href="https://mujoco.org">MuJoCo</a></td>
+    </tr>
+    <tr>
+        <td align="center"><a href="https://github.com/openai/multiagent-particle-envs">MPE</a></td>
+    </tr>
+    <tr>
+        <td align="center"><a href="https://github/oxwhirl/smac">SMAC</a></td>
+    </tr>
+    <tr>
+        <td align="center"><a href="https://www.deepmind.com/open-source/deepmind-control-suite">DMC</a></td>
+    </tr>
+</table>
 
-<center>
-<img src=docs/images/environment-uml.png width=500 height=350></center>
+<center><img src=docs/images/environment-uml.png width=500 height=350></center>
 
 ### 经验回放
 
