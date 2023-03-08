@@ -42,4 +42,4 @@ training end
 
 ## Supported Platform
 
-A2C algorithm supports GPU and CPU platform.
+A2C algorithm supports GPU CPU and Ascend platform.

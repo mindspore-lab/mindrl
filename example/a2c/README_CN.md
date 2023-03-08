@@ -42,4 +42,4 @@ training end
 
 ## 支持平台
 
-A2C算法支持GPU和CPU。
+A2C算法支持GPU CPU 和 Ascend。
