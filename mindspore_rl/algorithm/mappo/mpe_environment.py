@@ -15,34 +15,29 @@
 """MPEMultiEnvironment class."""
 #pylint: disable=E0402
 #pylint: disable=W0212
+import pdb
 import os
+import sys
 import numpy as np
+from collections import namedtuple
 from gym import spaces
 from mindspore_rl.environment import Environment
 
 
-def _prepare_mpe_env():
+def _prepare_mpe_env(current_path):
     '''prepare mpe env'''
-    current_path = os.path.dirname(os.path.normpath(os.path.realpath(__file__)))
-    os.chdir(current_path)
     # Clone mpe environment from marlbenchmark
     os.system('git clone https://github.com/marlbenchmark/on-policy.git')
     # Copy mpe folder to current directory
     os.system('cp -r on-policy/onpolicy/envs/mpe ./')
-    # Download patch from mindspore_rl
-    os.system(
-        'wget https://gitee.com/mindspore/reinforcement/raw/master/example/mappo/src/mpe_environment.patch\
-             --no-check-certificate')
     # patch mpe folder
-    os.system('patch -p0 < mpe_environment.patch')
-
-
-try:
-    from .mpe.MPE_env import MPEEnv
-
-except ModuleNotFoundError:
-    _prepare_mpe_env()
-    from .mpe.MPE_env import MPEEnv
+    splited_path = current_path.split('/')
+    for i, path in enumerate(reversed(splited_path)):
+        if path == "mindrl":
+            break
+    msrl_root_dir = current_path.rsplit('/', i)
+    mpe_patch = os.path.join(msrl_root_dir[0], 'third_party/patch/mpe_environment.patch')
+    os.system(f'patch -p0 < {mpe_patch}')
 
 
 class MultiAgentParticleEnvironment(Environment):
@@ -87,14 +82,18 @@ class MultiAgentParticleEnvironment(Environment):
         self._num_agent = params['num_agent']
         self._auto_reset = params.get('auto_reset', False)
 
-        class AllArgs:
-            def __init__(self, env_name, episode, num_agent, num_landmark):
-                self.episode_length = episode
-                self.num_agents = num_agent
-                self.num_landmarks = num_landmark
-                self.scenario_name = env_name
+        current_path = os.getcwd()
+        mpe_path = os.path.join(current_path, 'mpe')
+        sys.path.append(mpe_path)
+        all_files = os.listdir(current_path)
+        has_mpe = np.array(['mpe' == file for file in all_files]).any()
+        if not has_mpe:
+            _prepare_mpe_env(current_path)
 
-        all_args = AllArgs(self._env_name, 25, self._num_agent, self._num_agent)
+        from mpe.MPE_env import MPEEnv
+        mpe_args = namedtuple("mpe_args", "episode_length, num_agents, scenario_name, num_landmarks")
+        all_args = mpe_args(episode_length=25, num_agents=self._num_agent,
+                            scenario_name=self._env_name, num_landmarks=self._num_agent)
 
         self._env = MPEEnv(all_args)
         seed = params.get('seed')
@@ -109,7 +108,7 @@ class MultiAgentParticleEnvironment(Environment):
     def _step(self, actions):
         """Inner step function implementation"""
         onehot_action = np.eye(self._env.action_space[0].n)[actions].squeeze(1)
-        local_obs, rewards, done, _ = self._env._step(onehot_action)
+        local_obs, rewards, done, _ = self._env.step(onehot_action)
         done = np.expand_dims(np.array(done), -1)
         if (self._auto_reset and done.all()):
             local_obs = self._reset()
@@ -117,7 +116,7 @@ class MultiAgentParticleEnvironment(Environment):
 
     def _reset(self):
         """Inner reset function implementation"""
-        s0 = self._env._reset()
+        s0 = self._env.reset()
         return np.array(s0, np.float32)
 
     def _get_action(self):
