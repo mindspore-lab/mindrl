@@ -1,7 +1,8 @@
-diff --color -uNr mpe_origin/core.py mpe/core.py
---- mpe_origin/core.py	2022-08-31 15:17:53.171604000 +0800
-+++ mpe/core.py	2022-08-31 15:16:29.781398776 +0800
-@@ -204,7 +204,7 @@
+Binary files mpe_origin/.DS_Store and mpe/.DS_Store differ
+diff -uprN mpe_origin/core.py mpe/core.py
+--- mpe_origin/core.py	2023-03-10 14:52:41.000000000 +0800
++++ mpe/core.py	2023-03-10 14:59:11.000000000 +0800
+@@ -204,7 +204,7 @@ class World(object):
              landmark.color = np.array([0.25, 0.25, 0.25])
  
      # update state of the world
@@ -10,7 +11,7 @@ diff --color -uNr mpe_origin/core.py mpe/core.py
          # zoe 20200420
          self.world_step += 1
          # set actions for scripted agents
-@@ -213,24 +213,24 @@
+@@ -213,24 +213,24 @@ class World(object):
          # gather forces applied to entities
          p_force = [None] * len(self.entities)
          # apply agent physical controls
@@ -39,7 +40,7 @@ diff --color -uNr mpe_origin/core.py mpe/core.py
                      *agent.action.u.shape) * agent.u_noise if agent.u_noise else 0.0
                  # force = mass * a * action + n
                  p_force[i] = (
-@@ -277,12 +277,12 @@
+@@ -277,12 +277,12 @@ class World(object):
                                                                        np.square(entity.state.p_vel[1])) * entity.max_speed
              entity.state.p_pos += entity.state.p_vel * self.dt
  
@@ -54,10 +55,10 @@ diff --color -uNr mpe_origin/core.py mpe/core.py
                  agent.c_noise if agent.c_noise else 0.0
              agent.state.c = agent.action.c + noise
  
-diff --color -uNr mpe_origin/environment.py mpe/environment.py
---- mpe_origin/environment.py	2022-08-31 15:17:53.171604000 +0800
-+++ mpe/environment.py	2022-08-31 15:16:46.397069329 +0800
-@@ -33,6 +33,7 @@
+diff -uprN mpe_origin/environment.py mpe/environment.py
+--- mpe_origin/environment.py	2023-03-10 14:52:41.000000000 +0800
++++ mpe/environment.py	2023-03-10 14:59:51.000000000 +0800
+@@ -33,6 +33,7 @@ class MultiAgentEnv(gym.Env):
          self.done_callback = done_callback
  
          self.post_step_callback = post_step_callback
@@ -65,7 +66,7 @@ diff --color -uNr mpe_origin/environment.py mpe/environment.py
  
          # environment parameters
          # self.discrete_action_space = True
-@@ -108,13 +109,11 @@
+@@ -108,10 +109,8 @@ class MultiAgentEnv(gym.Env):
          self._reset_render()
  
      def seed(self, seed=None):
@@ -77,12 +78,8 @@ diff --color -uNr mpe_origin/environment.py mpe/environment.py
 +            self.seed_value = np.random.RandomState(seed)
  
      # step  this is  env.step()
--    def step(self, action_n):
-+    def _step(self, action_n):
-         self.current_step += 1
-         obs_n = []
-         reward_n = []
-@@ -125,7 +124,7 @@
+     def step(self, action_n):
+@@ -125,7 +124,7 @@ class MultiAgentEnv(gym.Env):
          for i, agent in enumerate(self.agents):
              self._set_action(action_n[i], agent, self.action_space[i])
          # advance world state
@@ -91,12 +88,8 @@ diff --color -uNr mpe_origin/environment.py mpe/environment.py
          # record observation for each agent
          for i, agent in enumerate(self.agents):
              obs_n.append(self._get_obs(agent))
-@@ -147,10 +146,10 @@
- 
-         return obs_n, reward_n, done_n, info_n
- 
--    def reset(self):
-+    def _reset(self):
+@@ -150,7 +149,7 @@ class MultiAgentEnv(gym.Env):
+     def reset(self):
          self.current_step = 0
          # reset world
 -        self.reset_callback(self.world)
@@ -104,19 +97,20 @@ diff --color -uNr mpe_origin/environment.py mpe/environment.py
          # reset renderer
          self._reset_render()
          # record observations for each agent
-diff --color -uNr mpe_origin/scenarios/simple_spread.py mpe/scenarios/simple_spread.py
---- mpe_origin/scenarios/simple_spread.py	2022-08-31 15:17:53.175604000 +0800
-+++ mpe/scenarios/simple_spread.py	2022-08-31 15:16:29.781398776 +0800
+Binary files mpe_origin/scenarios/__pycache__/__init__.cpython-37.pyc and mpe/scenarios/__pycache__/__init__.cpython-37.pyc differ
+diff -uprN mpe_origin/scenarios/simple_spread.py mpe/scenarios/simple_spread.py
+--- mpe_origin/scenarios/simple_spread.py	2023-03-10 14:52:41.000000000 +0800
++++ mpe/scenarios/simple_spread.py	2023-03-10 14:59:26.000000000 +0800
 @@ -1,6 +1,6 @@
  import numpy as np
 -from onpolicy.envs.mpe.core import World, Agent, Landmark
 -from onpolicy.envs.mpe.scenario import BaseScenario
-+from mindspore_rl.algorithm.mappo.mpe.core import World, Agent, Landmark
-+from mindspore_rl.algorithm.mappo.mpe.scenario import BaseScenario
++from mpe.core import World, Agent, Landmark
++from mpe.scenario import BaseScenario
  
  
  class Scenario(BaseScenario):
-@@ -26,10 +26,10 @@
+@@ -26,10 +26,10 @@ class Scenario(BaseScenario):
              landmark.collide = False
              landmark.movable = False
          # make initial conditions
@@ -129,7 +123,7 @@ diff --color -uNr mpe_origin/scenarios/simple_spread.py mpe/scenarios/simple_spr
          # random properties for agents
          world.assign_agent_colors()
  
-@@ -37,11 +37,11 @@
+@@ -37,11 +37,11 @@ class Scenario(BaseScenario):
  
          # set random initial states
          for agent in world.agents:
