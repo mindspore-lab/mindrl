@@ -17,6 +17,7 @@ TensorArray
 """
 from __future__ import absolute_import
 
+from mindspore import context
 from mindspore.nn.cell import Cell
 from mindspore.ops.operations import _tensor_array as ta
 from mindspore._checkparam import Rel, Validator
@@ -64,13 +65,22 @@ class TensorArray(Cell):
         super(TensorArray, self).__init__()
         Validator.check_subclass("dtype", dtype, mstype.number_type + (mstype.bool_,), self.cls_name)
         Validator.check_int(size, 0, Rel.GE, "size", self.cls_name)
-        self.handle_ = ta.TensorArray(dtype, element_shape, dynamic_size, size, name)()
+        handle = ta.TensorArray(dtype, element_shape, dynamic_size, size, name)
         self.tensor_array_write = ta.TensorArrayWrite()
         self.tensor_array_read = ta.TensorArrayRead(dtype, element_shape)
         self.tensor_array_close = ta.TensorArrayClose()
         self.tensor_array_clear = ta.TensorArrayClear()
         self.tensor_array_stack = ta.TensorArrayStack(dtype, element_shape, dynamic_size, size)
         self.tensor_array_size = ta.TensorArraySize()
+        if context.get_context('device_target') in ['Ascend']:
+            handle.add_prim_attr('primitive_target', 'CPU')
+            self.tensor_array_write.add_prim_attr('primitive_target', 'CPU')
+            self.tensor_array_read.add_prim_attr('primitive_target', 'CPU')
+            self.tensor_array_close.add_prim_attr('primitive_target', 'CPU')
+            self.tensor_array_clear.add_prim_attr('primitive_target', 'CPU')
+            self.tensor_array_stack.add_prim_attr('primitive_target', 'CPU')
+            self.tensor_array_size.add_prim_attr('primitive_target', 'CPU')
+        self.handle_ = handle()
 
     def write(self, index, value):
         """

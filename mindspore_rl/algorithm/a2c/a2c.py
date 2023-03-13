@@ -21,6 +21,7 @@ from mindspore_rl.utils import TensorArray
 import mindspore
 import mindspore.nn as nn
 from mindspore import Tensor
+from mindspore import Parameter
 import mindspore.ops as ops
 import mindspore.nn.probability.distribution as msd
 from mindspore.ops import operations as P
@@ -36,19 +37,20 @@ class A2CPolicyAndNetwork():
     class ActorCriticNet(nn.Cell):
         '''ActorCriticNet'''
 
-        def __init__(self, input_size, hidden_size, output_size):
+        def __init__(self, input_size, hidden_size, output_size, compute_type=mindspore.float32):
             super().__init__()
             self.common = nn.Dense(
-                input_size, hidden_size, weight_init='XavierUniform')
+                input_size, hidden_size, weight_init='XavierUniform').to_float(compute_type)
             self.actor = nn.Dense(hidden_size, output_size,
-                                  weight_init='XavierUniform')
-            self.critic = nn.Dense(hidden_size, 1, weight_init='XavierUniform')
+                                  weight_init='XavierUniform').to_float(compute_type)
+            self.critic = nn.Dense(hidden_size, 1, weight_init='XavierUniform').to_float(compute_type)
             self.relu = nn.LeakyReLU()
+            self.cast = ops.Cast()
 
         def construct(self, x):
             x = self.common(x)
             x = self.relu(x)
-            return self.actor(x), self.critic(x)
+            return self.cast(self.actor(x), mindspore.float32), self.cast(self.critic(x), mindspore.float32)
 
     class Loss(nn.Cell):
         '''Actor-Critic loss'''
@@ -75,8 +77,8 @@ class A2CPolicyAndNetwork():
             return critic_loss + actor_loss
 
     def __init__(self, params):
-        self.a2c_net = self.ActorCriticNet(params['state_space_dim'], params['hidden_size'],
-                                           params['action_space_dim'])
+        self.a2c_net = self.ActorCriticNet(params.get('state_space_dim'), params.get('hidden_size'),
+                                           params.get('action_space_dim'), params.get('compute_type'))
         optimizer = nn.Adam(self.a2c_net.trainable_params(),
                             learning_rate=params['lr'])
         loss_net = self.Loss(self.a2c_net)
@@ -101,6 +103,7 @@ class A2CActor(Actor):
         self.cast = P.Cast()
         self.softmax = ops.Softmax()
         self.zero = Tensor(0, mindspore.int64)
+        self.start = Parameter(self.zero)
         self.done = Tensor(True, mindspore.bool_)
         self.states = TensorArray(mindspore.float32, (4,), dynamic_size=False, size=loop_size)
         self.actions = TensorArray(mindspore.int32, (1,), dynamic_size=False, size=loop_size)
@@ -112,7 +115,7 @@ class A2CActor(Actor):
     def act(self, phase, params):
         '''Store returns into TensorArrays from env'''
         if phase == 2:
-            t = self.zero
+            t = self.start
             done_status = self.zero
             done_num = self.zero
             masks = self.masks
