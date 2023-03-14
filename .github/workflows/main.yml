@@ -31,6 +31,8 @@ jobs:
         pip install -r requirements/cpu_requirements.txt
     - name: Lint with pre-commit
       uses: pre-commit/action@v3.0.0
+      with:
+        extra_args: --color=always --from-ref ${{ github.event.pull_request.base.sha }} --to-ref ${{ github.event.pull_request.head.sha }}
     - name: Test with unit test (UT) pytest
       run: |
         pytest tests/ut/
