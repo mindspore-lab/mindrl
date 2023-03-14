@@ -31,8 +31,6 @@ jobs:
         pip install -r requirements/cpu_requirements.txt
     - name: Lint with pre-commit
       uses: pre-commit/action@v3.0.0
-      with:
-        extra_args: --from-ref=master --to-ref=HEAD
     - name: Test with unit test (UT) pytest
       run: |
         pytest tests/ut/
