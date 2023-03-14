@@ -83,7 +83,7 @@ class MultivariateNormalDiag(msd.Normal):
         diag_a_std = ops.matrix_diag(sd)
         b_inv_a = self.expand_dims(sd / sd_b, -1)
         solved_value = self.expand_dims((1. / sd_b), -1) * (self.expand_dims((mean_b - mean), -1))
-        kl_div = (diag_b_std.log_matrix_determinant()[1] - diag_a_std.log_matrix_determinant()[1] + 0.5 * (
+        kl_div = (diag_b_std.slogdet()[1] - diag_a_std.slogdet()[1] + 0.5 * (
             (-sd_b.shape[-1]) + self._squared_frobenius_norm(b_inv_a) + self._squared_frobenius_norm(solved_value)))
         return kl_div
 
