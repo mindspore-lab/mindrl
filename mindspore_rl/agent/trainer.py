@@ -144,7 +144,7 @@ class Trainer(nn.Cell):
         if os.path.exists(ckpt_file):
             print("Load file ", ckpt_file)
             param_dict = load_checkpoint(ckpt_file)
-            not_load = load_param_into_net(net, param_dict)
+            _, not_load = load_param_into_net(net, param_dict)
             if not_load:
                 raise RuntimeError("Load params into net failed!")
         else:
