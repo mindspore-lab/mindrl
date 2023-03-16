@@ -18,6 +18,7 @@ PPO config.
 import mindspore
 from mindspore_rl.environment import GymEnvironment
 from mindspore_rl.core.uniform_replay_buffer import UniformReplayBuffer
+from mindspore_rl.distribution.distribution_policies.multi_actor_single_learner_dp import MultiActorEnvSingleLearnerDP
 from .ppo import PPOActor, PPOLearner, PPOPolicy
 
 collect_env_params = {'name': 'HalfCheetah-v2'}
@@ -82,4 +83,13 @@ algorithm_config = {
         'type': UniformReplayBuffer,
         'capacity': 1000,
     }
+}
+
+deploy_config = {
+    'auto_distribution': True,
+    'distribution_policy': MultiActorEnvSingleLearnerDP,
+    'worker_num':2,
+    'network': 'actor_net',
+    'algo_name': 'ppo',
+    'config': {}
 }

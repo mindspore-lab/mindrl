@@ -28,6 +28,7 @@ class DistributionPolicy():
         self.fragment_number = 0
         self.boundary = []
         self.interface = {}
+        self.communication_data = {}
         self.fuse = []
         self.replicate_list = []
         self.topology = []
@@ -62,6 +63,9 @@ class DistributionPolicy():
 
     def add_interface(self, fragment_type, parameters):
         self.interface[fragment_type] = parameters
+
+    def add_communication_data(self, name, data):
+        self.communication_data[name] = data
 
     def fuse_fragment(self, fused_type, fragments_list):
         fused = {fused_type: fragments_list}

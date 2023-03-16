@@ -1,4 +1,4 @@
-# Copyright 2021-2022 Huawei Technologies Co., Ltd
+# Copyright 2021-2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -69,6 +69,7 @@ class Session():
             self.config = deploy_config['config']
             self.dist_policy = deploy_config['distribution_policy']
             self.is_auto = deploy_config['auto_distribution']
+            self.algo_name = deploy_config['algo_name']
 
     def run(self, class_type=None, is_train=True, episode=0, duration=0):
         """
@@ -83,9 +84,8 @@ class Session():
 
         if self.dist:
             init("nccl")
-            algorithm = sys.argv[0]
             if self.is_auto:
-                fragment_list = fragment_generation(algorithm, self.alg_config, self.dist_policy)
+                fragment_list = fragment_generation(self.algo_name, self.worker_num, self.dist_policy, self.msrl)
             else:
                 from fragments import get_all_fragments
                 fragment_list = get_all_fragments(self.msrl.num_actors)

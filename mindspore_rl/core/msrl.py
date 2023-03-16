@@ -98,8 +98,9 @@ class MSRL(nn.Cell):
 
         if deploy_config is not None:
             # Need to compute the number of process per worker.
-            self.proc_num = deploy_config['worker_num']
+            self.proc_num = deploy_config.get('worker_num')
             self.distributed = True
+            self.shared_network_str = deploy_config.get('network')
         self.init(alg_config)
 
     def _compulsory_items_check(self, config, compulsory_item, position):
@@ -408,9 +409,9 @@ class MSRL(nn.Cell):
                 self.agent_learn = self.learner.learn
             else:
                 if num_actors == 1:
-                    policy_and_network = self.__create_policy_and_network(config)
-                    self.actors = self.__create_actor(config, policy_and_network)
-                    self.learner = self.__create_learner(config, policy_and_network)
+                    self.policy_and_network = self.__create_policy_and_network(config)
+                    self.actors = self.__create_actor(config, self.policy_and_network)
+                    self.learner = self.__create_learner(config, self.policy_and_network)
                     self.agent_act = self.actors.act
                     self.agent_learn = self.learner.learn
                     self.agent_get_action = self.actors.get_action
@@ -421,9 +422,9 @@ class MSRL(nn.Cell):
                     for i in range(num_actors):
                         if not share_env:
                             self.collect_environment.append(self.__create_environments(config)[0])
-                        policy_and_network = self.__create_policy_and_network(config)
-                        self.actors.append(self.__create_actor(config, policy_and_network, actor_id=i))
-                    self.learner = self.__create_learner(config, policy_and_network)
+                        self.policy_and_network = self.__create_policy_and_network(config)
+                        self.actors.append(self.__create_actor(config, self.policy_and_network, actor_id=i))
+                    self.learner = self.__create_learner(config, self.policy_and_network)
                     self.agent_learn = self.learner.learn
                 else:
                     raise ValueError("The number of actors should >= 1, but get ", num_actors)
@@ -446,6 +447,8 @@ class MSRL(nn.Cell):
                 self.agent.append(agent_type(self.__create_actor(config, policy_and_network),
                                              self.__create_learner(config, policy_and_network)))
             self.agent = nn.CellList(self.agent)
+        if self.shared_network_str:
+            self.shared_network = eval('self.policy_and_network.' + self.shared_network_str)
 
     def get_replay_buffer(self):
         """

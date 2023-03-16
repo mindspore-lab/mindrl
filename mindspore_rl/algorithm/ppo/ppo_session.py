@@ -23,7 +23,7 @@ from mindspore_rl.algorithm.ppo import config
 
 class PPOSession(Session):
     '''PPO session'''
-    def __init__(self, env_yaml=None, algo_yaml=None):
+    def __init__(self, env_yaml=None, algo_yaml=None, is_distribution=None):
         update_config(config, env_yaml, algo_yaml)
         env_config = config.algorithm_config.get('collect_environment')
         env = env_config.get('type')(env_config.get('params'))
@@ -45,4 +45,7 @@ class PPOSession(Session):
         time_cb = TimeCallback()
         cbs = [loss_cb, ckpt_cb, eval_cb, time_cb]
         params = config.trainer_params
-        super().__init__(config.algorithm_config, None, params=params, callbacks=cbs)
+        deploy_config = None
+        if is_distribution:
+            deploy_config = config.deploy_config
+        super().__init__(config.algorithm_config, deploy_config, params=params, callbacks=cbs)

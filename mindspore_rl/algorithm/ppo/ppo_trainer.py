@@ -51,7 +51,7 @@ class PPOTrainer(Trainer):
         training_reward = self.zero
         j = self.zero
         state = self.msrl.collect_environment.reset()
-
+        self.msrl.replay_buffer_reset()
         while self.less(j, self.duration):
             reward, new_state, action, miu, sigma = self.msrl.agent_act(
                 trainer.COLLECT, state)
@@ -74,7 +74,6 @@ class PPOTrainer(Trainer):
         training_loss += self.msrl.agent_learn(
             (state_list, action_list, reward_list, next_state_list, miu_list,
              sigma_list))
-        self.msrl.replay_buffer_reset()
         return training_loss, training_reward, j
 
     @ms_function

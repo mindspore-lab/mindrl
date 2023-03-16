@@ -33,3 +33,4 @@ class AsyncMultiActorSingleLearnerDP(DistributionPolicy):
         self.set_replicate_list('Actor', self.actor_number)
         self.set_topology({'Actor': 'Learner'})
         self.auto = True
+        self.name = 'AsyncMultiActorSingleLearnerDP'

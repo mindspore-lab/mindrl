@@ -21,16 +21,18 @@ from mindspore_rl.distribution.distribution_policies.distribution_policy import 
 
 class MultiActorEnvSingleLearnerDP(DistributionPolicy):
     '''define multi actor single learner policy'''
-    def __init__(self, algorithm_config=None):
+    def __init__(self, msrl, algorithm_config=None):
         super(MultiActorEnvSingleLearnerDP, self).__init__()
         if algorithm_config is not None:
             self.set_actor_number(algorithm_config['actor']['number'])
             self.set_learner_number(algorithm_config['learner']['number'])
             self.set_fragment_number(self.actor_number + self.learner_number)
         self.set_boundary('algorithmic')
-        self.add_interface('Actor', {'operations': {'AllGather': 'state_list, reward_list,\
-                            action_list, next_state_list, miu_list, sigma_list'}})
-        self.add_interface('Learner', {'operations': {'AllGather': 'learner._actor_net.get_parameters()'}})
+        self.add_interface('Actor', {'operations': {'AllGather'}})
+        self.add_interface('Learner', {'operations': {'AllGather'}})
+        self.add_communication_data('Data', list(map(lambda b: b.name, msrl.buffers.buffer)))
+        self.add_communication_data('Weight', list(map(lambda b: b.name, msrl.shared_network.get_parameters())))
         self.set_replicate_list('Actor', self.actor_number)
         self.set_topology({'Learner': 'Actor'})
+        self.name = 'MultiActorEnvSingleLearnerDP'
         self.auto = True
