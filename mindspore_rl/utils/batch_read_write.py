@@ -22,7 +22,7 @@ from mindspore.ops.operations._rl_inner_ops import BatchAssign
 
 
 class BatchWrite(Cell):
-    r"""BatchWrite: write a list of parameters to assign the target.
+    r"""Write a list of parameters to assign the target.
 
     .. warning::
         This is an experiential prototype that is subject to change and/or deletion.
@@ -75,14 +75,14 @@ class BatchWrite(Cell):
             src (tuple(Parameters)): A paramameter tuple of the source model.
 
         Returns:
-            Bool, true.
+            True.
         """
         self.write(dst, src)
         return True
 
 
 class BatchRead(Cell):
-    r"""BatchRead: read a list of parameters to assign the target.
+    r"""Read a list of parameters to assign the target.
 
     .. warning::
         This is an experiential prototype that is subject to change and/or deletion.
@@ -136,7 +136,7 @@ class BatchRead(Cell):
             src (tuple(Parameters)): A paramameter tuple of the source model.
 
         Returns:
-            Bool, true.
+            True.
         """
         self.read(dst, src)
         return True

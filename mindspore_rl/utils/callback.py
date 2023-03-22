@@ -30,7 +30,7 @@ class Callback:
     Base callback.
     '''
     def __enter__(self):
-        '''Return self'''
+        '''Return self.'''
         return self
 
     def __exit__(self, *err):
@@ -38,7 +38,7 @@ class Callback:
 
     def begin(self, params):
         '''
-        Call once before train
+        Call once before train.
 
         Args:
             params (CallbackParam): Parameters for begin.
@@ -46,7 +46,7 @@ class Callback:
 
     def end(self, params):
         '''
-        Call once after train
+        Call once after train.
 
         Args:
             params (CallbackParam): Parameters for end.
@@ -54,7 +54,7 @@ class Callback:
 
     def episode_begin(self, params):
         '''
-        Call before each episode begin
+        Call before each episode begin.
 
         Args:
             params (CallbackParam): Parameters for episode begin.
@@ -62,7 +62,7 @@ class Callback:
 
     def episode_end(self, params):
         '''
-        Call after each episode finished
+        Call after each episode finished.
 
         Args:
             params (CallbackParam): Parameters for episode end.
@@ -70,7 +70,7 @@ class Callback:
 
 
 class CallbackParam(dict):
-    '''Callback object's parameters'''
+    '''It contains the parameters required for the execution of the callback function.'''
     def __getattr__(self, key):
         return self[key]
 
@@ -82,7 +82,7 @@ class CallbackManager(Callback):
     '''Execute callbacks sequentially
 
         Args:
-            callbacks (list[Callback]): Callbacks list.
+            callbacks (list[Callback]): a list of Callbacks.
     '''
     def __init__(self, callbacks):
         self._callbacks, self._stack = [], None
@@ -116,7 +116,7 @@ class CallbackManager(Callback):
 
     def begin(self, params):
         '''
-        Call only once before training
+        Call only once before training.
 
         Args:
             params (CallbackParam): Parameters for begin.
@@ -126,7 +126,7 @@ class CallbackManager(Callback):
 
     def end(self, params):
         '''
-        Call only once after training
+        Call only once after training.
 
         Args:
             params (CallbackParam): Parameters for end.
@@ -146,7 +146,7 @@ class CallbackManager(Callback):
 
     def episode_end(self, params):
         '''
-        Call before each episode end
+        Call before each episode end.
 
         Args:
             params (CallbackParam): Parameters for episode end.
@@ -164,10 +164,18 @@ def _is_tensor(input_):
 
 class LossCallback(Callback):
     r'''
-    Loss Callback to monitor loss in each episode.
+    Print loss in each episode end.
 
     Args:
-        print_rate (int): The frequency to print loss. Default: 1.
+        print_rate (int, optional): The frequency to print loss. Default: 1.
+
+    Examples:
+        >>> from mindspore_rl.utils.callback import LossCallback
+        >>> from mindspore_rl.core import Session
+        >>> from mindspore_rl.algorithm.dqn import config
+        >>> loss_cb = LossCallback()
+        >>> cbs = [loss_cb]
+        >>> session = Session(config.algorithm_config, None, None, cbs)
     '''
     def __init__(self, print_rate=1):
         super(LossCallback, self).__init__()
@@ -222,10 +230,18 @@ class TimeCallback(Callback):
     Time Callback to monitor time costs for each episode.
 
     Args:
-        print_rate (int): The frequency to print time. Default: 1.
-        fixed_steps_in_episode (Optional[int]): If the number of steps in each episode is fixed, this number
-            is used to calculate the step time. Otherwise, the real steps number should be provided in params.
+        print_rate (int, optional): The frequency to print time. Default: 1.
+        fixed_steps_in_episode (int, optional): If the number of steps in each episode is fixed, this number
+            is used to calculate the step time. If None, the real steps number should be provided in params.
             Default: None.
+
+    Examples:
+        >>> from mindspore_rl.utils.callback import TimeCallback
+        >>> from mindspore_rl.core import Session
+        >>> from mindspore_rl.algorithm.dqn import config
+        >>> time_cb = TimeCallback()
+        >>> cbs = [time_cb]
+        >>> session = Session(config.algorithm_config, None, None, cbs)
     '''
     def __init__(self, print_rate=1, fixed_steps_in_episode=None):
         super(TimeCallback, self).__init__()
@@ -278,9 +294,17 @@ class CheckpointCallback(Callback):
     Save the checkpoint file for all the model weights. And keep the latest `max_ckpt_nums` checkpoint files.
 
     Args:
-        save_per_episode (int): The frequency to save checkpoint. Default: 0.
-        directory (str, optional): The directory for saving checkpoints. Default is current path.
-        max_ckpt_nums (int, optional): Numbers of how many checkpoint files to be kept. Default:5.
+        save_per_episode (int, optional): The frequency to save checkpoint. Default: 0（not saved).
+        directory (str, optional): The directory for saving checkpoints. Default: './'.
+        max_ckpt_nums (int, optional): Numbers of how many checkpoint files to be kept. Default: 5.
+
+    Examples:
+        >>> from mindspore_rl.utils.callback import CheckpointCallback
+        >>> from mindspore_rl.core import Session
+        >>> from mindspore_rl.algorithm.dqn import config
+        >>> ckpt_cb = CheckpointCallback()
+        >>> cbs = [ckpt_cb]
+        >>> session = Session(config.algorithm_config, None, None, cbs)
     '''
     def __init__(self, save_per_episode=0, directory=None, max_ckpt_nums=5):
         super(CheckpointCallback, self).__init__()
@@ -342,7 +366,15 @@ class EvaluateCallback(Callback):
     Evaluate callback.
 
     Args:
-        eval_rate (int): The frequency to eval. Default: 0.
+        eval_rate (int, optional): The frequency to eval. Default: 0(will not evaluate).
+
+    Examples:
+        >>> from mindspore_rl.utils.callback import EvaluateCallback
+        >>> from mindspore_rl.core import Session
+        >>> from mindspore_rl.algorithm.dqn import config
+        >>> eval_cb = EvaluateCallback()
+        >>> cbs = [eval_cb]
+        >>> session = Session(config.algorithm_config, None, None, cbs)
     '''
     def __init__(self, eval_rate=0):
         super(EvaluateCallback, self).__init__()
