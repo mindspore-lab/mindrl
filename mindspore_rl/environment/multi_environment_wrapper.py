@@ -31,7 +31,7 @@ class MultiEnvironmentWrapper(nn.Cell):
 
     Args:
         env_instance (list[Environment]): A list that contains instance of environment (subclass of Environment).
-        num_proc (int): Number of processing uses during interacting with environment. Default: None.
+        num_proc (int, optional): Number of processing uses during interacting with environment. Default: 1.
 
     Supported Platforms:
         ``Ascend`` ``GPU`` ``CPU``
@@ -46,7 +46,7 @@ class MultiEnvironmentWrapper(nn.Cell):
 
     def __init__(self,
                  env_instance,
-                 num_proc=None):
+                 num_proc=1):
         super().__init__()
         self._nums = len(env_instance)
         self._envs = env_instance

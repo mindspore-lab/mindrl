@@ -12,7 +12,7 @@
 
     参数：
         - **params** (dict) - 字典包含TicTacToeEnvironment类中所需要的所有参数。
-        - **env_id** (int) - 环境id，用于设置环境内种子。默认：0。
+        - **env_id** (int，可选) - 环境id，用于设置环境内种子，默认为第0个环境。默认：0。
 
     .. py:method:: action_space
         :property:

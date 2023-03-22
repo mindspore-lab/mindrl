@@ -41,7 +41,8 @@ class PettingZooMPEEnvironment(Environment):
             +------------------------------+-------------------------------+
             |  continuous_actions          |  type of actions space        |
             +------------------------------+-------------------------------+
-        env_id (int): A integer which is used to set the seed of this environment. Default: 0.
+        env_id (int, optional): A integer which is used to set the seed of this environment,
+            default value means the 0th environment. Default: 0.
 
     Supported Platforms:
         ``Ascend`` ``GPU`` ``CPU``

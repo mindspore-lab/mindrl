@@ -21,7 +21,7 @@
         |  img_size                    |  渲染图像的大小            |
         +------------------------------+----------------------------+
         
-        - **env_id** (int) - 环境id，用于设置环境内种子。默认：0。
+        - **env_id** (int，可选) - 环境id，用于设置环境内种子，默认为第0个环境。默认：0。
 
     .. py:method:: action_space
         :property:
@@ -36,7 +36,7 @@
         关闭环境以释放环境资源
 
         返回：
-            - **Success** (bool) - 是否成功释放资源。
+            - **Success** (np.bool\_) - 是否成功释放资源。
 
     .. py:method:: config
         :property:
@@ -72,7 +72,7 @@
     .. py:method:: reward_space
         :property:
 
-        获取环境的状态空间。
+        获取环境的奖励空间。
 
         返回：
             Space，环境的奖励空间。

@@ -1,10 +1,10 @@
-.. py:class:: mindspore_rl.environment.MultiEnvironmentWrapper(env_instance, num_proc=None)
+.. py:class:: mindspore_rl.environment.MultiEnvironmentWrapper(env_instance, num_proc=1)
 
-    MultiEnvironmentWrapper是多环境场景下的包装器。用户实现自己的单环境类，并在配置文件中设置环境数量大于1时，框架将自动调用此类创建多环境。
+    MultiEnvironmentWrapper是平行环境场景下的包装器。用户实现自己的单环境类，并在配置文件中设置环境数量大于1时，框架将自动调用此类创建并行环境。
 
     参数：
         - **env_instance** (list[Environment]) - 包含环境实例（继承Environment类）的List。
-        - **num_proc** (int) - 在和环境交互时使用的进程数量。默认值： None。
+        - **num_proc** (int，可选) - 在和环境交互时使用的进程数量。默认值： 1。
 
     .. py:method:: action_space
         :property:
@@ -19,7 +19,7 @@
         关闭环境以释放环境资源
 
         返回：
-            - **Success** (bool) - 是否成功释放资源。
+            - **Success** (np.bool\_) - 是否成功释放资源。
 
     .. py:method:: config
         :property:

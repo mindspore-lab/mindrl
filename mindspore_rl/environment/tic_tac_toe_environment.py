@@ -38,7 +38,8 @@ class TicTacToeEnvironment(Environment):
 
     Args:
         params (dict): A dictionary contains all the parameters which are used in this class.
-        env_id (int): A integer which is used to set the seed of this environment. Default: 0.
+        env_id (int, optional): A integer which is used to set the seed of this environment,
+            default value means the 0th environment. Default: 0.
 
     Supported Platforms:
         ``Ascend`` ``GPU`` ``CPU``
@@ -221,7 +222,7 @@ class TicTacToeEnvironment(Environment):
         Return the total number of player
 
         Returns:
-            int, the total number of player.
+            Tensor, the total number of player.
         """
         return self._total_num_player
 
