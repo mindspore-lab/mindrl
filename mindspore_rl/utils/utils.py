@@ -42,7 +42,8 @@ def _update_dict(dest, src) -> None:
 
 def update_config(config, env_yaml, algo_yaml) -> None:
     r'''
-    Update the config by the provided yamls.
+    Update the config by the provided yamls. Eg: see `mindspore_rl/algorithm/dqn/config.py`,
+    `mindspore_rl/example/env_yaml/` and `mindspore_rl/example/algo_yaml/` for usage.
 
     Args:
         config (dict): the config to be update.
