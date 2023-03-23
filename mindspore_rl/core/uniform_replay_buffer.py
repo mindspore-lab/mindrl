@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2021-2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ Implementation of Replay Buffer class.
 
 import numpy as np
 import mindspore as ms
+from mindspore import get_seed
 from mindspore import context, Tensor
 from mindspore.ops import operations as P
 from mindspore.common.parameter import Parameter, ParameterTuple
@@ -87,8 +88,11 @@ class UniformReplayBuffer(nn.Cell):
         self.zero = Tensor(0, ms.int32)
         self.buffer_append = P.BufferAppend(self._capacity, shapes, types)
         self.buffer_get = P.BufferGetItem(self._capacity, shapes, types)
+        seed = get_seed()
+        if seed == None:
+            seed = 0
         self.buffer_sample = P.BufferSample(
-            self._capacity, batch_size, shapes, types)
+            self._capacity, batch_size, shapes, types, seed)
         if context.get_context('device_target') in ['Ascend']:
             self.buffer_append.add_prim_attr('primitive_target', 'CPU')
             self.buffer_get.add_prim_attr('primitive_target', 'CPU')
