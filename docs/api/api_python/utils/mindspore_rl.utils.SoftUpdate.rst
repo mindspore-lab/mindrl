@@ -1,7 +1,7 @@
 
 .. py:class:: mindspore_rl.utils.SoftUpdate(factor, update_interval, behavior_params, target_params)
 
-    采用滑动凭据方式更新目标网络的参数。
+    采用滑动平均方式更新目标网络的参数。
 
     设目标网络参数为 :math:`target\_param`，行为网络参数为 :math:`behavior\_param`，
     滑动平均系数为 :math:`factor`。
