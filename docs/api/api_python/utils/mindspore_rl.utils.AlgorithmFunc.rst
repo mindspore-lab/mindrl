@@ -5,7 +5,7 @@
 
     .. py:method:: calculate_prior(new_state, legal_action)
 
-        calculate_prior的功能是计算输入合法动作的先验概率。
+        计算输入合法动作的先验概率。
         
         参数：
             - **new_state** (mindspore.float32) - 环境的状态。
@@ -17,7 +17,7 @@
 
     .. py:method:: simulation(new_state)
 
-        simulation的功能是计算输入状态的奖励（评估价值）。
+        计算输入状态的奖励（评估价值）。
         
         参数：
             - **new_state** (mindspore.float32) - 环境的状态。

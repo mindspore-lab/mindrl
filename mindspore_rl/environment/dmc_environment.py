@@ -29,8 +29,8 @@ os.environ['MUJOCO_GL'] = 'egl'
 
 class DeepMindControlEnvironment(Environment):
     """
-    DeepMindControlEnvironment is a wrapper which encapsulates the DeepMind Control Suite(DMC)
-    It stack for physics-based simulation and Reinforcement Learning environments, using MUJOCO
+    DeepMindControlEnvironment is a wrapper which encapsulates the DeepMind Control Suite(DMC).
+    It stacks for physics-based simulation and Reinforcement Learning environments, using MUJOCO
     physics.
 
     Args:
@@ -54,7 +54,16 @@ class DeepMindControlEnvironment(Environment):
             +------------------------------+----------------------------+
             |  img_size                    |  The rendered img size     |
             +------------------------------+----------------------------+
-        env_id (int): A integer which is used to set the seed of this environment. Default: 0.
+        env_id (int, optional): A integer which is used to set the seed of this environment,
+            default value means the 0th environment. Default: 0.
+
+    Examples:
+        >>> env_params = {'env_name': 'walker_walk', 'img_size': (64, 64),
+                          'action_repeat': 2, 'normalize_action': True, 'seed': 1,
+                          'episode_limits': 1000, 'prefill_value': 5000}
+        >>> environment = DeepMindControlEnvironment(env_params, 0)
+        >>> print(environment)
+        DeepMindControlEnvironment<>
     """
 
     def __init__(self, params, env_id=0):
@@ -118,7 +127,7 @@ class DeepMindControlEnvironment(Environment):
         Get the action space of the environment.
 
         Returns:
-            The action space of environment.
+            Space, The action space of environment.
         """
 
         return self._action_space
@@ -139,7 +148,7 @@ class DeepMindControlEnvironment(Environment):
         Get the done space of the environment.
 
         Returns:
-            The done space of environment.
+            Space, The done space of environment.
         """
         return self._done_space
 
@@ -149,7 +158,7 @@ class DeepMindControlEnvironment(Environment):
         Get the reward space of the environment.
 
         Returns:
-            The reward space of environment.
+            Space, The reward space of environment.
         """
         return self._reward_space
 
@@ -159,7 +168,7 @@ class DeepMindControlEnvironment(Environment):
         Get the state space of the environment.
 
         Returns:
-            The state space of environment.
+            Space, The state space of environment.
         """
 
         return self._observation_space

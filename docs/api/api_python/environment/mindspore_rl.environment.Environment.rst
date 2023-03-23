@@ -20,7 +20,7 @@
         关闭环境以释放环境资源
 
         返回：
-            - **Success** (bool) - 是否成功释放资源。
+            - **Success** (np.bool\_) - 是否成功释放资源。
 
     .. py:method:: config
         :property:

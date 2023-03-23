@@ -59,11 +59,11 @@ class MCTS(nn.Cell):
             documentation of AlgorithmFunc.
         device (str): The device type in ["CPU", "GPU"], Ascend is not support yet.
         args (Tensor): any values which will be the input of MctsCreation. Please following the table below
-            to provide the input value. These value will not be reset after invoke 'restore_tree_data'.
-        has_init_reward (bool): Whether pass the reward to each node during the node initialization. Default: False.
-        max_action (float): The max number of action in environment. If the max_action is -1.0, the step in Environment
+            to provide the input value. These value will not be reset after invoke `restore_tree_data`.
+        has_init_reward (bool, optional): Whether pass the reward to each node during the node initialization. Default: False.
+        max_action (float, optional): The max number of action in environment. If the max_action is -1.0, the step in Environment
             will accept the last action. Otherwise, it will accept max_action number of action. Default: -1.0.
-        max_iteration (int): The max training iteration of MCTS. Default: 1000.
+        max_iteration (int, optional): The max training iteration of MCTS. Default: 1000.
 
             +------------------------------+-----------------+-----------------------------+--------------------------+
             |  MCTS Tree Type              |  MCTS Node Type |  Configuration Parameter    |  Notices                 |
@@ -339,7 +339,7 @@ class MCTS(nn.Cell):
 
         Args:
             *args (Tensor): The variable which updates during each iteration. They will be restored
-                            after invoking 'restore_tree_data'. The input value needs to match provied
+                            after invoking `restore_tree_data`. The input value needs to match provied
                             algorithm.
 
         Returns:
@@ -395,7 +395,7 @@ class MCTS(nn.Cell):
             handle (mindspore.int64): The unique handle of mcts tree.
 
         Returns:
-            - success (mindspore.bool\_), Whether restore is successful.
+            success (mindspore.bool\_), Whether restore is successful.
         """
         self._check_element(self.tree_handle_list, handle, 'restore_tree_data', 'handle')
         return self.restore_tree(handle)
@@ -409,7 +409,7 @@ class MCTS(nn.Cell):
             handle (mindspore.int64): The unique handle of mcts tree.
 
         Returns:
-            - success (mindspore.bool\_), Whether destroy is successful.
+            success (mindspore.bool\_), Whether destroy is successful.
         """
         self._check_element(self.tree_handle_list, handle, 'destroy', 'handle')
         ret = self.destroy_tree(handle)
@@ -445,27 +445,26 @@ class AlgorithmFunc(nn.Cell):
 
     def calculate_prior(self, new_state, legal_action):
         """
-        The functionality of calculate_prior is to calculate prior of the input legal actions.
+        Calculate prior of the input legal actions.
 
         Args:
             new_state (mindspore.float32): The state of environment.
             legal_action (mindspore.int32): The legal action of environment
 
         Returns:
-            - prior (mindspore.float32), The probability (or prior) of all the input legal actions.
+            prior (mindspore.float32), The probability (or prior) of all the input legal actions.
         """
         raise NotImplementedError("You must implement this function")
 
     def simulation(self, new_state):
         """
-        The functionality of simulation is to implement the simulation phase in MCTS. It takes the
-        state as input and return the rewards.
+        Simulation phase in MCTS. It takes the state as input and return the rewards.
 
         Args:
             new_state (mindspore.float32): The state of environment.
 
         Returns:
-            - rewards (mindspore.float32), The results of simulation.
+            rewards (mindspore.float32), The results of simulation.
         """
         raise NotImplementedError("You must implement this function")
 
@@ -481,6 +480,9 @@ class VanillaFunc(AlgorithmFunc):
     Examples:
         >>> env = TicTacToeEnvironment(None)
         >>> vanilla_func = VanillaFunc(env)
+        >>> legal_action = env.legal_action()
+        >>> prior = vanilla_func.calculate_prior(legal_action, legal_action)
+        >>> print(prior)
     """
 
     def __init__(self, env):
@@ -502,7 +504,7 @@ class VanillaFunc(AlgorithmFunc):
             legal_action (mindspore.int32): The legal action of environment
 
         Returns:
-            - prior (mindspore.float32), The probability (or prior) of all the input legal actions.
+            prior (mindspore.float32), The probability (or prior) of all the input legal actions.
         """
         invalid_action_num = (legal_action == -1).sum()
         prior = self.ones_like(legal_action).astype(ms.float32) /  \
@@ -517,7 +519,7 @@ class VanillaFunc(AlgorithmFunc):
             new_state (mindspore.float32): The state of environment.
 
         Returns:
-            - rewards (mindspore.float32), The results of simulation.
+            rewards (mindspore.float32), The results of simulation.
         """
         _, reward, done = self.env.load(new_state)
         while not done:
@@ -579,10 +581,10 @@ class MuzeroFunc(AlgorithmFunc):
 
         Args:
             new_state (mindspore.float32): The state of environment.
-            legal_action (mindspore.int32): The legal action of environment
+            legal_action (mindspore.int32): The legal action of environment.
 
         Returns:
-            prior (mindspore.float32): The probability (or prior) of all the input legal actions.
+            prior (mindspore.float32), The probability (or prior) of all the input legal actions.
         """
         policy, value = self.predict_net(new_state)
         self.value = self.decompressed_value(value)
@@ -596,6 +598,6 @@ class MuzeroFunc(AlgorithmFunc):
             new_state (mindspore.float32): The state of environment.
 
         Returns:
-            rewards (mindspore.float32): The results of simulation.
+            rewards (mindspore.float32), The results of simulation.
         """
         return self.value

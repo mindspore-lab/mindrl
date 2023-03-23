@@ -31,10 +31,8 @@ class StarCraft2Environment(Environment):
     field of collaborative multi-agent reinforcement learning (MARL) based on Blizzard's
     StarCraft II RTS game. SMAC makes use of Blizzard's StarCraft II Machine Learning API and
     DeepMind's PySC2 to provide a convenient interface for autonomous agents to interact with
-    StarCraft II, getting observations and performing actions. Unlike the PySC2, SMAC concentrates
-    on decentralised micromanagement scenarios, where each unit of the game is controlled by an
-    individual RL agent. More detail please have a look at the official github of SMAC:
-    https://github.com/oxwhirl/smac.
+    StarCraft II, getting observations and performing actions. More detail please have a look
+    at the official github of SMAC: https://github.com/oxwhirl/smac.
 
     Args:
         params (dict): A dictionary contains all the parameters which are used in this class.
@@ -46,7 +44,8 @@ class StarCraft2Environment(Environment):
             |                              |  instance of SMAC, such as map_name. For more detail   |
             |                              |  please have a look at its official github.            |
             +------------------------------+--------------------------------------------------------+
-        env_id (int): A integer which is used to set the seed of this environment.
+        env_id (int, optional): A integer which is used to set the seed of this environment,
+            default value means the 0th environment. Default: 0.
 
     Supported Platforms:
         ``Ascend`` ``GPU`` ``CPU``
