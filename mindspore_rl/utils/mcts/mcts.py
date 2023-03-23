@@ -29,7 +29,7 @@ from mindspore.common import ms_function
 GPU_TREE_TYPE = ['GPUCommon']
 GPU_NODE_TYPE = ['GPUVanilla']
 CPU_TREE_TYPE = ['CPUCommon']
-CPU_NODE_TYPE = ['CPUVanilla']
+CPU_NODE_TYPE = ['CPUVanilla', 'CPUMuzero']
 
 
 class MCTS(nn.Cell):
@@ -107,20 +107,6 @@ class MCTS(nn.Cell):
         for shape in state_shape:
             state_size *= shape
 
-        mcts_creation_info = CustomRegOp("creation_kernel") \
-            .input(0, "uct_value") \
-            .output(0, "tree_handle") \
-            .dtype_format(DataType.None_None, DataType.None_None) \
-            .attr("tree_type", "required", "all", value=self._check_params(str, tree_type, "tree_type")) \
-            .attr("node_type", "required", "all", value=self._check_params(str, node_type, "node_type")) \
-            .attr("max_utility", "required", "all", value=self._check_params(float, env.max_utility(), "max_utility")) \
-            .attr("state_size", "required", "all", value=self._check_params(float, state_size, "state_size")) \
-            .attr("player", "required", "all", value=self._check_params(float, root_player, "root_player")) \
-            .attr("total_num_player", "required", "all", value=self._check_params(float,
-                                                                                  env.total_num_player(),
-                                                                                  "total_num_player")) \
-            .target(device) \
-            .get_op_info()
         if device == 'GPU':
             self._check_element(GPU_TREE_TYPE, tree_type, 'MCTS', 'tree_type')
             self._check_element(GPU_NODE_TYPE, node_type, 'MCTS', 'node_type')
@@ -133,6 +119,41 @@ class MCTS(nn.Cell):
             raise ValueError("root_player {} is illegal, it needs to in range [0, {})".format(
                 root_player, env.total_num_player()))
 
+        if (node_type == "CPUMuzero"):
+            mcts_creation_info = CustomRegOp("creation_kernel") \
+                .input(0, "discount") \
+                .input(1, "pb_c_base") \
+                .input(2, "pb_c_init") \
+                .input(3, "root_dirichlet_alpha") \
+                .input(4, "root_exploration_fraction") \
+                .output(0, "tree_handle") \
+                .dtype_format(DataType.None_None, DataType.None_None, DataType.None_None,
+                              DataType.None_None, DataType.None_None, DataType.None_None) \
+                .attr("tree_type", "required", "all", value=self._check_params(str, tree_type, "tree_type")) \
+                .attr("node_type", "required", "all", value=self._check_params(str, node_type, "node_type")) \
+                .attr("max_utility", "required", "all", value=self._check_params(float, env.max_utility(), "max_utility")) \
+                .attr("state_size", "required", "all", value=self._check_params(float, state_size, "state_size")) \
+                .attr("player", "required", "all", value=self._check_params(float, root_player, "root_player")) \
+                .attr("total_num_player", "required", "all", value=self._check_params(float,
+                                                                                      env.total_num_player(),
+                                                                                      "total_num_player")) \
+                .target(device) \
+                .get_op_info()
+        else:
+            mcts_creation_info = CustomRegOp("creation_kernel") \
+                .input(0, "uct_value") \
+                .output(0, "tree_handle") \
+                .dtype_format(DataType.None_None, DataType.None_None) \
+                .attr("tree_type", "required", "all", value=self._check_params(str, tree_type, "tree_type")) \
+                .attr("node_type", "required", "all", value=self._check_params(str, node_type, "node_type")) \
+                .attr("max_utility", "required", "all", value=self._check_params(float, env.max_utility(), "max_utility")) \
+                .attr("state_size", "required", "all", value=self._check_params(float, state_size, "state_size")) \
+                .attr("player", "required", "all", value=self._check_params(float, root_player, "root_player")) \
+                .attr("total_num_player", "required", "all", value=self._check_params(float,
+                                                                                      env.total_num_player(),
+                                                                                      "total_num_player")) \
+                .target(device) \
+                .get_op_info()
         mcts_creation = ops.Custom("{}:MctsCreation".format(so_path), (1,),
                                    ms.int64, "aot", reg_info=mcts_creation_info)
         mcts_creation.add_prim_attr("primitive_target", device)
@@ -263,8 +284,6 @@ class MCTS(nn.Cell):
         self.get_last_state.add_prim_attr("primitive_target", device)
 
         mcts_globalvar_info = CustomRegOp("globalvar_kernel") \
-            .output(0, "success") \
-            .dtype_format(DataType.None_None) \
             .attr("tree_handle", "required", "all", value=self._check_params(float, tree_handle_numpy, "tree_handle")) \
             .target(device) \
             .get_op_info()
