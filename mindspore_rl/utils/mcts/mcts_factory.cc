@@ -81,7 +81,8 @@ std::tuple<int64_t, MonteCarloTreePtr> MonteCarloTreeFactory::CreateTree(const s
 }
 
 void MonteCarloTreeFactory::InsertGlobalVariable(int64_t tree_handle, float *global_variable) {
-  map_handle_to_tree_variable_.insert(std::make_pair(handle_, global_variable));
+    map_handle_to_tree_variable_.insert(
+        std::make_pair(tree_handle, global_variable));
 }
 
 void MonteCarloTreeFactory::RegisterNode(const std::string& node_name, NodeCreator&& node_creator) {
