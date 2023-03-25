@@ -27,6 +27,10 @@ class OUNoise(nn.Cell):
     r"""
     Perform Ornstein-Uhlenbeck (OU) noise base on actions.
 
+    Set zero-mean normal distribution as :math:`N(0, stddev)`,
+    Then the next temporal value is :math:`x\_next = (1 - damping) * x - N(0, stddev)`,
+    The action with OU Noise is :math:`action += x\_next`.
+
     Args:
         stddev (float): stddev of Ornstein-Uhlenbeck (OU) noise.
         damping (float): damping of Ornstein-Uhlenbeck (OU) noise.

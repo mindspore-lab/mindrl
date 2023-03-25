@@ -36,8 +36,8 @@ class SoftUpdate(nn.Cell):
     Args:
         factor (float): moving average factor between [0, 1].
         update_interval (int): The target network parameters will be updated every `update_interval` steps.
-        behavior_params(list): list of behavior network parameters.
-        target_params(list): list of target network parameters.
+        behavior_params(list(Parameter)): list of behavior network parameters.
+        target_params(list(Parameter)): list of target network parameters.
 
     Examples:
         >>> import numpy as np
