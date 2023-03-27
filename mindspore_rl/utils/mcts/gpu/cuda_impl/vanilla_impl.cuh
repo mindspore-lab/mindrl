@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright 2022-2023 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef MINDSPORE_RL_UTILS_MCTS_GPU_GPU_CUDA_IMPL_VANILLA_IMPL_CUH_
-#define MINDSPORE_RL_UTILS_MCTS_GPU_GPU_CUDA_IMPL_VANILLA_IMPL_CUH_
+#ifndef MINDSPORE_RL_UTILS_MCTS_GPU_CUDA_IMPL_VANILLA_IMPL_CUH_
+#define MINDSPORE_RL_UTILS_MCTS_GPU_CUDA_IMPL_VANILLA_IMPL_CUH_
 
 #include <cuda_runtime_api.h>
 
@@ -24,4 +24,4 @@ void CalSelectionPolicy(int *explore_count, float *total_reward, int *parent_exp
 
 void CalUpdate(int *explore_count, float *total_reward, float *values, int player, cudaStream_t cuda_stream);
 
-#endif  // MINDSPORE_RL_UTILS_MCTS_GPU_GPU_CUDA_IMPL_VANILLA_IMPL_CUH_
+#endif  // MINDSPORE_RL_UTILS_MCTS_GPU_CUDA_IMPL_VANILLA_IMPL_CUH_

@@ -20,12 +20,15 @@
 #include <utils/mcts/mcts_factory.h>
 #include <utils/mcts/cpu/cpu_mcts_tree_node.h>
 #include <string>
-
+namespace mindspore_rl {
+namespace utils {
 class CPUMuzeroTreeNode : public CPUMonteCarloTreeNode {
- public:
-  CPUMuzeroTreeNode(const std::string &name, int *action, float *prior, float *init_reward, int player,
-                    int64_t tree_handle, MonteCarloTreeNodePtr parent_node, int row, int state_size)
-      : CPUMonteCarloTreeNode(name, action, prior, init_reward, player, tree_handle, parent_node, row, state_size) {
+public:
+  CPUMuzeroTreeNode(const std::string &name, int *action, float *prior,
+                    float *init_reward, int player, int64_t tree_handle,
+                    MonteCarloTreeNodePtr parent_node, int row, int state_size)
+      : CPUMonteCarloTreeNode(name, action, prior, init_reward, player,
+                              tree_handle, parent_node, row, state_size) {
     node_reward_ = new float[sizeof(float)];
     memset(node_reward_, 0, sizeof(float));
   }
@@ -35,9 +38,10 @@ class CPUMuzeroTreeNode : public CPUMonteCarloTreeNode {
   void SetInitReward(float *init_reward) override;
   MonteCarloTreeNodePtr BestAction() const override;
 
- private:
+private:
   float *node_reward_;
 };
 MS_REG_NODE(CPUMuzero, CPUMuzeroTreeNode);
-
-#endif  // MINDSPORE_RL_UTILS_MCTS_CPU_CPU_MUZERO_H_
+} // namespace utils
+} // namespace mindspore_rl
+#endif // MINDSPORE_RL_UTILS_MCTS_CPU_CPU_MUZERO_H_

@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright 2022-2023 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,10 @@
 #include <algorithm>
 #include "utils/mcts/mcts_factory.h"
 #include "utils/mcts/mcts_tree_node.h"
-
-bool MonteCarloTree::Selection(int *action_list, int max_action, void *device_stream) {
+namespace mindspore_rl {
+namespace utils {
+bool MonteCarloTree::Selection(int *action_list, int max_action,
+                               void *device_stream) {
   visited_path_.clear();
   visited_path_.emplace_back(root_);
   MonteCarloTreeNodePtr current_node = root_;
@@ -38,7 +40,8 @@ bool MonteCarloTree::Selection(int *action_list, int max_action, void *device_st
     visited_path_.emplace_back(selected_child);
     current_node = selected_child;
   }
-  // If max_action is -1, which means that the Selection will only return the last action.
+  // If max_action is -1, which means that the Selection will only return the
+  // last action.
   if (max_action == -1 && selected_child != nullptr) {
     Memcpy(action_list, selected_child->action(), sizeof(int));
   }
@@ -55,8 +58,8 @@ bool MonteCarloTree::Backpropagation(float *returns, void *device_stream) {
     solved = true;
   }
   // For each node in visited path, call the Update() to update the value.
-  // If current branch is solved, backprop the best outcome from the bottom to top.
-  // for (auto &node : visited_path_) {
+  // If current branch is solved, backprop the best outcome from the bottom to
+  // top. for (auto &node : visited_path_) {
   for (int i = visited_path_.size() - 1; i >= 0; i--) {
     auto node = visited_path_[i];
     node->Update(returns, total_num_player_, device_stream);
@@ -66,11 +69,13 @@ bool MonteCarloTree::Backpropagation(float *returns, void *device_stream) {
       for (const auto &child : node->children()) {
         if (child->outcome().empty()) {
           all_solved = false;
-        } else if (best == nullptr || child->outcome()[child->player()] > best->outcome()[best->player()]) {
+        } else if (best == nullptr || child->outcome()[child->player()] >
+                                          best->outcome()[best->player()]) {
           best = child;
         }
       }
-      if (best != nullptr && (all_solved || best->outcome()[best->player()] == max_utility_)) {
+      if (best != nullptr &&
+          (all_solved || best->outcome()[best->player()] == max_utility_)) {
         node->set_outcome(best->outcome());
       } else {
         solved = false;
@@ -85,3 +90,5 @@ int *MonteCarloTree::BestAction() {
   auto best_child_node = root_->BestAction();
   return best_child_node->action();
 }
+} // namespace utils
+} // namespace mindspore_rl

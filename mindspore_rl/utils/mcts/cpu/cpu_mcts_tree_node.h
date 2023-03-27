@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright 2022-2023 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,25 +23,35 @@
 #include <memory>
 #include <string>
 #include <vector>
-
+namespace mindspore_rl {
+namespace utils {
 class CPUMonteCarloTreeNode : public MonteCarloTreeNode {
- public:
-  CPUMonteCarloTreeNode(std::string name, int *action, float *prior, float *init_reward, int player,
-                        int64_t tree_handle, std::shared_ptr<MonteCarloTreeNode> parent_node, int row, int state_size)
-      : MonteCarloTreeNode(name, action, prior, init_reward, player, tree_handle, parent_node, row, state_size) {
+public:
+  CPUMonteCarloTreeNode(std::string name, int *action, float *prior,
+                        float *init_reward, int player, int64_t tree_handle,
+                        std::shared_ptr<MonteCarloTreeNode> parent_node,
+                        int row, int state_size)
+      : MonteCarloTreeNode(name, action, prior, init_reward, player,
+                           tree_handle, parent_node, row, state_size) {
     if (state_size > 0) {
       InitNode(state_size, init_reward, action, prior);
     } else {
-      std::cout << "[ERROR]The state size is smaller than 0, please check" << std::endl;
+      std::cout << "[ERROR]The state size is smaller than 0, please check"
+                << std::endl;
     }
   }
 
   ~CPUMonteCarloTreeNode() override = default;
 
-  void InitNode(int state_size, float *init_reward, int *action, float *prior) override;
-  int GetMaxPosition(float *selection_value, int num_items, void *device_stream) override;
-  bool BestActionPolicy(std::shared_ptr<MonteCarloTreeNode> child_node) const override;
-  virtual void SetInitReward(float *init_reward) { Memcpy(total_reward_, init_reward + player_, sizeof(float)); }
+  void InitNode(int state_size, float *init_reward, int *action,
+                float *prior) override;
+  int GetMaxPosition(float *selection_value, int num_items,
+                     void *device_stream) override;
+  bool BestActionPolicy(
+      std::shared_ptr<MonteCarloTreeNode> child_node) const override;
+  virtual void SetInitReward(float *init_reward) {
+    Memcpy(total_reward_, init_reward + player_, sizeof(float));
+  }
   std::shared_ptr<MonteCarloTreeNode> BestAction() const override;
 
   std::string DebugString() override {
@@ -53,19 +63,22 @@ class CPUMonteCarloTreeNode : public MonteCarloTreeNode {
       action_value = &temp;
     }
     std::ostringstream oss;
-    oss << tree_handle_ << "_" << name_ << "_row_" << row_ << "_player_" << player_;
+    oss << tree_handle_ << "_" << name_ << "_row_" << row_ << "_player_"
+        << player_;
     oss << "_action_" << *action_value << "_terminal_" << terminal_;
     return oss.str();
   }
 
   void *AllocateMem(size_t size) override;
   bool Memcpy(void *dst_ptr, void *src_ptr, size_t size) override;
-  bool MemcpyAsync(void *dst_ptr, void *src_ptr, size_t size, void *device_stream) override;
+  bool MemcpyAsync(void *dst_ptr, void *src_ptr, size_t size,
+                   void *device_stream) override;
   bool Memset(void *dst_ptr, int value, size_t size) override;
   bool Free(void *ptr) override;
 
   virtual bool SelectionPolicy(float *uct_value, void *device_stream) const = 0;
   virtual bool Update(float *returns, int num_player, void *device_stream) = 0;
 };
-
-#endif  // MINDSPORE_RL_UTILS_MCTS_CPU_CPU_MCTS_TREE_NODE_H_
+} // namespace utils
+} // namespace mindspore_rl
+#endif // MINDSPORE_RL_UTILS_MCTS_CPU_CPU_MCTS_TREE_NODE_H_

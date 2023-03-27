@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright 2022-2023 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef MINDSPORE_RL_UTILS_MCTS_GPU_GPU_CUDA_IMPL_ARGMAX_IMPL_CUH_
-#define MINDSPORE_RL_UTILS_MCTS_GPU_GPU_CUDA_IMPL_ARGMAX_IMPL_CUH_
+#ifndef MINDSPORE_RL_UTILS_MCTS_GPU_CUDA_IMPL_ARGMAX_IMPL_CUH_
+#define MINDSPORE_RL_UTILS_MCTS_GPU_CUDA_IMPL_ARGMAX_IMPL_CUH_
 
 #include <cuda_runtime_api.h>
 
 void CalArgmax(const float *selection_value, int num_items, int *output, cudaStream_t cuda_stream);
 
-#endif  // MINDSPORE_RL_UTILS_MCTS_GPU_GPU_CUDA_IMPL_ARGMAX_IMPL_CUH_
+#endif  // MINDSPORE_RL_UTILS_MCTS_GPU_CUDA_IMPL_ARGMAX_IMPL_CUH_

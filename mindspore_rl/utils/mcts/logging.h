@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright 2022-2023 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,8 @@
 
 #include <stdio.h>
 #include <cstdarg>
-
+namespace mindspore_rl {
+namespace utils {
 constexpr int MAX_LOG_LEN = 500;
 constexpr int ONE = 1;
 
@@ -35,11 +36,13 @@ void LogModule(char *buf, int bufLen, const char *fmt, ...) {
   va_end(ap);
 }
 
-#define LOG_ERROR(fmt, ...)                                                                     \
-  do {                                                                                          \
-    char Logbuff[MAX_LOG_LEN] = {0};                                                            \
-    LogModule(Logbuff, sizeof(Logbuff), fmt, ##__VA_ARGS__);                                    \
-    printf("[ERROR] [mindspore_rl/%s:%d] %s] %s\n", __FILE__, __LINE__, __FUNCTION__, Logbuff); \
+#define LOG_ERROR(fmt, ...)                                                    \
+  do {                                                                         \
+    char Logbuff[MAX_LOG_LEN] = {0};                                           \
+    LogModule(Logbuff, sizeof(Logbuff), fmt, ##__VA_ARGS__);                   \
+    printf("[ERROR] [mindspore_rl/%s:%d] %s] %s\n", __FILE__, __LINE__,        \
+           __FUNCTION__, Logbuff);                                             \
   } while (0)
-
-#endif  // MINDSPORE_RL_UTILS_MCTS_LOGGING_H_
+} // namespace utils
+} // namespace mindspore_rl
+#endif // MINDSPORE_RL_UTILS_MCTS_LOGGING_H_

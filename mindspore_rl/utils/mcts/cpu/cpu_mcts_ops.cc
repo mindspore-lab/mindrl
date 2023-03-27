@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright 2022-2023 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,13 @@
 #include <utils/mcts/custom_aot_extra.h>
 #include <cstdint>
 #include <iostream>
-
+namespace mindspore_rl {
+namespace utils {
 constexpr int kErrorCode = 2;
 constexpr int kInputIndex = 1;
 
 class CreationAttr : public AotKernelData {
- public:
+public:
   std::string tree_type;
   std::string node_type;
   float max_utility;
@@ -34,7 +35,8 @@ class CreationAttr : public AotKernelData {
   float total_num_player;
 };
 
-extern "C" int MctsCreationInit(int *ndims, int64_t **shapes, const char **dtypes, AotExtra *extra) {
+extern "C" int MctsCreationInit(int *ndims, int64_t **shapes,
+                                const char **dtypes, AotExtra *extra) {
   CreationAttr *kernel_ptr = new CreationAttr;
   kernel_ptr->tree_type = extra->Attr<std::string>("tree_type");
   kernel_ptr->node_type = extra->Attr<std::string>("node_type");
@@ -46,7 +48,8 @@ extern "C" int MctsCreationInit(int *ndims, int64_t **shapes, const char **dtype
   return 0;
 }
 
-extern "C" int MctsCreation(int nparam, void **params, int *ndims, int64_t **shapes, const char **dtypes, void *stream,
+extern "C" int MctsCreation(int nparam, void **params, int *ndims,
+                            int64_t **shapes, const char **dtypes, void *stream,
                             void *extra) {
   // Input Attr
   // MctsCreation has 6 compulsory attr value
@@ -65,22 +68,27 @@ extern "C" int MctsCreation(int nparam, void **params, int *ndims, int64_t **sha
   int player = static_cast<int>(kernel_ptr->player);
   int total_num_player = static_cast<int>(kernel_ptr->total_num_player);
   // Input value
-  // The input of MctsCreation will be treated as the global variable of the monte carlo tree. It
-  // is shared by all the node in this monte carlo tree. These variable will be saved in a std::vector with void* type.
-  // User can call MonteCarloTreeFactory::GetInstance().GetTreeVariableByHandle(tree_handle_) to obtain the variable
-  // vector and select the corresponding variable by index.
+  // The input of MctsCreation will be treated as the global variable of the
+  // monte carlo tree. It is shared by all the node in this monte carlo tree.
+  // These variable will be saved in a std::vector with void* type. User can
+  // call
+  // MonteCarloTreeFactory::GetInstance().GetTreeVariableByHandle(tree_handle_)
+  // to obtain the variable vector and select the corresponding variable by
+  // index.
   float *input_global_const = new float[nparam - 1];
   for (int i = 0; i < nparam - 1; i++) {
     input_global_const[i] = static_cast<float *>(params[i])[0];
   }
   // Output value
-  // The output value of MctsCreation is the unique handle of this new monte carlo tree.
+  // The output value of MctsCreation is the unique handle of this new monte
+  // carlo tree.
   int64_t *output = static_cast<int64_t *>(params[nparam - 1]);
 
   int64_t tree_handle;
   MonteCarloTreePtr tree;
   std::tie(tree_handle, tree) = MonteCarloTreeFactory::GetInstance().CreateTree(
-    tree_name, node_name, player, max_utility, state_size, total_num_player, input_global_const);
+      tree_name, node_name, player, max_utility, state_size, total_num_player,
+      input_global_const);
   if (tree == nullptr) {
     return kErrorCode;
   }
@@ -89,12 +97,13 @@ extern "C" int MctsCreation(int nparam, void **params, int *ndims, int64_t **sha
 }
 
 class SelectionAttr : public AotKernelData {
- public:
+public:
   float max_action;
   float tree_handle;
 };
 
-extern "C" int MctsSelectionInit(int *ndims, int64_t **shapes, const char **dtypes, AotExtra *extra) {
+extern "C" int MctsSelectionInit(int *ndims, int64_t **shapes,
+                                 const char **dtypes, AotExtra *extra) {
   SelectionAttr *kernel_ptr = new SelectionAttr;
   kernel_ptr->max_action = extra->Attr<float>("max_action");
   kernel_ptr->tree_handle = extra->Attr<float>("tree_handle");
@@ -102,11 +111,13 @@ extern "C" int MctsSelectionInit(int *ndims, int64_t **shapes, const char **dtyp
   return 0;
 }
 
-extern "C" int MctsSelection(int nparam, void **params, int *ndims, int64_t **shapes, const char **dtypes, void *stream,
-                             void *extra) {
+extern "C" int MctsSelection(int nparam, void **params, int *ndims,
+                             int64_t **shapes, const char **dtypes,
+                             void *stream, void *extra) {
   // Input Attr
   // MctsSelection has 2 compulsory input attr
-  // 1. The max length of action that MctsSelection returns, if max_action = -1, it will only return the last action
+  // 1. The max length of action that MctsSelection returns, if max_action = -1,
+  // it will only return the last action
   // 2. The unique tree handle
   AotExtra *extra_aot = static_cast<AotExtra *>(extra);
   auto kernel_ptr = static_cast<SelectionAttr *>(extra_aot->KernelData());
@@ -114,12 +125,15 @@ extern "C" int MctsSelection(int nparam, void **params, int *ndims, int64_t **sh
   int64_t tree_handle = static_cast<int64_t>(kernel_ptr->tree_handle);
   // Output value
   // It has two output value:
-  // 1. The handle of visited path, but its a dummy handle. There is no map to represent the mapping between handle
-  //    and visited path. The visited path is saved in tree. This dummy handle is more like an dummy object that
-  //    user can operate in python side.
-  // 2. If the max_action is given, it will return a Tensor which is combined by actions of each node in visited path.
-  //    Moreover, the Tensor will be filled with -1, if its length does not reach the max_action value.
-  //    If the max_action is NOT given, it will only return the last action in visited path.
+  // 1. The handle of visited path, but its a dummy handle. There is no map to
+  // represent the mapping between handle
+  //    and visited path. The visited path is saved in tree. This dummy handle
+  //    is more like an dummy object that user can operate in python side.
+  // 2. If the max_action is given, it will return a Tensor which is combined by
+  // actions of each node in visited path.
+  //    Moreover, the Tensor will be filled with -1, if its length does not
+  //    reach the max_action value. If the max_action is NOT given, it will only
+  //    return the last action in visited path.
   int64_t *visited_path_handle = static_cast<int64_t *>(params[0]);
   int *out_action = static_cast<int *>(params[1]);
 
@@ -131,7 +145,8 @@ extern "C" int MctsSelection(int nparam, void **params, int *ndims, int64_t **sh
   if (max_action == -1) {
     size_of_action = 1;
   }
-  int *action_list = reinterpret_cast<int *>(tree->AllocateMem(size_of_action * sizeof(int)));
+  int *action_list =
+      reinterpret_cast<int *>(tree->AllocateMem(size_of_action * sizeof(int)));
   tree->Memset(action_list, -1, sizeof(int) * size_of_action);
   auto ret = tree->Selection(action_list, max_action, nullptr);
   if (!ret) {
@@ -145,13 +160,14 @@ extern "C" int MctsSelection(int nparam, void **params, int *ndims, int64_t **sh
 }
 
 class ExpansionAttr : public AotKernelData {
- public:
+public:
   std::string node_type;
   bool has_init_reward;
   float tree_handle;
 };
 
-extern "C" int MctsExpansionInit(int *ndims, int64_t **shapes, const char **dtypes, AotExtra *extra) {
+extern "C" int MctsExpansionInit(int *ndims, int64_t **shapes,
+                                 const char **dtypes, AotExtra *extra) {
   ExpansionAttr *kernel_ptr = new ExpansionAttr;
   kernel_ptr->node_type = extra->Attr<std::string>("node_type");
   kernel_ptr->has_init_reward = extra->Attr<bool>("has_init_reward");
@@ -160,8 +176,9 @@ extern "C" int MctsExpansionInit(int *ndims, int64_t **shapes, const char **dtyp
   return 0;
 }
 
-extern "C" int MctsExpansion(int nparam, void **params, int *ndims, int64_t **shapes, const char **dtypes, void *stream,
-                             void *extra) {
+extern "C" int MctsExpansion(int nparam, void **params, int *ndims,
+                             int64_t **shapes, const char **dtypes,
+                             void *stream, void *extra) {
   // Input Attr
   // MctsExpansion has 3 compulsory input attr
   // 1. The name of node
@@ -176,7 +193,8 @@ extern "C" int MctsExpansion(int nparam, void **params, int *ndims, int64_t **sh
   // MctsExpansion has 4 input values:
   // 1. A dummy handle, it is not used.
   // 2. action is a Tensor that is used to create the node
-  // 3. prior is a Tensor that states for probability, which has the same length as action.
+  // 3. prior is a Tensor that states for probability, which has the same length
+  // as action.
   // 4. Which player does these nodes belong to
   int *action = static_cast<int *>(params[1]);
   float *prior = static_cast<float *>(params[2]);
@@ -191,25 +209,28 @@ extern "C" int MctsExpansion(int nparam, void **params, int *ndims, int64_t **sh
   if (!has_init_reward) {
     init_reward = nullptr;
   }
-  bool ret = tree->Expansion(node_name, action, prior, init_reward, shapes[kInputIndex][0], tree->state_size());
+  bool ret = tree->Expansion(node_name, action, prior, init_reward,
+                             shapes[kInputIndex][0], tree->state_size());
 
   tree->Memcpy(output, &ret, sizeof(bool));
   return 0;
 }
 
 class BackpropagationAttr : public AotKernelData {
- public:
+public:
   float tree_handle;
 };
 
-extern "C" int MctsBackpropagationInit(int *ndims, int64_t **shapes, const char **dtypes, AotExtra *extra) {
+extern "C" int MctsBackpropagationInit(int *ndims, int64_t **shapes,
+                                       const char **dtypes, AotExtra *extra) {
   BackpropagationAttr *kernel_ptr = new BackpropagationAttr;
   kernel_ptr->tree_handle = extra->Attr<float>("tree_handle");
   extra->SetKernelData(kernel_ptr);
   return 0;
 }
 
-extern "C" int MctsBackpropagation(int nparam, void **params, int *ndims, int64_t **shapes, const char **dtypes,
+extern "C" int MctsBackpropagation(int nparam, void **params, int *ndims,
+                                   int64_t **shapes, const char **dtypes,
                                    void *stream, void *extra) {
   // Input Attr
   // MctsBackpropagation has 1 input attr
@@ -237,18 +258,20 @@ extern "C" int MctsBackpropagation(int nparam, void **params, int *ndims, int64_
 }
 
 class BestActionAttr : public AotKernelData {
- public:
+public:
   float tree_handle;
 };
 
-extern "C" int BestActionInit(int *ndims, int64_t **shapes, const char **dtypes, AotExtra *extra) {
+extern "C" int BestActionInit(int *ndims, int64_t **shapes, const char **dtypes,
+                              AotExtra *extra) {
   BestActionAttr *kernel_ptr = new BestActionAttr;
   kernel_ptr->tree_handle = extra->Attr<float>("tree_handle");
   extra->SetKernelData(kernel_ptr);
   return 0;
 }
 
-extern "C" int BestAction(int nparam, void **params, int *ndims, int64_t **shapes, const char **dtypes, void *stream,
+extern "C" int BestAction(int nparam, void **params, int *ndims,
+                          int64_t **shapes, const char **dtypes, void *stream,
                           void *extra) {
   // Input Attr
   // BestAction has 1 input attr
@@ -269,24 +292,27 @@ extern "C" int BestAction(int nparam, void **params, int *ndims, int64_t **shape
 }
 
 class UpdateLeafNodeOutcomeAttr : public AotKernelData {
- public:
+public:
   float tree_handle;
 };
 
-extern "C" int UpdateLeafNodeOutcomeInit(int *ndims, int64_t **shapes, const char **dtypes, AotExtra *extra) {
+extern "C" int UpdateLeafNodeOutcomeInit(int *ndims, int64_t **shapes,
+                                         const char **dtypes, AotExtra *extra) {
   UpdateLeafNodeOutcomeAttr *kernel_ptr = new UpdateLeafNodeOutcomeAttr;
   kernel_ptr->tree_handle = extra->Attr<float>("tree_handle");
   extra->SetKernelData(kernel_ptr);
   return 0;
 }
 
-extern "C" int UpdateLeafNodeOutcome(int nparam, void **params, int *ndims, int64_t **shapes, const char **dtypes,
+extern "C" int UpdateLeafNodeOutcome(int nparam, void **params, int *ndims,
+                                     int64_t **shapes, const char **dtypes,
                                      void *stream, void *extra) {
   // Input Attr
   // UpdateLeafNodeOutcome has 1 input attr
   // 1. The unique tree handle
   AotExtra *extra_aot = static_cast<AotExtra *>(extra);
-  auto kernel_ptr = static_cast<UpdateLeafNodeOutcomeAttr *>(extra_aot->KernelData());
+  auto kernel_ptr =
+      static_cast<UpdateLeafNodeOutcomeAttr *>(extra_aot->KernelData());
   int64_t tree_handle = static_cast<int64_t>(kernel_ptr->tree_handle);
   // Input value
   // UpdateOutcome has 2 input values:
@@ -313,24 +339,28 @@ extern "C" int UpdateLeafNodeOutcome(int nparam, void **params, int *ndims, int6
 }
 
 class UpdateLeafNodeTerminalAttr : public AotKernelData {
- public:
+public:
   float tree_handle;
 };
 
-extern "C" int UpdateLeafNodeTerminalInit(int *ndims, int64_t **shapes, const char **dtypes, AotExtra *extra) {
+extern "C" int UpdateLeafNodeTerminalInit(int *ndims, int64_t **shapes,
+                                          const char **dtypes,
+                                          AotExtra *extra) {
   UpdateLeafNodeTerminalAttr *kernel_ptr = new UpdateLeafNodeTerminalAttr;
   kernel_ptr->tree_handle = extra->Attr<float>("tree_handle");
   extra->SetKernelData(kernel_ptr);
   return 0;
 }
 
-extern "C" int UpdateLeafNodeTerminal(int nparam, void **params, int *ndims, int64_t **shapes, const char **dtypes,
+extern "C" int UpdateLeafNodeTerminal(int nparam, void **params, int *ndims,
+                                      int64_t **shapes, const char **dtypes,
                                       void *stream, void *extra) {
   // Input Attr
   // UpdateLeafNodeTerminal has 1 input attr
   // 1. The unique tree handle
   AotExtra *extra_aot = static_cast<AotExtra *>(extra);
-  auto kernel_ptr = static_cast<UpdateLeafNodeTerminalAttr *>(extra_aot->KernelData());
+  auto kernel_ptr =
+      static_cast<UpdateLeafNodeTerminalAttr *>(extra_aot->KernelData());
   int64_t tree_handle = static_cast<int64_t>(kernel_ptr->tree_handle);
   // Input value
   // UpdateTerminal has 2 input values:
@@ -352,24 +382,27 @@ extern "C" int UpdateLeafNodeTerminal(int nparam, void **params, int *ndims, int
 }
 
 class UpdateLeafNodeStateAttr : public AotKernelData {
- public:
+public:
   float tree_handle;
 };
 
-extern "C" int UpdateLeafNodeStateInit(int *ndims, int64_t **shapes, const char **dtypes, AotExtra *extra) {
+extern "C" int UpdateLeafNodeStateInit(int *ndims, int64_t **shapes,
+                                       const char **dtypes, AotExtra *extra) {
   UpdateLeafNodeStateAttr *kernel_ptr = new UpdateLeafNodeStateAttr;
   kernel_ptr->tree_handle = extra->Attr<float>("tree_handle");
   extra->SetKernelData(kernel_ptr);
   return 0;
 }
 
-extern "C" int UpdateLeafNodeState(int nparam, void **params, int *ndims, int64_t **shapes, const char **dtypes,
+extern "C" int UpdateLeafNodeState(int nparam, void **params, int *ndims,
+                                   int64_t **shapes, const char **dtypes,
                                    void *stream, void *extra) {
   // Input Attr
   // UpdateLeafNodeState has 1 input attr
   // 1. The unique tree handle
   AotExtra *extra_aot = static_cast<AotExtra *>(extra);
-  auto kernel_ptr = static_cast<UpdateLeafNodeStateAttr *>(extra_aot->KernelData());
+  auto kernel_ptr =
+      static_cast<UpdateLeafNodeStateAttr *>(extra_aot->KernelData());
   int64_t tree_handle = static_cast<int64_t>(kernel_ptr->tree_handle);
   // Input value
   // UpdateState has 2 input values:
@@ -391,18 +424,20 @@ extern "C" int UpdateLeafNodeState(int nparam, void **params, int *ndims, int64_
 }
 
 class UpdateRootStateAttr : public AotKernelData {
- public:
+public:
   float tree_handle;
 };
 
-extern "C" int UpdateRootStateInit(int *ndims, int64_t **shapes, const char **dtypes, AotExtra *extra) {
+extern "C" int UpdateRootStateInit(int *ndims, int64_t **shapes,
+                                   const char **dtypes, AotExtra *extra) {
   UpdateRootStateAttr *kernel_ptr = new UpdateRootStateAttr;
   kernel_ptr->tree_handle = extra->Attr<float>("tree_handle");
   extra->SetKernelData(kernel_ptr);
   return 0;
 }
 
-extern "C" int UpdateRootState(int nparam, void **params, int *ndims, int64_t **shapes, const char **dtypes,
+extern "C" int UpdateRootState(int nparam, void **params, int *ndims,
+                               int64_t **shapes, const char **dtypes,
                                void *stream, void *extra) {
   // Input Attr
   // UpdateRootState has 1 input attr
@@ -428,18 +463,20 @@ extern "C" int UpdateRootState(int nparam, void **params, int *ndims, int64_t **
 }
 
 class GetLastStateAttr : public AotKernelData {
- public:
+public:
   float tree_handle;
 };
 
-extern "C" int GetLastStateInit(int *ndims, int64_t **shapes, const char **dtypes, AotExtra *extra) {
+extern "C" int GetLastStateInit(int *ndims, int64_t **shapes,
+                                const char **dtypes, AotExtra *extra) {
   GetLastStateAttr *kernel_ptr = new GetLastStateAttr;
   kernel_ptr->tree_handle = extra->Attr<float>("tree_handle");
   extra->SetKernelData(kernel_ptr);
   return 0;
 }
 
-extern "C" int GetLastState(int nparam, void **params, int *ndims, int64_t **shapes, const char **dtypes, void *stream,
+extern "C" int GetLastState(int nparam, void **params, int *ndims,
+                            int64_t **shapes, const char **dtypes, void *stream,
                             void *extra) {
   // Input Attr
   // GetLastState has 1 input attr
@@ -468,18 +505,20 @@ extern "C" int GetLastState(int nparam, void **params, int *ndims, int64_t **sha
 }
 
 class DestroyTreeAttr : public AotKernelData {
- public:
+public:
   float tree_handle;
 };
 
-extern "C" int DestroyTreeInit(int *ndims, int64_t **shapes, const char **dtypes, AotExtra *extra) {
+extern "C" int DestroyTreeInit(int *ndims, int64_t **shapes,
+                               const char **dtypes, AotExtra *extra) {
   DestroyTreeAttr *kernel_ptr = new DestroyTreeAttr;
   kernel_ptr->tree_handle = extra->Attr<float>("tree_handle");
   extra->SetKernelData(kernel_ptr);
   return 0;
 }
 
-extern "C" int DestroyTree(int nparam, void **params, int *ndims, int64_t **shapes, const char **dtypes, void *stream,
+extern "C" int DestroyTree(int nparam, void **params, int *ndims,
+                           int64_t **shapes, const char **dtypes, void *stream,
                            void *extra) {
   // Input value
   // Unique tree handle
@@ -487,7 +526,8 @@ extern "C" int DestroyTree(int nparam, void **params, int *ndims, int64_t **shap
   // Output value
   // Whether the destroy executes successfully.
   bool *output = static_cast<bool *>(params[1]);
-  auto tree = MonteCarloTreeFactory::GetInstance().GetTreeByHandle(*tree_handle);
+  auto tree =
+      MonteCarloTreeFactory::GetInstance().GetTreeByHandle(*tree_handle);
   if (tree == nullptr) {
     return kErrorCode;
   }
@@ -502,18 +542,20 @@ extern "C" int DestroyTree(int nparam, void **params, int *ndims, int64_t **shap
 }
 
 class RestoreTreeAttr : public AotKernelData {
- public:
+public:
   float tree_handle;
 };
 
-extern "C" int RestoreTreeInit(int *ndims, int64_t **shapes, const char **dtypes, AotExtra *extra) {
+extern "C" int RestoreTreeInit(int *ndims, int64_t **shapes,
+                               const char **dtypes, AotExtra *extra) {
   RestoreTreeAttr *kernel_ptr = new RestoreTreeAttr;
   kernel_ptr->tree_handle = extra->Attr<float>("tree_handle");
   extra->SetKernelData(kernel_ptr);
   return 0;
 }
 
-extern "C" int RestoreTree(int nparam, void **params, int *ndims, int64_t **shapes, const char **dtypes, void *stream,
+extern "C" int RestoreTree(int nparam, void **params, int *ndims,
+                           int64_t **shapes, const char **dtypes, void *stream,
                            void *extra) {
   // Input Value
   // Unique tree handle
@@ -525,31 +567,34 @@ extern "C" int RestoreTree(int nparam, void **params, int *ndims, int64_t **shap
       MonteCarloTreeFactory::GetInstance().GetTreeByHandle(*tree_handle);
   if (tree == nullptr) {
     return kErrorCode;
-    }
+  }
   tree->Restore();
   bool ret = true;
   tree->Memcpy(output, &ret, sizeof(bool));
 }
 
 class UpdateGlobalVariableAttr : public AotKernelData {
- public:
+public:
   float tree_handle;
 };
 
-extern "C" int UpdateGlobalVariableInit(int *ndims, int64_t **shapes, const char **dtypes, AotExtra *extra) {
+extern "C" int UpdateGlobalVariableInit(int *ndims, int64_t **shapes,
+                                        const char **dtypes, AotExtra *extra) {
   UpdateGlobalVariableAttr *kernel_ptr = new UpdateGlobalVariableAttr;
   kernel_ptr->tree_handle = extra->Attr<float>("tree_handle");
   extra->SetKernelData(kernel_ptr);
   return 0;
 }
 
-extern "C" int UpdateGlobalVariable(int nparam, void **params, int *ndims, int64_t **shapes, const char **dtypes,
+extern "C" int UpdateGlobalVariable(int nparam, void **params, int *ndims,
+                                    int64_t **shapes, const char **dtypes,
                                     void *stream, void *extra) {
   // Input Attr
   // UpdateRootState has 1 input attr
   // 1. The unique tree handle
   AotExtra *extra_aot = static_cast<AotExtra *>(extra);
-  auto kernel_ptr = static_cast<UpdateGlobalVariableAttr *>(extra_aot->KernelData());
+  auto kernel_ptr =
+      static_cast<UpdateGlobalVariableAttr *>(extra_aot->KernelData());
   int64_t tree_handle = static_cast<int64_t>(kernel_ptr->tree_handle);
 
   float *input_global_variable = new float[nparam - 1];
@@ -557,25 +602,28 @@ extern "C" int UpdateGlobalVariable(int nparam, void **params, int *ndims, int64
     input_global_variable[i] = static_cast<float *>(params[i])[0];
   }
   bool *output = static_cast<bool *>(params[nparam - 1]);
-  MonteCarloTreeFactory::GetInstance().InsertGlobalVariable(tree_handle, input_global_variable);
+  MonteCarloTreeFactory::GetInstance().InsertGlobalVariable(
+      tree_handle, input_global_variable);
 
   output[0] = true;
   return 0;
 }
 
 class GetRootInfoAttr : public AotKernelData {
- public:
+public:
   float tree_handle;
 };
 
-extern "C" int GetRootInfoInit(int *ndims, int64_t **shapes, const char **dtypes, AotExtra *extra) {
+extern "C" int GetRootInfoInit(int *ndims, int64_t **shapes,
+                               const char **dtypes, AotExtra *extra) {
   GetRootInfoAttr *kernel_ptr = new GetRootInfoAttr;
   kernel_ptr->tree_handle = extra->Attr<float>("tree_handle");
   extra->SetKernelData(kernel_ptr);
   return 0;
 }
 
-extern "C" int GetRootInfo(int nparam, void **params, int *ndims, int64_t **shapes, const char **dtypes, void *stream,
+extern "C" int GetRootInfo(int nparam, void **params, int *ndims,
+                           int64_t **shapes, const char **dtypes, void *stream,
                            void *extra) {
   // Input Attr
   // GetLastState has 1 input attr
@@ -599,9 +647,13 @@ extern "C" int GetRootInfo(int nparam, void **params, int *ndims, int64_t **shap
     sum_explore_count += *child->explore_count();
   }
   for (int i = 0; i < root->children().size(); i++) {
-    float norm_count = static_cast<float>(*(root->children()[i]->explore_count())) / sum_explore_count;
+    float norm_count =
+        static_cast<float>(*(root->children()[i]->explore_count())) /
+        sum_explore_count;
     tree->Memcpy(out_explore_count + i, &norm_count, sizeof(float));
   }
   tree->Memcpy(out_value, &value, sizeof(float));
   return 0;
 }
+} // namespace utils
+} // namespace mindspore_rl

@@ -20,17 +20,22 @@
 #include <limits>
 #include <random>
 #include <numeric>
-
+namespace mindspore_rl {
+namespace utils {
 using namespace std;
 
-bool CPUMuzeroTreeNode::SelectionPolicy(float *uct_value, void *device_stream) const {
+bool CPUMuzeroTreeNode::SelectionPolicy(float *uct_value,
+                                        void *device_stream) const {
   float value_score = 0;
   if (!outcome_.empty()) {
     *uct_value = outcome_[player_];
     return true;
   }
-  auto global_const_vector = MonteCarloTreeFactory::GetInstance().GetTreeConstByHandle(tree_handle_);
-  auto global_variable_vector = MonteCarloTreeFactory::GetInstance().GetTreeVariableByHandle(tree_handle_);
+  auto global_const_vector =
+      MonteCarloTreeFactory::GetInstance().GetTreeConstByHandle(tree_handle_);
+  auto global_variable_vector =
+      MonteCarloTreeFactory::GetInstance().GetTreeVariableByHandle(
+          tree_handle_);
   float minimum = global_variable_vector[0];
   float maximum = global_variable_vector[1];
   float pb_c_base = global_const_vector[1];
@@ -50,11 +55,15 @@ bool CPUMuzeroTreeNode::SelectionPolicy(float *uct_value, void *device_stream) c
   return true;
 }
 
-bool CPUMuzeroTreeNode::Update(float *values, int total_num_player, void *device_stream) {
+bool CPUMuzeroTreeNode::Update(float *values, int total_num_player,
+                               void *device_stream) {
   *total_reward_ += values[player_];
   *explore_count_ += 1;
-  auto global_variable_vector = MonteCarloTreeFactory::GetInstance().GetTreeVariableByHandle(tree_handle_);
-  auto global_const_vector = MonteCarloTreeFactory::GetInstance().GetTreeConstByHandle(tree_handle_);
+  auto global_variable_vector =
+      MonteCarloTreeFactory::GetInstance().GetTreeVariableByHandle(
+          tree_handle_);
+  auto global_const_vector =
+      MonteCarloTreeFactory::GetInstance().GetTreeConstByHandle(tree_handle_);
   float minimum = global_variable_vector[0];
   float maximum = global_variable_vector[1];
   float discount = global_const_vector[0];
@@ -73,7 +82,9 @@ void CPUMuzeroTreeNode::SetInitReward(float *init_reward) {
 }
 
 MonteCarloTreeNodePtr CPUMuzeroTreeNode::BestAction() const {
-  auto global_variable_vector = MonteCarloTreeFactory::GetInstance().GetTreeVariableByHandle(tree_handle_);
+  auto global_variable_vector =
+      MonteCarloTreeFactory::GetInstance().GetTreeVariableByHandle(
+          tree_handle_);
   float temperature = global_variable_vector[2];
 
   random_device rd;
@@ -85,12 +96,17 @@ MonteCarloTreeNodePtr CPUMuzeroTreeNode::BestAction() const {
     auto prob = pow(*child->explore_count(), (1 / temperature));
     explore_count_vector.emplace_back(prob);
   }
-  int sum_value = accumulate(explore_count_vector.begin(), explore_count_vector.end(), 0);
+  int sum_value =
+      accumulate(explore_count_vector.begin(), explore_count_vector.end(), 0);
   uniform_int_distribution<int> dis(1, sum_value);
   partial_sum(explore_count_vector.begin(), explore_count_vector.end(),
               back_inserter(accumulated_count));
   int pos = dis(gen);
-  int index = lower_bound(accumulated_count.begin(), accumulated_count.end(), pos) - accumulated_count.begin();
+  int index =
+      lower_bound(accumulated_count.begin(), accumulated_count.end(), pos) -
+      accumulated_count.begin();
 
   return children_[index];
 }
+} // namespace utils
+} // namespace mindspore_rl
