@@ -33,12 +33,12 @@ from mindspore.ops.operations._rl_inner_ops import CudnnGRU
 from mindspore.nn.layer.rnn_cells import _rnn_relu_cell, _rnn_tanh_cell, _gru_cell, _lstm_cell
 
 
-@constexpr
+@constexpr(check=False)
 def arange(start, stop, step, dtype):
     return Tensor(np.arange(start, stop, step), dtype)
 
 
-@constexpr
+@constexpr(check=False)
 def _init_state(shape, dtype, is_lstm):
     hx = Tensor(np.zeros(shape), dtype)
     cx = Tensor(np.zeros(shape), dtype)
@@ -47,18 +47,18 @@ def _init_state(shape, dtype, is_lstm):
     return hx
 
 
-@constexpr
+@constexpr(check=False)
 def _check_input_dtype(input_dtype, param_name, allow_dtypes, cls_name):
     validator.check_type_name(param_name, input_dtype, allow_dtypes, cls_name)
 
 
-@constexpr
+@constexpr(check=False)
 def _check_input_dtype_same_and_valid(args_name, args_value, valid_values, cls_name):
     args = {args_name[i]: args_value[i] for i in range(len(args_value))}
     validator.check_types_same_and_valid(args, valid_values, cls_name)
 
 
-@constexpr
+@constexpr(check=False)
 def _check_is_tensor(param_name, input_data, cls_name):
     """Internal function, used to check whether the input data is Tensor."""
     if input_data is not None and not isinstance(P.typeof(input_data), mstype.tensor_type):
@@ -67,7 +67,7 @@ def _check_is_tensor(param_name, input_data, cls_name):
     return True
 
 
-@constexpr
+@constexpr(check=False)
 def _check_is_tuple(param_name, input_data, cls_name):
     """Internal function, used to check whether the input data is Tensor."""
     if input_data is not None and not isinstance(P.typeof(input_data), mstype.Tuple):
@@ -75,7 +75,7 @@ def _check_is_tuple(param_name, input_data, cls_name):
                         f"but got '{P.typeof(input_data)}'")
 
 
-@constexpr
+@constexpr(check=False)
 def _check_tuple_length(param_name, input_data, length, cls_name):
     """Internal function, used to check whether the input data is Tensor."""
     if input_data is not None and len(input_data) != length:
@@ -83,7 +83,7 @@ def _check_tuple_length(param_name, input_data, length, cls_name):
                         f"but got '{len(input_data)}'")
 
 
-@constexpr
+@constexpr(check=False)
 def _check_seq_length_size(batch_size_x, seq_length_size, cls_name):
     if batch_size_x != seq_length_size:
         raise ValueError(f"For '{cls_name}' batch size of x and seq_length must be equal, "
