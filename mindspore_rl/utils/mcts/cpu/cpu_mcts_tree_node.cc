@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright 2022-2023 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,10 @@
 
 #include <utils/mcts/cpu/cpu_mcts_tree_node.h>
 #include <limits>
-
-void CPUMonteCarloTreeNode::InitNode(int state_size, float *init_reward, int *action, float *prior) {
+namespace mindspore_rl {
+namespace utils {
+void CPUMonteCarloTreeNode::InitNode(int state_size, float *init_reward,
+                                     int *action, float *prior) {
   // Initialize and allocate memory
   state_ = reinterpret_cast<float *>(AllocateMem(sizeof(float) * state_size));
   total_reward_ = reinterpret_cast<float *>(AllocateMem(sizeof(float)));
@@ -39,7 +41,8 @@ void CPUMonteCarloTreeNode::InitNode(int state_size, float *init_reward, int *ac
   }
 }
 
-int CPUMonteCarloTreeNode::GetMaxPosition(float *selection_value, int num_items, void *device_stream) {
+int CPUMonteCarloTreeNode::GetMaxPosition(float *selection_value, int num_items,
+                                          void *device_stream) {
   int max_index = -1;
   float max_value = -std::numeric_limits<float>::infinity();
   for (int i = 0; i < num_items; i++) {
@@ -53,14 +56,16 @@ int CPUMonteCarloTreeNode::GetMaxPosition(float *selection_value, int num_items,
 
 MonteCarloTreeNodePtr CPUMonteCarloTreeNode::BestAction() const {
   return *std::max_element(children_.begin(), children_.end(),
-                           [](const MonteCarloTreeNodePtr node_a, const MonteCarloTreeNodePtr node_b) {
+                           [](const MonteCarloTreeNodePtr node_a,
+                              const MonteCarloTreeNodePtr node_b) {
                              return node_a->BestActionPolicy(node_b);
                            });
 }
 
 bool CPUMonteCarloTreeNode::BestActionPolicy(MonteCarloTreeNodePtr node) const {
   float outcome_self = (outcome_.empty() ? 0 : outcome_[player_]);
-  float outcome_input = (node->outcome().empty() ? 0 : node->outcome()[node->player()]);
+  float outcome_input =
+      (node->outcome().empty() ? 0 : node->outcome()[node->player()]);
   if (outcome_self != outcome_input) {
     return outcome_self < outcome_input;
   }
@@ -77,7 +82,8 @@ bool CPUMonteCarloTreeNode::Memcpy(void *dst_ptr, void *src_ptr, size_t size) {
   return true;
 }
 
-bool CPUMonteCarloTreeNode::MemcpyAsync(void *dst_ptr, void *src_ptr, size_t size, void *device_stream) {
+bool CPUMonteCarloTreeNode::MemcpyAsync(void *dst_ptr, void *src_ptr,
+                                        size_t size, void *device_stream) {
   std::memcpy(dst_ptr, src_ptr, size);
   return true;
 }
@@ -91,3 +97,5 @@ bool CPUMonteCarloTreeNode::Free(void *ptr) {
   free(ptr);
   return true;
 }
+} // namespace utils
+} // namespace mindspore_rl

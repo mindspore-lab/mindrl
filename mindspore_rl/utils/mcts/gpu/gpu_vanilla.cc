@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright 2022-2023 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,25 +19,33 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
-
-bool GPUVanillaTreeNode::SelectionPolicy(float *uct_value, void *device_stream) const {
+namespace mindspore_rl {
+namespace utils {
+bool GPUVanillaTreeNode::SelectionPolicy(float *uct_value,
+                                         void *device_stream) const {
   if (!outcome_.empty()) {
     auto out_value = outcome_[player_];
     cudaMemcpy(uct_value, &out_value, sizeof(float), cudaMemcpyHostToDevice);
     return true;
   }
 
-  auto global_variable_vector = MonteCarloTreeFactory::GetInstance().GetTreeConstByHandle(tree_handle_);
+  auto global_variable_vector =
+      MonteCarloTreeFactory::GetInstance().GetTreeConstByHandle(tree_handle_);
   auto uct_ptr = global_variable_vector;
 
   int *parent_explore_count = parent_->explore_count();
-  CalSelectionPolicy(explore_count_, total_reward_, parent_explore_count, uct_ptr, uct_value,
+  CalSelectionPolicy(explore_count_, total_reward_, parent_explore_count,
+                     uct_ptr, uct_value,
                      static_cast<cudaStream_t>(device_stream));
   return true;
 }
 
-bool GPUVanillaTreeNode::Update(float *values, int total_num_player, void *device_stream) {
-  CalUpdate(explore_count_, total_reward_, values, player_, reinterpret_cast<cudaStream_t>(device_stream));
+bool GPUVanillaTreeNode::Update(float *values, int total_num_player,
+                                void *device_stream) {
+  CalUpdate(explore_count_, total_reward_, values, player_,
+            reinterpret_cast<cudaStream_t>(device_stream));
 
   return true;
 }
+} // namespace utils
+} // namespace mindspore_rl

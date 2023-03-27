@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright 2022-2023 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,17 +21,19 @@
 #include <utils/mcts/mcts_factory.h>
 #include <cstring>
 #include <string>
-
+namespace mindspore_rl {
+namespace utils {
 class CPUMonteCarloTree : public MonteCarloTree {
- public:
-  CPUMonteCarloTree(MonteCarloTreeNodePtr root, float max_utility, int64_t tree_handle, int state_size,
-                    int total_num_player)
-      : MonteCarloTree(root, max_utility, tree_handle, state_size, total_num_player) {}
+public:
+  CPUMonteCarloTree(MonteCarloTreeNodePtr root, float max_utility,
+                    int64_t tree_handle, int state_size, int total_num_player)
+      : MonteCarloTree(root, max_utility, tree_handle, state_size,
+                       total_num_player) {}
 
   ~CPUMonteCarloTree() override = default;
 
-  bool Expansion(std::string node_name, int *action, float *prior, float *init_reward, int num_action,
-                 int state_size) override;
+  bool Expansion(std::string node_name, int *action, float *prior,
+                 float *init_reward, int num_action, int state_size) override;
 
   void *AllocateMem(size_t size) override;
   bool Memcpy(void *dst_ptr, void *src_ptr, size_t size) override;
@@ -40,5 +42,6 @@ class CPUMonteCarloTree : public MonteCarloTree {
 };
 
 MS_REG_TREE(CPUCommon, CPUMonteCarloTree);
-
-#endif  // MINDSPORE_RL_UTILS_MCTS_CPU_CPU_MCTS_TREE_H_
+} // namespace utils
+} // namespace mindspore_rl
+#endif // MINDSPORE_RL_UTILS_MCTS_CPU_CPU_MCTS_TREE_H_

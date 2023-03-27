@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright 2022-2023 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,10 @@
 #include <utils/mcts/gpu/cuda_impl/argmax_impl.cuh>
 #include <cuda_runtime_api.h>
 #include <limits>
-
-void GPUMonteCarloTreeNode::InitNode(int state_size, float *init_reward, int *action, float *prior) {
+namespace mindspore_rl {
+namespace utils {
+void GPUMonteCarloTreeNode::InitNode(int state_size, float *init_reward,
+                                     int *action, float *prior) {
   // Initialize and allocate memory
   state_ = reinterpret_cast<float *>(AllocateMem(sizeof(float) * state_size));
   total_reward_ = reinterpret_cast<float *>(AllocateMem(sizeof(float)));
@@ -41,11 +43,14 @@ void GPUMonteCarloTreeNode::InitNode(int state_size, float *init_reward, int *ac
   }
 }
 
-int GPUMonteCarloTreeNode::GetMaxPosition(float *selection_value, int num_items, void *device_stream) {
+int GPUMonteCarloTreeNode::GetMaxPosition(float *selection_value, int num_items,
+                                          void *device_stream) {
   int *index = reinterpret_cast<int *>(AllocateMem(sizeof(int)));
-  CalArgmax(selection_value, num_items, index, static_cast<cudaStream_t>(device_stream));
+  CalArgmax(selection_value, num_items, index,
+            static_cast<cudaStream_t>(device_stream));
   int *index_host = new int[sizeof(int)];
-  cudaMemcpyAsync(index_host, index, sizeof(int), cudaMemcpyDeviceToHost, static_cast<cudaStream_t>(device_stream));
+  cudaMemcpyAsync(index_host, index, sizeof(int), cudaMemcpyDeviceToHost,
+                  static_cast<cudaStream_t>(device_stream));
   cudaStreamSynchronize(static_cast<cudaStream_t>(device_stream));
 
   return *index_host;
@@ -53,7 +58,8 @@ int GPUMonteCarloTreeNode::GetMaxPosition(float *selection_value, int num_items,
 
 MonteCarloTreeNodePtr GPUMonteCarloTreeNode::BestAction() const {
   return *std::max_element(children_.begin(), children_.end(),
-                           [](const MonteCarloTreeNodePtr node_a, const MonteCarloTreeNodePtr node_b) {
+                           [](const MonteCarloTreeNodePtr node_a,
+                              const MonteCarloTreeNodePtr node_b) {
                              return node_a->BestActionPolicy(node_b);
                            });
 }
@@ -62,15 +68,21 @@ bool GPUMonteCarloTreeNode::BestActionPolicy(MonteCarloTreeNodePtr node) const {
   int *explore_count_host = reinterpret_cast<int *>(malloc(sizeof(int)));
   float *total_reward_host = reinterpret_cast<float *>(malloc(sizeof(float)));
   int *explore_count_input_host = reinterpret_cast<int *>(malloc(sizeof(int)));
-  float *total_reward_input_host = reinterpret_cast<float *>(malloc(sizeof(float)));
+  float *total_reward_input_host =
+      reinterpret_cast<float *>(malloc(sizeof(float)));
 
-  cudaMemcpy(explore_count_host, explore_count_, sizeof(int), cudaMemcpyDeviceToHost);
-  cudaMemcpy(total_reward_host, total_reward_, sizeof(float), cudaMemcpyDeviceToHost);
-  cudaMemcpy(explore_count_input_host, node->explore_count(), sizeof(int), cudaMemcpyDeviceToHost);
-  cudaMemcpy(total_reward_input_host, node->total_reward(), sizeof(float), cudaMemcpyDeviceToHost);
+  cudaMemcpy(explore_count_host, explore_count_, sizeof(int),
+             cudaMemcpyDeviceToHost);
+  cudaMemcpy(total_reward_host, total_reward_, sizeof(float),
+             cudaMemcpyDeviceToHost);
+  cudaMemcpy(explore_count_input_host, node->explore_count(), sizeof(int),
+             cudaMemcpyDeviceToHost);
+  cudaMemcpy(total_reward_input_host, node->total_reward(), sizeof(float),
+             cudaMemcpyDeviceToHost);
 
   float outcome_self = (outcome_.empty() ? 0 : outcome_[player_]);
-  float outcome_input = (node->outcome().empty() ? 0 : node->outcome()[node->player()]);
+  float outcome_input =
+      (node->outcome().empty() ? 0 : node->outcome()[node->player()]);
   if (outcome_self != outcome_input) {
     return outcome_self < outcome_input;
   }
@@ -91,8 +103,10 @@ bool GPUMonteCarloTreeNode::Memcpy(void *dst_ptr, void *src_ptr, size_t size) {
   return true;
 }
 
-bool GPUMonteCarloTreeNode::MemcpyAsync(void *dst_ptr, void *src_ptr, size_t size, void *device_stream) {
-  cudaMemcpyAsync(dst_ptr, src_ptr, size, cudaMemcpyDeviceToDevice, reinterpret_cast<cudaStream_t>(device_stream));
+bool GPUMonteCarloTreeNode::MemcpyAsync(void *dst_ptr, void *src_ptr,
+                                        size_t size, void *device_stream) {
+  cudaMemcpyAsync(dst_ptr, src_ptr, size, cudaMemcpyDeviceToDevice,
+                  reinterpret_cast<cudaStream_t>(device_stream));
   return true;
 }
 
@@ -105,3 +119,5 @@ bool GPUMonteCarloTreeNode::Free(void *ptr) {
   cudaFree(ptr);
   return true;
 }
+} // namespace utils
+} // namespace mindspore_rl

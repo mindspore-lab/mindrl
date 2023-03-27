@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright 2022-2023 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,11 @@
 
 #include <utils/mcts/mcts_tree_node.h>
 #include <algorithm>
-
+namespace mindspore_rl {
+namespace utils {
 MonteCarloTreeNodePtr MonteCarloTreeNode::SelectChild(void *device_stream) {
-  float *selection_value = reinterpret_cast<float *>(AllocateMem(sizeof(float) * children_.size()));
+  float *selection_value =
+      reinterpret_cast<float *>(AllocateMem(sizeof(float) * children_.size()));
   float *uct_value = reinterpret_cast<float *>(AllocateMem(sizeof(float)));
   // For each child, use selection policy to calculate corresponding value,
   // then choose the largest one.
@@ -31,8 +33,11 @@ MonteCarloTreeNodePtr MonteCarloTreeNode::SelectChild(void *device_stream) {
     MemcpyAsync(selection_value + i, uct_value, sizeof(float), device_stream);
     i++;
   }
-  int64_t max_position = GetMaxPosition(selection_value, children_.size(), device_stream);
+  int64_t max_position =
+      GetMaxPosition(selection_value, children_.size(), device_stream);
   Free(selection_value);
   Free(uct_value);
   return children_[max_position];
 }
+} // namespace utils
+} // namespace mindspore_rl
