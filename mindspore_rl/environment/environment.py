@@ -16,6 +16,8 @@
 The environment base class.
 """
 #pylint: disable=R1710
+from mindspore import Tensor
+from typing import Union, Sequence
 import numpy as np
 import mindspore.nn as nn
 from mindspore import log as logger
@@ -25,6 +27,207 @@ from mindspore_rl.environment.space import Space
 
 
 class Environment(nn.Cell):
+    r"""
+    The abstract base class for environment. All the environments or wrappers need to inherit
+    this base class. Moreover, subclass needs to overridden corresponding functions and properties.
+
+    Supported Platforms:
+        ``Ascend`` ``GPU`` ``CPU``
+    """
+
+    def __init__(self):
+        super(Environment, self).__init__()
+
+    @property
+    def action_space(self) -> Space:
+        """
+        Get the action space of the environment.
+
+        Returns:
+            action_space (Space), The action space of environment.
+        """
+        raise NotImplementedError("Property action_space should be overridden by subclass.")
+
+    @property
+    def observation_space(self) -> Space:
+        """
+        Get the state space of the environment.
+
+        Returns:
+            observation_space (Space), The state space of environment.
+        """
+        raise NotImplementedError("Property observation_space should be overridden by subclass.")
+
+    @property
+    def reward_space(self) -> Space:
+        """
+        Get the reward space of the environment.
+
+        Returns:
+            reward_space (Space), The reward space of environment.
+        """
+        raise NotImplementedError("Property reward_space should be overridden by subclass.")
+
+    @property
+    def done_space(self) -> Space:
+        """
+        Get the done space of the environment.
+
+        Returns:
+            done_space (Space), The done space of environment.
+        """
+        raise NotImplementedError("Property done_space should be overridden by subclass.")
+
+    @property
+    def config(self) -> dict:
+        """
+        Get the config of environment.
+
+        Returns:
+            config (dict), A dictionary which contains environment's info.
+        """
+        raise NotImplementedError("Property config should be overridden by subclass.")
+
+    @property
+    def batched(self) -> bool:
+        """
+        Whether the environment is batched.
+
+        Returns:
+            batched (bool), Whether the environment is batched. Default: False.
+        """
+        return False
+
+    @property
+    def num_environment(self) -> int:
+        """
+        Number of environment
+
+        Returns:
+            num_env (int),  Number of environment.
+        """
+        return 1
+
+    @property
+    def num_agent(self) -> int:
+        """
+        Number of agents in the environment.
+
+        Returns:
+            num_agent (int), Number of agent in the current environment. If the environment is
+                single agent, it will return 1. Otherwise, subclass needs to override this property
+                to return correct number of agent. Default: 1.
+        """
+        return 1
+
+    @property
+    def _num_reset_out(self) -> int:
+        """
+        Inner method, return the number of return value of reset.
+
+        Returns:
+            int, The number of return value of reset.
+        """
+        return 1
+
+    @property
+    def _num_step_out(self) -> int:
+        """
+        Inner method, return the number of return value of step.
+
+        Returns:
+            int, The number of return value of step.
+        """
+        return 3
+
+    def reset(self):
+        """
+        Reset the environment to the initial state. It is always used at the beginning of each
+        episode. It will return the value of initial state or other initial information.
+
+        Returns:
+            - state (Union[np.ndarray, Tensor]), A numpy array or Tensor which states for
+                the initial state of environment.
+            - args (Union[np.ndarray, Tensor], optional), Support arbitrary outputs, but user needs to ensure the
+                dtype. This output is optional.
+        """
+        raise NotImplementedError("Method reset should be overridden by subclass.")
+
+    def step(self, action: Union[Tensor, np.ndarray]):
+        r"""
+        Execute the environment step, which means that interact with environment once.
+
+        Args:
+            action (Union[Tensor, np.ndarray]): A tensor that contains the action information.
+
+        Returns:
+            - state (Union[np.ndarray, Tensor]), The environment state after performing the action.
+            - reward (Union[np.ndarray, Tensor]), The reward after performing the action.
+            - done (Union[np.ndarray, Tensor]), Whether the simulation finishes or not.
+            - args (Union[np.ndarray, Tensor], optional), Support arbitrary outputs, but user needs to ensure the
+                dtype. This output is optional.
+        """
+        raise NotImplementedError("Method step should be overridden by subclass.")
+
+    def send(self, action: Union[Tensor, np.ndarray], env_id: Union[Tensor, np.ndarray]):
+        r"""
+        Execute the environment step asynchronously. User can obtain result by using recv.
+
+        Args:
+            action (Union[Tensor, np.ndarray]): A tensor or array that contains the action information.
+            env_id (Union[Tensor, np.ndarray]): Which environment these actions will interact with.
+
+        Returns:
+            Success (bool): True if the action is successfully executed, otherwise False.
+        """
+        raise NotImplementedError("Method send should be overridden by subclass.")
+
+    def recv(self):
+        r"""
+        Receive the result of interacting with environment.
+
+        Returns:
+            - state (Union[np.ndarray, Tensor]), The environment state after performing the action.
+            - reward (Union[np.ndarray, Tensor]), The reward after performing the action.
+            - done (Union[np.ndarray, Tensor]), whether the simulation finishes or not.
+            - env_id (Union[np.ndarray, Tensor]), Which environments are interacted.env
+            - args (Union[np.ndarray, Tensor], optional), Support arbitrary outputs, but user needs to ensure the
+                dtype. This output is optional.
+        """
+        raise NotImplementedError("Method async_step should be overridden by subclass.")
+
+    def set_seed(self, seed_value: Union[int, Sequence[int]]) -> bool:
+        r"""
+        Set seed to control the randomness of environment.
+
+        Args:
+            seed_value (int), The value that is used to set
+
+        Returns:
+            Success (np.bool\_), Whether successfully set the seed.
+        """
+        raise NotImplementedError("Method set_seed should be overridden by subclass.")
+
+    def render(self) -> Union[Tensor, np.ndarray]:
+        """
+        Generate the image for current frame of environment.
+
+        Returns:
+            img (Union[Tensor, np.ndarray]), The image of environment at current frame.
+        """
+        raise NotImplementedError("Method render should be overridden by subclass.")
+
+    def close(self) -> bool:
+        r"""
+        Close the environment to release the resource.
+
+        Returns:
+            Success (np.bool\_), Whether shutdown the process or threading successfully.
+        """
+        return True
+
+
+class DeprecatedEnvironment(nn.Cell):
     r"""
     The virtual base class of the environment. Each environment subclass needs to inherit this class, and
     implements \_reset, \_get_action, \_step, \_get_min_max_action and \_get_min_max_observation in subclass.
@@ -38,7 +241,7 @@ class Environment(nn.Cell):
     """
 
     def __init__(self, env_name=None, env=None, config=None):
-        super(Environment, self).__init__(auto_prefix=False)
+        super(DeprecatedEnvironment, self).__init__(auto_prefix=False)
         new_api_env = ['MultiAgentParticleEnvironment']
         if env_name in new_api_env:
             self._base_env = env

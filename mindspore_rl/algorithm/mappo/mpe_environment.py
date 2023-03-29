@@ -21,7 +21,7 @@ import sys
 import numpy as np
 from collections import namedtuple
 from gym import spaces
-from mindspore_rl.environment import Environment
+from mindspore_rl.environment.environment import DeprecatedEnvironment
 
 
 def _prepare_mpe_env(current_path):
@@ -40,7 +40,7 @@ def _prepare_mpe_env(current_path):
     os.system(f'patch -p0 < {mpe_patch}')
 
 
-class MultiAgentParticleEnvironment(Environment):
+class MultiAgentParticleEnvironment(DeprecatedEnvironment):
     """
     This is the wrapper of Multi-Agent Particle Environment(MPE) which is modified by MAPPO author from
     (https://github.com/marlbenchmark/on-policy/tree/main/onpolicy). A simple multi-agent particle world with
