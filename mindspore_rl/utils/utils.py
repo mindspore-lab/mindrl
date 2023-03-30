@@ -18,6 +18,8 @@ Utils.
 import os
 from importlib import import_module
 import yaml
+import numpy as np
+from typing import Tuple, Union
 
 
 def _update_dict(dest, src) -> None:
@@ -91,3 +93,25 @@ def update_config(config, env_yaml, algo_yaml) -> None:
         else:
             print(f"File {algo_yaml} is not exiddsts.")
             return
+
+
+def check_type(input_type, items, debug_str):
+    if isinstance(items, list) or isinstance(items, tuple):
+        [check_type(input_type, item, debug_str) for item in items]
+        return items, len(items)
+    elif isinstance(items, input_type):
+        return items, 1
+    else:
+        raise TypeError(f"input item {debug_str} expects {input_type}, but got {type(items)}")
+
+
+def check_valid_return_value(return_value: Union[Tuple, np.ndarray], debug_str: str) -> int:
+    num_valid_output = 0
+    if isinstance(return_value, tuple):
+        list_valid_output = [check_valid_return_value(item, debug_str) for item in return_value]
+        num_valid_output = sum(list_valid_output)
+    elif isinstance(return_value, np.ndarray):
+        num_valid_output = 1
+    else:
+        raise TypeError(f"For {debug_str}, its output must be tuple or np.ndarray, but got {type(return_value)}")
+    return num_valid_output
