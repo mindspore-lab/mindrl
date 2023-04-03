@@ -34,7 +34,7 @@ class Trainer(nn.Cell):
 
     Note:
         Reference to `dqn_trainer.py
-        <https://gitee.com/mindspore/docs/blob/master/docs/reinforcement/docs/source_en/dqn.md
+        <https://gitee.com/mindspore/docs/blob/r0.6/docs/reinforcement/docs/source_en/dqn.md
         #defining-the-dqntrainer-class>`_.
 
     Args:
