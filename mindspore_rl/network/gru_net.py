@@ -21,7 +21,7 @@ import mindspore.nn as nn
 from mindspore import context
 from mindspore.common.initializer import initializer
 from mindspore.common.parameter import Parameter
-from mindspore._checkparam import Validator as validator
+from mindspore import _checkparam as validator
 from mindspore.ops.operations import _rl_inner_ops as rl_ops
 
 

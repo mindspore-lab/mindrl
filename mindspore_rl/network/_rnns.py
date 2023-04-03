@@ -28,7 +28,7 @@ from mindspore.common.tensor import Tensor
 from mindspore.common.parameter import ParameterTuple, Parameter
 from mindspore.nn.cell import Cell
 from mindspore import log as logger
-from mindspore._checkparam import Validator as validator
+from mindspore import _checkparam as validator
 from mindspore.ops.operations._rl_inner_ops import CudnnGRU
 from mindspore.nn.layer.rnn_cells import _rnn_relu_cell, _rnn_tanh_cell, _gru_cell, _lstm_cell
 
