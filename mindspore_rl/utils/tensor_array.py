@@ -20,9 +20,8 @@ from __future__ import absolute_import
 from mindspore import context
 from mindspore.nn.cell import Cell
 from mindspore.ops.operations import _tensor_array as ta
-from mindspore._checkparam import Rel, Validator
 from mindspore.common import dtype as mstype
-
+from mindspore import _checkparam as validator
 
 class TensorArray(Cell):
     r"""TensorArray: a dynamic array to store tensors.
@@ -63,8 +62,8 @@ class TensorArray(Cell):
     def __init__(self, dtype, element_shape, dynamic_size=True, size=0, name="TA"):
         """Initialize TensorArray"""
         super(TensorArray, self).__init__()
-        Validator.check_subclass("dtype", dtype, mstype.number_type + (mstype.bool_,), self.cls_name)
-        Validator.check_int(size, 0, Rel.GE, "size", self.cls_name)
+        validator.check_subclass("dtype", dtype, mstype.number_type + (mstype.bool_,), self.cls_name)
+        validator.check_int(size, 0, validator.GE, "size", self.cls_name)
         handle = ta.TensorArray(dtype, element_shape, dynamic_size, size, name)
         self.tensor_array_write = ta.TensorArrayWrite()
         self.tensor_array_read = ta.TensorArrayRead(dtype, element_shape)
