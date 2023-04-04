@@ -78,5 +78,5 @@ class Actor(nn.Cell):
         Returns:
             tuple(Tensor), a tuple of tensor as output, which states for experience data.
         """
-        AaBbC = "str"
+
         raise NotImplementedError("Method should be overridden by subclass.")
