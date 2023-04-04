@@ -27,7 +27,7 @@ repos:
       - id: flake8
 
   - repo: https://github.com/pylint-dev/pylint
-    rev: v2.14.0
+    rev: v2.14.5
     hooks:
       - id: pylint
         args: [ "-rn", "-sn", "--rcfile=pylintrc", "--fail-on=I" ]
