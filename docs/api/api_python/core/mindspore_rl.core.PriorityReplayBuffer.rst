@@ -19,7 +19,7 @@
         销毁经验回放缓存。
 
         返回：
-            - **handle** (Tensor) - 优先级经验回放缓存句柄，数据和维度分别是int64和（1,）。
+            - **handle** (Tensor) - 优先级经验回放缓存句柄，数据和shape分别是int64和 :math:`(1,)`。
 
     .. py:method:: push(*transition)
 
@@ -29,7 +29,7 @@
             - **transition** (List[Tensor]) - 与初始化的shapes和dtypes匹配的张量列表。
 
         返回：
-            - **handle** (Tensor) - 优先级经验回放缓存句柄，数据和维度分别是int64和（1,）。
+            - **handle** (Tensor) - 优先级经验回放缓存句柄，数据和shape分别是int64和 :math:`(1,)`。
 
 
     .. py:method:: sample(beta)
@@ -53,4 +53,4 @@
             - **priorities** (Tensor) - transition优先级。
 
         返回：
-            - **handle** (Tensor) - 优先级经验回放缓存句柄，数据和维度分别是int64和（1,）。
+            - **handle** (Tensor) - 优先级经验回放缓存句柄，数据和shape分别是int64和 :math:`(1,)`。

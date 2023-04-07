@@ -37,7 +37,7 @@ class ReservoirReplayBuffer(nn.Cell):
         seed1 (int): Random seed1, must be non-negative. Default: 0.
 
     Outputs:
-        handle(Tensor): Handle of created replay buffer instance with dtype int64 and shape (1,).
+        handle(Tensor): Handle of created replay buffer instance with dtype int64 and shape :math:`(1,)`.
 
     Raises:
         TypeError: The args not provided.
@@ -74,7 +74,7 @@ class ReservoirReplayBuffer(nn.Cell):
                 and dtypes into the buffer.
 
         Returns:
-            handle(Tensor), The replay buffer instance handle with dtype int64 and shape (1,).
+            handle(Tensor), The replay buffer instance handle with dtype int64 and shape :math:`(1,)`.
         """
 
         return self.push_op(transition)
@@ -94,7 +94,7 @@ class ReservoirReplayBuffer(nn.Cell):
         Destroy the replay buffer.
 
         Returns:
-            The replay buffer instance handle with dtype int64 and shape (1,).
+            The replay buffer instance handle with dtype int64 and shape :math:`(1,)`.
         """
 
         return self.destroy_op()
