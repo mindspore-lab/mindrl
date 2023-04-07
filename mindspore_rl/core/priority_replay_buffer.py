@@ -69,7 +69,7 @@ class PriorityReplayBuffer(nn.Cell):
                 and dtypes into the buffer.
 
         Returns:
-            handle(Tensor), Priority replay buffer instance handle with dtype int64 and shape (1,).
+            handle(Tensor), Priority replay buffer instance handle with dtype int64 and shape :math:`(1,)`.
         """
 
         return self.push_op(transition)
@@ -109,7 +109,7 @@ class PriorityReplayBuffer(nn.Cell):
         Destroy the replay buffer.
 
         Returns:
-            Priority replay buffer instance handle with dtype int64 and shape (1,).
+            Priority replay buffer instance handle with dtype int64 and shape :math:`(1,)`.
         """
 
         return self.destroy_op()
