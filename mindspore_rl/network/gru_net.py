@@ -49,17 +49,17 @@ class GruNet(nn.Cell):
 
     Inputs:
         - **x_in** (Tensor) - Tensor of data type mindspore.float32 and
-          shape (seq_len, batch_size, `input_size`) or (batch_size, seq_len, `input_size`).
+          shape :math:`(seq\_len, batch\_size, input\_size)` or :math:`(batch\_size, seq\_len, input\_size)`.
         - **h_in** (Tensor) - Tensor of data type mindspore.float32 and
-          shape (num_directions * `num_layers`, batch_size, `hidden_size`). The data type of `h_in` must be the same as
-          `x_in`.
+          shape :math:`(num\_directions * num\_layers, batch\_size, hidden\_size)`. The data type of `h_in`
+          must be the same as `x_in`.
 
     Outputs:
         Tuple, a tuple contains (`x_out`, `h_out`).
 
-        - **x_out** (Tensor) - Tensor of shape (seq_len, batch_size, num_directions * `hidden_size`) or
-          (batch_size, seq_len, num_directions * `hidden_size`).
-        - **h_out** (Tensor) - Tensor of shape (num_directions * `num_layers`, batch_size, `hidden_size`).
+        - **x_out** (Tensor) - Tensor of shape :math:`(seq\_len, batch\_size, num\_directions * hidden\_size)` or
+          :math:`(batch\_size, seq\_len, num\_directions * hidden\_size)`.
+        - **h_out** (Tensor) - Tensor of shape :math:`(num\_directions * num\_layers, batch\_size, hidden\_size)`.
 
     Examples:
         >>> net = GruNet(10, 16, 2, has_bias=True, bidirectional=False)
@@ -131,15 +131,15 @@ class GruNet(nn.Cell):
         The forward calculation of gru net
 
         Args:
-            x_in (Tensor): Tensor of data type mindspore.float32 and shape (seq_len, batch_size, `input_size`)
-                            or (batch_size, seq_len, `input_size`).
-            h_in (Tensor): Tensor of data type mindspore.float32 and shape (num_directions * `num_layers`,
-                            batch_size, `hidden_size`). The data type of `h_in` must be the same as `x_in`.
+            x_in (Tensor): Tensor of data type mindspore.float32 and shape :math:`(seq\_len, batch\_size, input\_size)`
+                or :math:`(batch\_size, seq\_len, input\_size)`.
+            h_in (Tensor): Tensor of data type mindspore.float32 and shape :math:`(num\_directions * num\_layers,
+                batch\_size, hidden\_size)`. The data type of `h_in` must be the same as `x_in`.
 
         Returns:
-            - **x_out** (Tensor) - Tensor of shape (seq_len, batch_size, num_directions * `hidden_size`) or
-              (batch_size, seq_len, num_directions * `hidden_size`).
-            - **h_out** (Tensor) - Tensor of shape (num_directions * `num_layers`, batch_size, `hidden_size`).
+            - **x_out** (Tensor) - Tensor of shape :math:`(seq\_len, batch\_size, num\_directions * hidden\_size)` or
+              :math:`(batch\_size, seq\_len, num\_directions * hidden\_size)`.
+            - **h_out** (Tensor) - Tensor of shape :math:`(num\_directions * num\_layers, batch\_size, hidden\_size)`.
         """
         x_out = None
         h_out = None

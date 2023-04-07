@@ -17,23 +17,23 @@
         - **enable_fusion** (bool) - 是否需要使用GRU的融合算子。默认值：True。
 
     输入：
-        - **x_in** (Tensor) - 数据类型为mindspore.float32和shape为(seq_len, batch_size, `input_size`)或(batch_size, seq_len, `input_size`)的Tensor。
-        - **h_in** (Tensor) - 数据类型为mindspore.float32和shape为(num_directions * `num_layers`, batch_size, `hidden_size`)的Tensor。`h_in` 的数据类型必须和 `x_in` 一致。
+        - **x_in** (Tensor) - 数据类型为mindspore.float32和shape为 :math:`(seq\_len, batch\_size, input\_size)` 或 :math:`(batch\_size, seq\_len, input\_size)` 的Tensor。
+        - **h_in** (Tensor) - 数据类型为mindspore.float32和shape为 :math:`(num\_directions * num\_layers, batch\_size, hidden\_size)` 的Tensor。`h_in` 的数据类型必须和 `x_in` 一致。
 
     输出：
         元组，包含(`x_out`, `h_out`)。
 
-        - **x_out** (Tensor) - shape为(seq_len, batch_size, num_directions * `hidden_size`) 或(batch_size, seq_len, num_directions * `hidden_size`)的Tensor。
-        - **h_out** (Tensor) - shape为(num_directions * `num_layers`, batch_size, `hidden_size`)的Tensor。
+        - **x_out** (Tensor) - shape为 :math:`(seq\_len, batch\_size, num\_directions * hidden\_size)` 的Tensor。
+        - **h_out** (Tensor) - shape为 :math:`(num\_directions * num\_layers, batch\_size, hidden\_size)` 的Tensor。
 
     .. py:method:: construct(x_in, h_in)
 
         gru网络的正向输出。
 
         参数：
-            - **x_in** (Tensor) - 数据类型为mindspore.float32和shape为(seq_len, batch_size, `input_size`)或(batch_size, seq_len, `input_size`)的Tensor。
-            - **h_in** (Tensor) - 数据类型为mindspore.float32和shape为(num_directions * `num_layers`, batch_size, `hidden_size`)的Tensor。`h_in` 的数据类型必须和 `x_in` 一致。
+            - **x_in** (Tensor) - 数据类型为mindspore.float32和shape为 :math:`(seq\_len, batch\_size, input\_size)` 或 :math:`(batch\_size, seq\_len, input\_size)` 的Tensor。
+            - **h_in** (Tensor) - 数据类型为mindspore.float32和shape为 :math:`(num\_directions * num\_layers, batch\_size, hidden\_size)` 的Tensor。`h_in` 的数据类型必须和 `x_in` 一致。
 
         返回：
-            - **x_out** (Tensor) - shape为(seq_len, batch_size, num_directions * `hidden_size`) 或(batch_size, seq_len, num_directions * `hidden_size`)的Tensor。
-            - **h_out** (Tensor) - shape为(num_directions * `num_layers`, batch_size, `hidden_size`)的Tensor。
+            - **x_out** (Tensor) - shape为 :math:`(seq\_len, batch\_size, num\_directions * hidden\_size)` 的Tensor。
+            - **h_out** (Tensor) - shape为 :math:`(num\_directions * num\_layers, batch\_size, hidden\_size)` 的Tensor。
