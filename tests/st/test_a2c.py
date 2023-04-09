@@ -12,29 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-'''
+"""
 Test case for A2C training.
-'''
+"""
 
-#pylint: disable=C0413
-#pylint: disable=C0411
-#pylint: disable=W0611
+# pylint: disable=C0413
+# pylint: disable=C0411
+# pylint: disable=W0611
 import pytest
 from mindspore import context
-from mindspore_rl.algorithm.a2c import A2CSession
-from mindspore_rl.algorithm.a2c import A2CTrainer
+
+from mindspore_rl.algorithm.a2c import A2CSession, A2CTrainer
 
 
+@pytest.mark.skip(reason="Need mindspore update")
 @pytest.mark.level0
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 def test_train_a2c():
-    '''
+    """
     Feature: Test A2C train.
     Description: A2C net.
     Expectation: success.
-    '''
+    """
     context.set_context(mode=context.GRAPH_MODE)
     ac_session = A2CSession()
     ac_session.run(class_type=A2CTrainer, episode=5)

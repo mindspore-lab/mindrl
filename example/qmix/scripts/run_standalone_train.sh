@@ -25,9 +25,14 @@ elif [ $# == 1 ]; then
 elif [ $# == 2 ]; then
   EPISODE=$1
   DEVICE=$2
+elif [ $# == 3 ]; then
+  EPISODE=$1
+  DEVICE=$2
+  PRECISION=$3
 else
-  echo "Usage: bash run_standalone_train.sh [EPISODE](optional) [DEVICE_TARGET](optional)."
+  echo "Usage: bash run_standalone_train.sh [EPISODE](optional) [DEVICE_TARGET](optional) [PRECISION](optional)."
   echo "Example: bash run_standalone_train.sh"
 fi
 export OMP_NUM_THREADS=10
-python -s ${self_path}/../train.py --device_target=$DEVICE --episode=$EPISODE > qmix_train_log.txt 2>&1 &
+python -s ${self_path}/../train.py --device_target=$DEVICE --episode=$EPISODE \
+--precision_mode=$PRECISION > qmix_train_log.txt 2>&1 &
