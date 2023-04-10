@@ -31,7 +31,7 @@ elif [ $# == 3 ]; then
   DEVICE=$2
   PRECISION=$3
 else
-  echo "Usage: bash run_standalone_train.sh [CKPT_PATH](optional) [DEVICE_TARGET](optional) [PRECISION](optional)."
+  echo "Usage: bash run_standalone_train.sh [EPISODE](optional) [DEVICE_TARGET](optional) [PRECISION](optional)."
   echo "Example: bash run_standalone_train.sh"
 fi
 
