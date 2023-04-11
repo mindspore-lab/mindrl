@@ -47,7 +47,7 @@
         mcts_search是MCTS中的主要方法。调用此方法会返回当前状态下的最优动作。
         
         参数：
-            - **args** (Tensor) - 在迭代中会更新的变量，并且在调用 `restore_tree_data` 时会重置。输入值需要和传入的MCTS树以及节点对应。
+            - **\*args** (Tensor) - 在迭代中会更新的变量，并且在调用 `restore_tree_data` 时会重置。输入值需要和传入的MCTS树以及节点对应。
 
         返回：
             - **action** (mindspore.int32) - 蒙特卡洛树搜索返回的动作。

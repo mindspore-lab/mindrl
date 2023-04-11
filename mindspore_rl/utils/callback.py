@@ -294,7 +294,7 @@ class CheckpointCallback(Callback):
     Save the checkpoint file for all the model weights. And keep the latest `max_ckpt_nums` checkpoint files.
 
     Args:
-        save_per_episode (int, optional): The frequency to save checkpoint. Default: 0（not saved).
+        save_per_episode (int, optional): The frequency to save checkpoint. Default: 0(not saved).
         directory (str, optional): The directory for saving checkpoints. Default: './'.
         max_ckpt_nums (int, optional): Numbers of how many checkpoint files to be kept. Default: 5.
 
