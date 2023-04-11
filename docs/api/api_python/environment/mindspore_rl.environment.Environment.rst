@@ -62,12 +62,12 @@
         返回：
             - **reward_space** (Space) - 返回环境的奖励空间。
 
-    .. py:method:: step(action)
+    .. py:method:: step(action: Union[Tensor, np.ndarray])
 
         执行环境Step函数来和环境交互一回合。
 
         参数：
-            - **action** (Tensor) - 包含动作信息的Tensor。
+            - **action** (Union[Tensor, np.ndarray]) - 包含动作信息的Tensor。
 
         返回：
             - **state** (Tensor) - 输入动作后的环境返回的新状态。

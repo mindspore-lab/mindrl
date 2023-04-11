@@ -9,7 +9,7 @@
     参数：
         - **dtype** (mindspore.dtype) - TensorsQueue的数据类型。每个Tensor需要相同的类型。
         - **shapes** (tuple[int64]) - TensorsQueue中每个Tensor的shape。
-        - **size** (int,可选) - TensorsQueue的大小。默认：0。
+        - **size** (int，可选) - TensorsQueue的大小。默认：0。
         - **name** (str，可选) - TensorsQueue的名字。默认："TQ"。
 
     异常：
