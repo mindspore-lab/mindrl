@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2021-2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,18 +14,20 @@
 # ============================================================================
 """PPO Trainer"""
 import mindspore
-from mindspore.common.api import ms_function
 from mindspore import Tensor
+from mindspore.common.api import ms_function
 from mindspore.ops import operations as P
-from mindspore_rl.agent.trainer import Trainer
+
 from mindspore_rl.agent import trainer
+from mindspore_rl.agent.trainer import Trainer
 
 
-#pylint: disable=W0212
+# pylint: disable=W0212
 class PPOTrainer(Trainer):
     """This is the trainer class of PPO algorithm. It arranges the PPO algorithm"""
 
     def __init__(self, msrl, params=None):
+        # pylint: disable=R1725
         super(PPOTrainer, self).__init__(msrl)
         self.zero = Tensor(0, mindspore.float32)
         self.assign = P.Assign()
@@ -34,14 +36,16 @@ class PPOTrainer(Trainer):
         self.equal = P.Equal()
         self.less = P.Less()
         self.reduce_mean = P.ReduceMean()
-        self.duration = params['duration']
-        self.num_eval_episode = params['num_eval_episode']
+        self.duration = params["duration"]
+        self.num_eval_episode = params["num_eval_episode"]
 
     def trainable_variables(self):
         """Trainable variables for saving."""
-        trainable_variables = {"actor_net": self.msrl.learner.actor_net,
-                               "critic_net": self.msrl.learner.critic_net,
-                               "ppo_optimizer": self.msrl.learner._ppo_net_train.optimizer}
+        trainable_variables = {
+            "actor_net": self.msrl.learner.actor_net,
+            "critic_net": self.msrl.learner.critic_net,
+            "ppo_optimizer": self.msrl.learner._ppo_net_train.optimizer,
+        }
         return trainable_variables
 
     @ms_function
@@ -54,16 +58,19 @@ class PPOTrainer(Trainer):
         self.msrl.replay_buffer_reset()
         while self.less(j, self.duration):
             reward, new_state, action, miu, sigma = self.msrl.agent_act(
-                trainer.COLLECT, state)
+                trainer.COLLECT, state
+            )
             self.msrl.replay_buffer_insert(
-                [state, action, reward, new_state, miu, sigma])
+                [state, action, reward, new_state, miu, sigma]
+            )
             state = new_state
             reward = self.reduce_mean(reward)
             training_reward += reward
             j += 1
 
         replay_buffer_elements = self.msrl.get_replay_buffer_elements(
-            transpose=True, shape=(1, 0, 2))
+            transpose=True, shape=(1, 0, 2)
+        )
         state_list = replay_buffer_elements[0]
         action_list = replay_buffer_elements[1]
         reward_list = replay_buffer_elements[2]
@@ -72,8 +79,15 @@ class PPOTrainer(Trainer):
         sigma_list = replay_buffer_elements[5]
 
         training_loss += self.msrl.agent_learn(
-            (state_list, action_list, reward_list, next_state_list, miu_list,
-             sigma_list))
+            (
+                state_list,
+                action_list,
+                reward_list,
+                next_state_list,
+                miu_list,
+                sigma_list,
+            )
+        )
         return training_loss, training_reward, j
 
     @ms_function

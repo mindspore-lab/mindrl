@@ -18,8 +18,9 @@ Distribution policy base class
 """
 
 
-class DistributionPolicy():
-    '''Define distrbution policy'''
+class DistributionPolicy:
+    """Define distrbution policy"""
+
     def __init__(self):
         self.actor_number = 0
         self.learner_number = 0
@@ -44,7 +45,6 @@ class DistributionPolicy():
             self.learner_number = learner_num
         else:
             raise Exception("Learner number cannot smaller than 0")
-
 
     def set_agent_number(self, agent_num):
         if agent_num >= 0:
