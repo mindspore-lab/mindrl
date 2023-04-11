@@ -10,5 +10,5 @@
     参数：
         - **factor** (float) - 滑动平均系数，范围[0, 1]。
         - **update_interval** (int) - 目标网络参数更新间隔。
-        - **behavior_params** (list) - 行为网络参数列表。
-        - **target_params** (list) - 目标网络参数列表。
+        - **behavior_params** (list(Parameter)) - 行为网络参数列表。
+        - **target_params** (list(Parameter)) - 目标网络参数列表。

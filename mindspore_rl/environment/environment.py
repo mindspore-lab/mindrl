@@ -102,7 +102,7 @@ class Environment(nn.Cell):
         Get the action space of the environment.
 
         Returns:
-            action_space(Space): The action space of environment.
+            action_space(Space), The action space of environment.
         """
         return self._action_space
 
@@ -112,7 +112,7 @@ class Environment(nn.Cell):
         Get the observation space of the environment.
 
         Returns:
-            observation_space(Space): The observation space of environment.
+            observation_space(Space), The observation space of environment.
         """
         return self._observation_space
 
@@ -122,7 +122,7 @@ class Environment(nn.Cell):
         Get the reward space of the environment.
 
         Returns:
-            reward_space(Space): The reward space of environment.
+            reward_space(Space), The reward space of environment.
         """
         return self._reward_space
 
@@ -132,7 +132,7 @@ class Environment(nn.Cell):
         Get the done space of the environment.
 
         Returns:
-            done_space(Space): The done space of environment.
+            done_space(Space), The done space of environment.
         """
         return self._done_space
 
@@ -142,7 +142,7 @@ class Environment(nn.Cell):
         Get the config of environment.
 
         Returns:
-            config_dict(dict): A dictionary which contains environment's info.
+            config_dict(dict), A dictionary which contains environment's info.
         """
         return self._config
 
