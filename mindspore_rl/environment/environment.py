@@ -94,7 +94,7 @@ class Environment(nn.Cell):
         Whether the environment is batched.
 
         Returns:
-            batched (bool), Whether the environment is batched. Default: False.
+            batched (bool), Whether the environment is batched. Default is False.
         """
         return False
 
@@ -147,9 +147,9 @@ class Environment(nn.Cell):
 
         Returns:
             - state (Union[np.ndarray, Tensor]), A numpy array or Tensor which states for
-                the initial state of environment.
+              the initial state of environment.
             - args (Union[np.ndarray, Tensor], optional), Support arbitrary outputs, but user needs to ensure the
-                dtype. This output is optional.
+              dtype. This output is optional.
         """
         raise NotImplementedError("Method reset should be overridden by subclass.")
 
@@ -165,7 +165,7 @@ class Environment(nn.Cell):
             - reward (Union[np.ndarray, Tensor]), The reward after performing the action.
             - done (Union[np.ndarray, Tensor]), Whether the simulation finishes or not.
             - args (Union[np.ndarray, Tensor], optional), Support arbitrary outputs, but user needs to ensure the
-                dtype. This output is optional.
+              dtype. This output is optional.
         """
         raise NotImplementedError("Method step should be overridden by subclass.")
 
@@ -178,7 +178,7 @@ class Environment(nn.Cell):
             env_id (Union[Tensor, np.ndarray]): Which environment these actions will interact with.
 
         Returns:
-            Success (bool): True if the action is successfully executed, otherwise False.
+            Success (bool), True if the action is successfully executed, otherwise False.
         """
         raise NotImplementedError("Method send should be overridden by subclass.")
 
@@ -192,7 +192,7 @@ class Environment(nn.Cell):
             - done (Union[np.ndarray, Tensor]), whether the simulation finishes or not.
             - env_id (Union[np.ndarray, Tensor]), Which environments are interacted.env
             - args (Union[np.ndarray, Tensor], optional), Support arbitrary outputs, but user needs to ensure the
-                dtype. This output is optional.
+              dtype. This output is optional.
         """
         raise NotImplementedError("Method async_step should be overridden by subclass.")
 
@@ -201,7 +201,7 @@ class Environment(nn.Cell):
         Set seed to control the randomness of environment.
 
         Args:
-            seed_value (int), The value that is used to set
+            seed_value (int): The value that is used to set
 
         Returns:
             Success (np.bool\_), Whether successfully set the seed.
