@@ -18,7 +18,7 @@ import mindspore
 import mindspore.numpy as np
 import mindspore.nn as nn
 import mindspore.ops.operations as P
-from mindspore.common.api import ms_function
+from mindspore.common.api import jit
 from mindspore import Tensor
 from mindspore.common.parameter import Parameter, ParameterTuple
 from mindspore.communication.management import NCCL_WORLD_COMM_GROUP
@@ -73,7 +73,7 @@ class Fragment1Kernel(nn.Cell):
         self.depend = P.Depend()
         self.expand_dims = P.ExpandDims()
 
-    @ms_function
+    @jit
     def execute(self):
         '''execute'''
         training_reward = self.zero
@@ -222,7 +222,7 @@ class Fragment2Kernel(nn.Cell):
         self.all_gather = P.AllGather(group=NCCL_WORLD_COMM_GROUP)
         self.depend = P.Depend()
 
-    @ms_function
+    @jit
     def execute(self):
         '''execute'''
         training_loss = self.zero

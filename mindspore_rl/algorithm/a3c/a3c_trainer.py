@@ -20,7 +20,7 @@ import mindspore
 from mindspore.ops.operations._rl_inner_ops import MuxSend, MuxReceive
 from mindspore.communication.management import init, NCCL_WORLD_COMM_GROUP, get_rank, get_group_size
 from mindspore.ops import operations as ops
-from mindspore import ms_function
+from mindspore import jit
 from mindspore import context
 
 # Dynamic networking is only supported in GRAPH_MODE, but the default mode in MS is PYNATIVE_MODE.
@@ -70,7 +70,7 @@ class A3CTrainer(Trainer):
                 print(f"Train in actor {rank_id}, episode {i}, rewards {one_step[0].asnumpy()}, "
                       f"loss {one_step[2].asnumpy()}")
 
-    @ms_function
+    @jit
     def train_one_episode(self):
         '''Train one episode'''
         # actors

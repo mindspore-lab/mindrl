@@ -28,7 +28,7 @@ from mindspore_rl.agent import trainer
 from mindspore_rl.core import Session
 import mindspore
 from mindspore import Tensor
-from mindspore import ms_function
+from mindspore import jit
 from mindspore import context
 import mindspore.nn as nn
 from mindspore.common.parameter import ParameterTuple
@@ -238,7 +238,7 @@ class A2CTrainer(Trainer):
                 print(f"Train in actor {rank_id}, episode {i}, rewards {one_step[0].asnumpy()}, "
                       f"loss {one_step[2].asnumpy()}")
 
-    @ms_function
+    @jit
     def train_one_episode(self):
         # actors
         _, grads, _ = self.msrl.agent_act(trainer.COLLECT, self.weight_copy)

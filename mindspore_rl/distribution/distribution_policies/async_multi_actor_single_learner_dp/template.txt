@@ -6,7 +6,7 @@ from mindspore_rl.utils import TensorArray
 from mindspore_rl.utils import BatchRead
 from mindspore_rl.utils import BatchWrite
 import mindspore
-from mindspore import nn 
+from mindspore import nn
 from mindspore import Tensor
 from mindspore.common.parameter import ParameterTuple
 from mindspore import ops
@@ -24,7 +24,7 @@ from mindspore_rl.agent.trainer import Trainer
 from mindspore_rl.agent import trainer
 from mindspore.ops.operations._rl_inner_ops import MuxSend, MuxReceive
 from mindspore.communication.management import init, NCCL_WORLD_COMM_GROUP, get_rank, get_group_size
-from mindspore import ms_function
+from mindspore import jit
 
 class $fragment_name$(nn.Cell):
     def __init__(self, msrl, rank, episode, duration):
@@ -34,7 +34,7 @@ class $fragment_name$(nn.Cell):
         self.episode = episode
         self.duration = duration
 
-    @ms_function
+    @jit
     def kernel(self):
         pass
         return
@@ -52,7 +52,7 @@ class $fragment_name$(nn.Cell):
         self.episode = episode
         self.duration = duration
 
-    @ms_function
+    @jit
     def kernel(self):
         pass
         return

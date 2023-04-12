@@ -14,7 +14,7 @@
 # ============================================================================
 """DDPG Trainer"""
 import mindspore
-from mindspore.common.api import ms_function
+from mindspore.common.api import jit
 from mindspore import Tensor, Parameter
 from mindspore.ops import operations as P
 from mindspore_rl.agent.trainer import Trainer
@@ -46,7 +46,7 @@ class DDPGTrainer(Trainer):
         trainable_variables = {"actor_net": self.msrl.actors.actor_net}
         return trainable_variables
 
-    @ms_function
+    @jit
     def init_training(self):
         """Initialize training"""
         obs = self.msrl.collect_environment.reset()
@@ -61,7 +61,7 @@ class DDPGTrainer(Trainer):
             i += 1
         return i
 
-    @ms_function
+    @jit
     def train_one_episode(self):
         """the algorithm in one episode"""
         if not self.inited:
@@ -84,7 +84,7 @@ class DDPGTrainer(Trainer):
         return loss, total_reward, steps
 
 
-    @ms_function
+    @jit
     def evaluate(self):
         """evaluate function"""
         total_eval_reward = self.zero

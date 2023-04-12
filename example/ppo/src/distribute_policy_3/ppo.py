@@ -27,7 +27,7 @@ from mindspore.ops import operations as P
 from mindspore.ops import functional as F
 from mindspore.common.parameter import Parameter
 from mindspore.common.initializer import initializer
-from mindspore.common.api import ms_function
+from mindspore.common.api import jit
 from mindspore.communication import get_group_size
 from mindspore.communication.management import init
 
@@ -443,7 +443,7 @@ class PPOTrainer(Trainer):
                   f"reward: {training_reward.asnumpy():.3f}")
             print("training time ", et-st)
 
-    @ms_function
+    @jit
     def train_one_episode(self):
         """the algorithm in one episode"""
         training_loss = self.zero
@@ -472,7 +472,7 @@ class PPOTrainer(Trainer):
         self.msrl.replay_buffer_reset()
         return training_loss, training_reward
 
-    @ms_function
+    @jit
     def evaluation(self):
         """evaluation function"""
         total_eval_reward = self.zero

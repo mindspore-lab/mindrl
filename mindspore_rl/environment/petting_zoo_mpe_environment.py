@@ -175,7 +175,7 @@ class PettingZooMPEEnvironment(Environment):
         try:
             self._env.render()
         except:
-            raise RuntimeError("Failed to render, run in PyNative mode and comment the ms_function.")
+            raise RuntimeError("Failed to render, run in PyNative mode and comment the jit.")
 
     def reset(self):
         """

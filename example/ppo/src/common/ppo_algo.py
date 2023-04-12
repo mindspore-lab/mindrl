@@ -23,7 +23,7 @@ from mindspore.ops import composite as C
 from mindspore.ops import operations as P
 from mindspore.common.parameter import Parameter
 from mindspore.common.initializer import initializer
-from mindspore.common.api import ms_function
+from mindspore.common.api import jit
 
 from mindspore_rl.agent.actor import Actor
 from mindspore_rl.agent.learner import Learner
@@ -352,7 +352,7 @@ class PPOTrainer(Trainer):
             print(f"Episode {i}, steps: {self.duration}, "
                   f"reward: {training_reward.asnumpy():.3f}")
 
-    @ms_function
+    @jit
     def train_one_episode(self):
         """the algorithm in one episode"""
         training_loss = self.zero
@@ -384,7 +384,7 @@ class PPOTrainer(Trainer):
         self.print('reward', training_reward)
         return training_loss, training_reward
 
-    @ms_function
+    @jit
     def evaluation(self):
         """evaluation function"""
         total_eval_reward = self.zero

@@ -20,7 +20,7 @@ import tqdm
 from mindspore_rl.agent.trainer import Trainer
 from mindspore_rl.agent import trainer
 from mindspore.ops import operations as ops
-from mindspore import ms_function
+from mindspore import jit
 
 
 class A2CTrainer(Trainer):
@@ -46,7 +46,7 @@ class A2CTrainer(Trainer):
                 if i == episodes - 1:
                     print(f'\nFailed to solved this problem after running {episodes} episodes.')
 
-    @ms_function
+    @jit
     def train_one_episode(self):
         '''Train one episode'''
         state = self.msrl.collect_environment.reset()

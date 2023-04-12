@@ -16,7 +16,7 @@
 
 import numpy as np
 import mindspore as ms
-from mindspore.common.api import ms_function
+from mindspore.common.api import jit
 from mindspore import Tensor, Parameter
 from mindspore.ops import operations as P
 from mindspore_rl.agent import Trainer
@@ -77,7 +77,7 @@ class QMIXTrainer(Trainer):
                                "mixer_net": self.msrl.learner.mixer_net}
         return trainable_variables
 
-    @ms_function
+    @jit
     def train_one_episode(self):
         """the train one episode implementation"""
         done = self.false
@@ -158,7 +158,7 @@ class QMIXTrainer(Trainer):
 
         return loss, total_reward, steps, step_info
 
-    @ms_function
+    @jit
     def evaluate(self):
         """Evaluation function"""
         done = self.false

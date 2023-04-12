@@ -23,7 +23,7 @@ from mindspore.ops import CustomRegOp, DataType
 import mindspore.nn as nn
 from mindspore.ops import operations as P
 import mindspore.nn.probability.distribution as msd
-from mindspore.common import ms_function
+from mindspore.common import jit
 
 
 GPU_TREE_TYPE = ['GPUCommon']
@@ -350,7 +350,7 @@ class MCTS(nn.Cell):
         self.max_action = max_action
         self.customized_func = customized_func
 
-    @ms_function
+    @jit
     def mcts_search(self, *args):
         """
         mcts_search is the main function of MCTS. Invoke this function will return the best
@@ -435,7 +435,7 @@ class MCTS(nn.Cell):
         self.tree_handle_list.pop()
         return ret
 
-    @ms_function
+    @jit
     def _get_root_information(self, dummpy_handle):
         """Does not support yet"""
         return self.get_root_info(dummpy_handle)

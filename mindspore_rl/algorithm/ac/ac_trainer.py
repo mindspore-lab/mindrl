@@ -16,7 +16,7 @@
 from mindspore_rl.agent.trainer import Trainer
 from mindspore_rl.agent import trainer
 import mindspore
-from mindspore.common.api import ms_function
+from mindspore.common.api import jit
 from mindspore import Tensor
 from mindspore.ops import operations as P
 from mindspore.common.parameter import Parameter
@@ -41,7 +41,7 @@ class ACTrainer(Trainer):
         trainable_variables = {"actor_net": self.msrl.learner.actor_net}
         return trainable_variables
 
-    @ms_function
+    @jit
     def train_one_episode(self):
         '''Train one episode'''
         state = self.msrl.collect_environment.reset()
@@ -62,7 +62,7 @@ class ACTrainer(Trainer):
                 break
         return loss, total_reward, steps
 
-    @ms_function
+    @jit
     def evaluate(self):
         '''evaluate'''
         total_reward = self.zero_value

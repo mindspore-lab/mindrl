@@ -14,7 +14,7 @@
 # ============================================================================
 """SAC Trainer"""
 import mindspore
-from mindspore.common.api import ms_function
+from mindspore.common.api import jit
 from mindspore import Tensor, Parameter
 from mindspore.ops import operations as P
 from mindspore_rl.agent.trainer import Trainer
@@ -57,7 +57,7 @@ class SACTrainer(Trainer):
             i += 1
         return done
 
-    @ms_function
+    @jit
     def train_one_episode(self):
         """the algorithm in one episode"""
         if not self.inited:
@@ -79,7 +79,7 @@ class SACTrainer(Trainer):
             step += 1
         return loss / step, total_reward, step
 
-    @ms_function
+    @jit
     def evaluate(self):
         """evaluate function"""
         total_eval_reward = self.zero

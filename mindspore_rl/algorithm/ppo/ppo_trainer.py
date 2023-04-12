@@ -15,7 +15,7 @@
 """PPO Trainer"""
 import mindspore
 from mindspore import Tensor
-from mindspore.common.api import ms_function
+from mindspore.common.api import jit
 from mindspore.ops import operations as P
 
 from mindspore_rl.agent import trainer
@@ -48,7 +48,7 @@ class PPOTrainer(Trainer):
         }
         return trainable_variables
 
-    @ms_function
+    @jit
     def train_one_episode(self):
         """the algorithm in one episode"""
         training_loss = self.zero
@@ -90,7 +90,7 @@ class PPOTrainer(Trainer):
         )
         return training_loss, training_reward, j
 
-    @ms_function
+    @jit
     def evaluate(self):
         """evaluate function"""
         total_eval_reward = self.zero

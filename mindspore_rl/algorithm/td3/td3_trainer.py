@@ -14,7 +14,7 @@
 # ============================================================================
 """TD3 Trainer"""
 import mindspore
-from mindspore.common.api import ms_function
+from mindspore.common.api import jit
 from mindspore import Tensor, Parameter
 from mindspore.ops import operations as P
 from mindspore_rl.agent.trainer import Trainer
@@ -48,7 +48,7 @@ class TD3Trainer(Trainer):
         trainable_variables = {"actor_net": self.msrl.actors.actor_net}
         return trainable_variables
 
-    @ms_function
+    @jit
     def init_training(self):
         """Initialize training"""
         obs = self.msrl.collect_environment.reset()
@@ -61,7 +61,7 @@ class TD3Trainer(Trainer):
             i += 1
         return i
 
-    @ms_function
+    @jit
     def train_one_episode(self):
         """the algorithm in one episode"""
         if not self.inited:
@@ -82,7 +82,7 @@ class TD3Trainer(Trainer):
             steps += 1
         return loss, total_rewards, steps
 
-    @ms_function
+    @jit
     def evaluate(self):
         """evaluate function"""
         total_eval_reward = self.zero

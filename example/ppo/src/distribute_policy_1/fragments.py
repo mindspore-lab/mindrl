@@ -17,7 +17,7 @@ import time
 import mindspore
 import mindspore.numpy as np
 import mindspore.nn as nn
-from mindspore.common.api import ms_function
+from mindspore.common.api import jit
 from mindspore import Tensor
 from mindspore.ops import operations as P
 from mindspore.common.parameter import Parameter, ParameterTuple
@@ -40,7 +40,7 @@ class Fragment2Kernel(nn.Cell):
         self.x = ParameterTuple(self.msrl.policy_and_network.actor_net.get_parameters())
         self.zero = Tensor(0, mindspore.float32)
 
-    @ms_function
+    @jit
     def learn_no_comm(self):
         '''learn'''
         training_loss = self.zero
@@ -98,14 +98,14 @@ class FragmentActionkernel(nn.Cell):
         for i in range(self.num_actor):
             self.send_list[i] = Send(sr_tag=(i+1), dest_rank=(i+1), group=NCCL_WORLD_COMM_GROUP)
 
-    @ms_function
+    @jit
     def gather_state(self):
         """all_gather"""
         state_fused = self.all_gather(self.state)
         self.assign(self.state_fused, state_fused)
         return self.true
 
-    @ms_function
+    @jit
     def execution(self):
         """execution"""
         state_list = []
@@ -218,14 +218,14 @@ class Fragment1Kernel(nn.Cell):
         self.true = Tensor(1, mindspore.float32)
         self.flag = Tensor(0, mindspore.float32)
 
-    @ms_function
+    @jit
     def gather_state(self):
         '''gather'''
         state = self.msrl.collect_environment.reset()
         state_fused = self.all_gather(state)
         return self.true
 
-    @ms_function
+    @jit
     def execution(self):
         '''execute'''
         action = self.recv_action()
