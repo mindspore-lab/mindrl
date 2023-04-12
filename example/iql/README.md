@@ -2,9 +2,9 @@
 
 ## Related Paper
 
-1. Ilya Kostrikov, Ashvin Nair, Sergey Levine: ["Offline Reinforcement Learning with Implicit Q-Learning", 2021 ](https://link.zhihu.com/?target=http%3A//arxiv.org/abs/2110.06169)
+1. Ilya Kostrikov, Ashvin Nair, Sergey Levine: ["Offline Reinforcement Learning with Implicit Q-Learning", 2021 ](https://arxiv.org/abs/2110.06169)
 
-2. Justin Fu, Aviral Kumar, Ofir Nachum, George Tucker, and Sergey Levine.[D4rl: datasets for deep data-driven reinforcement learning,2021](https://gitee.com/link?target=https%3A%2F%2Farxiv.org%2Fabs%2F2004.07219)
+2. Justin Fu, Aviral Kumar, Ofir Nachum, George Tucker, and Sergey Levine.[D4rl: datasets for deep data-driven reinforcement learning,2021](https://arxiv.org/abs/2004.07219)
 
 IQL was proposed by Sergey Levine of Berkeley in 2021, and was published at the ICLR2022, proposing a new paradigm of offline reinforcement learning. The IQL algorithm combines expected quantile regression and focuses on the information that has been sampled to avoid querying the value of  the unseen action. The experiment shows that the algorithm can achieve the effect of SOTA on D4RL.
 
@@ -24,9 +24,9 @@ Before running IQL, you should first install [MindSpore](https://www.mindspore.c
 - MindSpore >= 1.9.0
 - Reinforcement >= 0.6
 - numpy >= 1.17.0
-- [gym](https://gitee.com/link?target=https%3A%2F%2Fgithub.com%2Fopenai%2Fgym) >= 0.18.3
+- [gym](https://github.com/openai/gym) >= 0.18.3
 - mujoco200
-- [mujoco-py](https://gitee.com/link?target=https%3A%2F%2Fgithub.com%2Fopenai%2Fmujoco-py)<2.2,>=2.1
+- [mujoco-py](https://github.com/openai/mujoco-py)<2.2,>=2.1
 - [D4RL](https://github.com/Farama-Foundation/D4RL)
 
 After the installation is successful, you can directly run IQL by entering the following instructions.

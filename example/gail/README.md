@@ -13,7 +13,7 @@
 
 ## How to run GAIL
 
-Before running GAIL, you should first install [MindSpore](https://www.mindspore.cn/install/en)(>=2.0.0) and [MindSpore-Reinforcement](https://gitee.com/mindspore/reinforcement/blob/master/README.md#installation). Besides, the following dependencies should be installed. Please follow the installation instructions on their official websites.
+Before running GAIL, you should first install [MindSpore](https://www.mindspore.cn/install/en)(>=2.0.0) and [MindSpore-Reinforcement](https://github.com/mindspore-lab/mindrl/tree/master/README.md#installation). Besides, the following dependencies should be installed. Please follow the installation instructions on their official websites.
 
 - [gym](https://github.com/openai/gym) <= 0.21.3
 - [mujoco-py](https://github.com/openai/mujoco-py)<2.2,>=2.1

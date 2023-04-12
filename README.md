@@ -46,7 +46,7 @@ pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/{MindSpore-Versi
 
 | MindSpore Reinforcement Version |                            Branch                            | MindSpore version |
 | :-----------------------------: | :----------------------------------------------------------: | :---------------: |
-|              0.6.0              | [r0.6](https://gitee.com/mindspore/reinforcement/tree/r0.6/) |       2.0.0       |
+|              0.6.0              | [r0.6](https://github.com/mindspore-lab/mindrl/tree/r0.6) |       2.0.0       |
 |              0.5.0              | [r0.5](https://gitee.com/mindspore/reinforcement/tree/r0.5/) |       1.8.0       |
 |              0.3.0              | [r0.3](https://gitee.com/mindspore/reinforcement/tree/r0.3/) |       1.7.0       |
 |              0.2.0              | [r0.2](https://gitee.com/mindspore/reinforcement/tree/r0.2/) |       1.6.0       |
@@ -288,7 +288,7 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center">✔️</td>
         <td align="center">✔️</td>
         <td align="center">/</td>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/blob/master/mindspore_rl/environment/tic_tac_toe_environment.py">Tic-Tac-Toe</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/environment/tic_tac_toe_environment.py">Tic-Tac-Toe</a></td>
     </tr>
     <tr>
         <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/awac">AWAC</a></td>
@@ -430,4 +430,4 @@ MindSpore Reinforcement will be updated every 3 months. If you encounter any pro
 
 ## License
 
-[Apache License 2.0](https://gitee.com/mindspore/reinforcement/blob/master/LICENSE)
+[Apache License 2.0](https://github.com/mindspore-lab/mindrl/tree/master/LICENSE)

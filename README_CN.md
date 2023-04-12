@@ -47,7 +47,7 @@ pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/{MindSpore-Versi
 
 | MindSpore Reinforcement |                             分支                             | MindSpore |
 | :---------------------: | :----------------------------------------------------------: | :-------: |
-|          0.6.0          | [r0.6](https://gitee.com/mindspore/reinforcement/tree/r0.6/) |   2.0.0   |
+|          0.6.0          | [r0.6](https://github.com/mindspore-lab/mindrl/tree/r0.6) |   2.0.0   |
 |          0.5.0          | [r0.5](https://gitee.com/mindspore/reinforcement/tree/r0.5/) |   1.8.0   |
 |          0.3.0          | [r0.3](https://gitee.com/mindspore/reinforcement/tree/r0.3/) |   1.7.0   |
 |          0.2.0          | [r0.2](https://gitee.com/mindspore/reinforcement/tree/r0.2/) |   1.6.0   |
@@ -289,7 +289,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center">✔️</td>
         <td align="center">✔️</td>
         <td align="center">/</td>
-        <td align="center"><a href="https://gitee.com/mindspore/reinforcement/blob/master/mindspore_rl/environment/tic_tac_toe_environment.py">Tic-Tac-Toe</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/environment/tic_tac_toe_environment.py">Tic-Tac-Toe</a></td>
     </tr>
     <tr>
         <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/awac">AWAC</a></td>
@@ -431,4 +431,4 @@ MindSpore Reinforcement 会按3个月周期更新，如果遇到问题，请及�
 
 ## 许可证
 
-[Apache License 2.0](https://gitee.com/mindspore/reinforcement/blob/master/LICENSE)
+[Apache License 2.0](https://github.com/mindspore-lab/mindrl/tree/master/LICENSE)
