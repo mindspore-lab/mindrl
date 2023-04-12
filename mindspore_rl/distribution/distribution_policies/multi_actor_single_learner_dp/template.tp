@@ -1,0 +1,95 @@
+import mindspore
+import mindspore.numpy as np
+from mindspore_rl.core import MSRL
+from mindspore_rl.agent import trainer
+import mindspore.nn as nn
+from mindspore import jit
+from mindspore import Tensor
+from mindspore.ops import operations as P
+from mindspore.ops import composite as C
+from mindspore.common.parameter import Parameter, ParameterTuple
+from mindspore.common.initializer import initializer
+from mindspore.communication.management import init, NCCL_WORLD_COMM_GROUP, get_rank, get_group_size
+from mindspore import set_seed
+import mindspore.nn.probability.distribution as msd
+import time
+
+
+# pylint disable=E0001
+class Actor(nn.Cell):
+    def __init__(self, msrl, rank, duration, episode):
+        super(Actor, self).__init__()
+        self.msrl = msrl
+        self.rank = rank
+        self.episode = episode
+        self.duration = duration
+        self.zero = Tensor(0, mindspore.float32)
+        self.reduce_mean = P.ReduceMean()
+
+        names = list(map(lambda b: b.name, msrl.buffers.buffer))
+        shapes = list(map(lambda b: b.shape, msrl.buffers.buffer))
+        types = list(map(lambda b: b.dtype, msrl.buffers.buffer))
+        # expand shape from (s.shape) to (1, env_num, duration, s.shape)
+        shapes = list(map(lambda s: (s[1], s[0], s[2]), shapes))
+        shapes = list(map(lambda s: (1,) + s, shapes))
+        buffer_names = self.__dict__
+        for i in range(len(names)):
+            buffer_names["_buffer_data_" + str(i)] = Parameter(Tensor(np.zeros(shapes[i]), types[i]), name="actor_" + names[i])
+        names = list(map(lambda b: b.name, msrl.shared_network.get_parameters()))
+        shapes = list(map(lambda b: b.shape, msrl.shared_network.get_parameters()))
+        types = list(map(lambda b: b.dtype, msrl.shared_network.get_parameters()))
+        self.weight = msrl.shared_network.get_parameters()
+        weight = self.__dict__
+        weight_names = self.__dict__
+        for i, w in enumerate(self.weight):
+            weight["weight_" + str(i)] = w
+            weight_names["_weight_data_" + str(i)] = Parameter(Tensor(np.zeros((1,) + w.shape), w.dtype), name="actor_w" + str(i))
+
+
+    @jit
+    def kernel(self):
+        pass
+        return training_reward
+
+    def run(self):
+        for i in range(self.episode):
+            res = self.kernel()
+            print("Reward is ", res.asnumpy())
+
+
+class Learner(nn.Cell):
+    def __init__(self, msrl, rank, duration, episode):
+        super(Learner, self).__init__()
+        self.msrl = msrl
+        self.rank = rank
+        self.episode = episode
+        self.duration = duration
+        names = list(map(lambda b: b.name, msrl.buffers.buffer))
+        shapes = list(map(lambda b: b.shape, msrl.buffers.buffer))
+        types = list(map(lambda b: b.dtype, msrl.buffers.buffer))
+        # expand shape from (s.shape) to (1, env_num, duration, s.shape)
+        shapes = list(map(lambda s: (s[1], s[0], s[2]), shapes))
+        shapes = list(map(lambda s: (1,) + s, shapes))
+
+        buffer_names = self.__dict__
+        for i in range(len(names)):
+            buffer_names["_buffer_data_" + str(i)] = Parameter(Tensor(np.zeros(shapes[i]), types[i]), name="learner_" + names[i])
+        names = list(map(lambda b: b.name, msrl.shared_network.get_parameters()))
+        shapes = list(map(lambda b: b.shape, msrl.shared_network.get_parameters()))
+        types = list(map(lambda b: b.dtype, msrl.shared_network.get_parameters()))
+        self.weight = msrl.shared_network.get_parameters()
+        weight = self.__dict__
+        weight_names = self.__dict__
+        for i, w in enumerate(self.weight):
+            weight["weight_" + str(i)] = w
+            weight_names["_weight_data_" + str(i)] = Parameter(Tensor(np.zeros(w.shape), w.dtype), name="learner_w" + str(i))
+
+
+    @jit
+    def kernel(self):
+        pass
+        return training_loss
+
+    def run(self):
+        for i in range(self.episode):
+            res = self.kernel()

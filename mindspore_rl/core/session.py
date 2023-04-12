@@ -1,4 +1,4 @@
-# Copyright 2021-2022 Huawei Technologies Co., Ltd
+# Copyright 2021-2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,21 +15,21 @@
 """
 Implementation of the session class.
 """
-import sys
-from mindspore.communication import init, get_rank
+from mindspore.communication import get_rank, init
+
 from mindspore_rl.core import MSRL
 from mindspore_rl.distribution import fragment_generation
 
 
-class _Workers():
-    r'''
+class _Workers:
+    r"""
     The _Workers class is class for the distributed algorithms.
 
     Args:
         msrl (MSRL): The MSRL instance.
         fragment_list (dict): All the fragmets for distribution.
         episode (int): The eposide for each training.
-    '''
+    """
 
     def __init__(self, msrl, fragment_list, duration, episode):
         self.rank_id = get_rank()
@@ -43,7 +43,7 @@ class _Workers():
         print("Finish fragment ", self.fid)
 
 
-class Session():
+class Session:
     """
     The Session is a class for running MindSpore RL algorithms.
 
@@ -65,17 +65,18 @@ class Session():
         self.alg_config = alg_config
         if deploy_config:
             self.dist = True
-            self.worker_num = deploy_config['worker_num']
-            self.config = deploy_config['config']
-            self.dist_policy = deploy_config['distribution_policy']
-            self.is_auto = deploy_config['auto_distribution']
+            self.worker_num = deploy_config["worker_num"]
+            self.config = deploy_config["config"]
+            self.dist_policy = deploy_config["distribution_policy"]
+            self.is_auto = deploy_config["auto_distribution"]
+            self.algo_name = deploy_config["algo_name"]
 
     def run(self, class_type=None, is_train=True, episode=0, duration=0):
         """
         Execute the reinforcement learning algorithm.
 
         Args:
-            class_type (Trainer): The class type of the algorithm's trainer class. Default: None.
+            class_type (Trainer): The class type of the algorithm"s trainer class. Default: None.
             is_train (bool): Run the algorithm in train mode or eval mode. Default: True
             episode (int): The number of episode of the training. Default: 0.
             duration (int): The number of duration of the training. Default: 0.
@@ -83,11 +84,13 @@ class Session():
 
         if self.dist:
             init("nccl")
-            algorithm = sys.argv[0]
             if self.is_auto:
-                fragment_list = fragment_generation(algorithm, self.alg_config, self.dist_policy)
+                fragment_list = fragment_generation(
+                    self.algo_name, self.worker_num, self.dist_policy, self.msrl
+                )
             else:
-                from fragments import get_all_fragments
+                from fragments import get_all_fragments  # pylint: disable=C0415
+
                 fragment_list = get_all_fragments(self.msrl.num_actors)
             workers = _Workers(self.msrl, fragment_list, duration, episode)
             workers.run()
@@ -97,17 +100,17 @@ class Session():
             else:
                 trainer = class_type(self.msrl, self.params)
             ckpt_path = None
-            if self.params and 'ckpt_path' in self.params:
-                ckpt_path = self.params['ckpt_path']
+            if self.params and "ckpt_path" in self.params:
+                ckpt_path = self.params["ckpt_path"]
             if is_train:
                 trainer.train(episode, self.callbacks, ckpt_path)
-                print('training end')
+                print("training end")
             else:
                 if ckpt_path:
                     trainer.load_and_eval(ckpt_path)
-                    print('eval end')
+                    print("eval end")
                 else:
-                    print('Please provide a ckpt_path for eval.')
+                    print("Please provide a ckpt_path for eval.")
 
         # Close the environment to release the resource
         if self.msrl.collect_environment is not None:

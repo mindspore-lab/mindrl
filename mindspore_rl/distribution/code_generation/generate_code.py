@@ -14,448 +14,682 @@
 # ============================================================================
 
 """
-Generate fragments.
+Generate fragments with python ast.
 """
-
 import ast
-import os
-import stat
-import sys
+import copy
 import importlib
+import inspect
+import os
+import shutil
+
+import astor
 
 
-#pylint: disable=E1123
-def _transfor_class_name(target, fragment_names):
-    '''Convert class name'''
-    found = 0
-    with open(target, 'r', encoding='utf-8') as template:
-        lines = template.readlines()
-        for name in fragment_names:
-            cnt = 0
-            for line_no, _ in enumerate(lines):
-                line = lines[line_no]
-                if '$fragment_name$' in line:
-                    new_line = line.replace('$fragment_name$', name)
-                    lines[line_no] = new_line
-                    cnt += 1
-                    found += cnt
-                    if cnt == 2:
-                        break
+class GenerateFragment:
+    """Class for generate fargments."""
 
-    if found != 4:
-        tmp_file = "template_tmp.py"
-        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-        modes = stat.S_IWUSR | stat.S_IRUSR
-        with os.fdopen(os.open(tmp_file, flags, modes), 'w') as fout:
-            fout.writelines(lines)
-        with open(tmp_file, 'r', encoding="utf-8") as target_out:
-            target_out = target_out.read()
-            ast_target = ast.parse(target_out, type_comments=True)
-    else:
-        print("error, the template does not contain $fragment_name$ place holder.")
-    return ast_target
+    def __init__(self, algo_name, policy, worker_num):
+        """
+        algo_name : the algo name, used to find the strandard trainer class defined in MSRL.
+        policy : distribute policy
+        worker_num : worker_num in config.py in `mindspore_rl/algorithm/xx` dir.
+        """
+        self.src_file = self.get_trainer_by_algo_name(algo_name)
+        self.template = self.get_template_by_policy(policy)
+        self.policy = policy
+        self.worker_num = worker_num
 
+    @classmethod
+    def get_template_by_policy(cls, policy) -> str:
+        """Find the template.tp in the disribution policy dir."""
+        file_dir = os.path.dirname(os.path.abspath(inspect.getmodule(policy).__file__))
+        src_template = file_dir + "/template.tp"
+        template = file_dir + "/template" + str(os.getpid()) + ".py"
+        shutil.copy(src_template, template)
+        return template
 
-def _copy_statement(ast_source):
-    statements = []
-    for i in ast.iter_child_nodes(ast_source):
-        if not isinstance(i, ast.Expr) and not isinstance(i, ast.arguments):
-            statements.insert(0, i)
-    return statements
+    @classmethod
+    def get_trainer_by_algo_name(cls, algo_name) -> str:
+        """Find the trainer class for algo."""
+        cur = os.path.dirname(__file__)
+        trainer_file = (
+            cur + "/../../algorithm/" + algo_name + "/" + algo_name + "_trainer.py"
+        )
+        return trainer_file
 
+    @classmethod
+    def generate_ast_from_py(cls, source_py) -> ast.Module:
+        """generate ast form source python code"""
+        with open(source_py, "r", encoding="utf-8") as fsource:
+            source = fsource.read()
+        ast_source = ast.parse(source)
+        return ast_source
 
-def _copy_constructor(ast_target, ast_source, fragment_name):
-    '''copy constructor from src to target'''
-    statements = _copy_statement(ast_source)
-    cnt = 0
-    for n in ast.iter_child_nodes(ast_target):
-        if isinstance(n, ast.ClassDef) and n.name == fragment_name:
-            for i in ast.iter_child_nodes(n):
-                if isinstance(i, ast.FunctionDef) and i.name == '__init__':
-                    for _ in ast.iter_child_nodes(i):
-                        cnt = cnt + 1
-                    cnt -= 1
-                    for statement in statements:
-                        i.body.insert(cnt, statement)
+    @classmethod
+    # pylint: disable=W0102
+    def find_buffer_and_learn_args(
+        cls,
+        ast_source,
+        buffer_func=["get_replay_buffer_elements", "replay_buffer_sample"],
+        learn_func=["agent_learn"],
+    ):
+        """
+        In trainer, find the function if `train_one_episode`, find the buffer name by `buffer_func`,
+        usually, there is two situations: 1 return the whole buffer by `msrl.get_replay_buffer_elements`
+                                          2 sample a batch of buffer by `replay_buffer_sample`.
+        Also, we need the name of args in `msrl.agent_learn()`.
+        Both of buffer names and learn args are user-defined, so we have to seach the code and find them.
+        Obviously, the `buffer_func` and `learn_func` must be the standard apis in MSRL.
+        """
+        buffer_names = []
+        learn_args = []
+        learn_return = []
+        # pylint: disable=R1702
+        for nodes in ast.iter_child_nodes(ast_source):
+            for node in ast.iter_child_nodes(nodes):
+                if (
+                    isinstance(node, ast.FunctionDef)
+                    and node.name == "train_one_episode"
+                ):
+                    for i in node.body:
+                        if isinstance(i, ast.Assign) and isinstance(i.value, ast.Call):
+                            if i.value.func.attr in buffer_func:
+                                # xx = msrl.get_buffer() or x1, x2 = msrl.get_buffer()
+                                if isinstance(i.targets[0], ast.Tuple):
+                                    for name in i.targets[0].elts:
+                                        buffer_names.append(name.id)
+                                else:
+                                    buffer_names.append(i.targets[0].id)
+                            if i.value.func.attr in learn_func:
+                                # loss = msrl.agent_learn(s, r ,s1) or loss = msrl.agent_learn(exp)
+                                if isinstance(i.value.args[0], ast.Tuple):
+                                    for item in i.value.args[0].elts:
+                                        learn_args.append(item.id)
+                                else:
+                                    learn_args.append(i.value.args[0].id)
+                                # loss = msrl.agent_learn(xx) or l1, l2 = msrl.agent_learn(xx)
+                                if isinstance(i.targets[0], ast.Tuple):
+                                    for name in i.targets[0].elts:
+                                        learn_return.append(name.id)
+                                else:
+                                    learn_return.append(i.targets[0].id)
+                        if isinstance(i, ast.AugAssign) and isinstance(
+                            i.value, ast.Call
+                        ):
+                            if i.value.func.attr in learn_func:
+                                # loss += msrl.agent_learn(exp) or l1 += msrl.agent_learn(xx, xx)
+                                if isinstance(i.value.args[0], ast.Tuple):
+                                    for item in i.value.args[0].elts:
+                                        learn_args.append(item.id)
+                                else:
+                                    learn_args.append(i.value.args[0].id)
+                                learn_return.append(i.target.id)
+        return buffer_names, learn_args, learn_return
 
+    @classmethod
+    def find_func(cls, ast_body, func):
+        """Find the AugAssign node."""
+        for i, node in enumerate(ast_body):
+            if isinstance(node, ast.AugAssign) and isinstance(node.value, ast.Call):
+                if node.value.func.attr in func:
+                    return i, node
+        return None
 
-def _build_receiver(f_type):
-    '''build receive statement'''
-    op_nodes = []
-
-    op_list = ['Receive', 'Send']
-    for op in op_list:
-        if op == 'Receive' and f_type == 'Actor':
-            irecv_node = ast.Assign(targets=[ast.Name(id='success', ctx=ast.Store())],\
-                                    value=ast.Call(func=ast.Name(id='self.update', ctx=ast.Load()),\
-                                    args=[ast.Name(id='self.weight'), ast.Name('weight')], keywords=[]))
-            op_nodes.append(irecv_node)
-            irecv_node = ast.Assign(targets=[ast.Name(id='weight', ctx=ast.Store())],\
-                                    value=ast.Call(func=ast.Name(id='self.recv_actor', ctx=ast.Load()),\
-                                    args=[], keywords=[]))
-            op_nodes.append(irecv_node)
-        if op == 'Receive' and f_type == 'Learner':
-            irecv_node = ast.Assign(targets=[ast.Name(id='grads', ctx=ast.Store())],\
-                                    value=ast.Call(func=ast.Name(id='self.recv_learner', ctx=ast.Load()),\
-                                    args=[], keywords=[]))
-            op_nodes.append(irecv_node)
-    return op_nodes
-
-
-def _build_sender(f_type):
-    '''build send statement'''
-    op_nodes = []
-    op_list = ['Receive', 'Send']
-
-    for op in op_list:
-        if op == 'Send' and f_type == 'Actor':
-            isend_node = ast.Assign(targets=[ast.Name(id='send_res', ctx=ast.Store())],\
-                                    value=ast.Call(func=ast.Name(id='self.send_actor',\
-                                    ctx=ast.Load()), args=[ast.Name(id='grads')], keywords=[]))
-            op_nodes.append(isend_node)
-        if op == 'Send' and f_type == 'Learner':
-            isend_node = ast.Assign(targets=[ast.Name(id='send_res', ctx=ast.Store())],\
-                                value=ast.Call(func=ast.Name(id='self.send_learner', ctx=ast.Load()),\
-                                args=[ast.Name(id='self.msrl.learner.global_params')], keywords=[]))
-            op_nodes.append(isend_node)
-    return op_nodes
-
-
-def _create_tuple(data):
-    '''create tuple AST'''
-    data_list = []
-    for i in data:
-        if isinstance(i, int):
-            data_list.append(ast.Constant(value=i))
+    # pylint: disable=W0102
+    def replace_augassign(self, ast_body, learn_func=["agent_learn"]):
+        """replace the AugAssign by Assign."""
+        if not isinstance(ast_body, list):
+            node = self.find_func([ast_body], learn_func)
         else:
-            data_list.append(ast.Name(id=i))
-    tuple_arg = ast.Tuple(elts=data_list, ctx=ast.Load())
-    return tuple_arg
-
-
-def _build_allgather_send(f_type):
-    '''build allgather on sender side'''
-    op_nodes = []
-    if f_type == 'Actor':
-        data_list = ['self.state_list', 'self.reward_list', 'self.action_list',
-                     'self.next_state_list', 'self.miu_list', 'self.sigma_list']
-        tmp_data_list = ['state_list', 'reward_list', 'action_list',
-                         'next_state_list', 'miu_list', 'sigma_list']
-        for i, _ in enumerate(data_list):
-            data = data_list[i]
-            tmp_data = tmp_data_list[i]
-            if i > 0:
-                dep_data = tmp_data_list[i-1]
-                depend_node = ast.Assign(targets=[ast.Name(id=data, ctx=ast.Store())],\
-                                         value=ast.Call(func=ast.Name(id='self.depend',\
-                                         ctx=ast.Load()), args=[ast.Name(id=data), ast.Name(id=dep_data)],\
-                                         keywords=[]))
-                op_nodes.append(depend_node)
-
-            expand_node = ast.Assign(targets=[ast.Name(id=tmp_data, ctx=ast.Store())],\
-                                     value=ast.Call(func=ast.Name(id='self.expand_dims',\
-                                     ctx=ast.Load()), args=[ast.Name(id=data), ast.Num(0)], keywords=[]))
-            op_nodes.append(expand_node)
-
-            allgather_node = ast.Assign(targets=[ast.Name(id=tmp_data, ctx=ast.Store())],\
-                                        value=ast.Call(func=ast.Name(id='self.allgather',\
-                                        ctx=ast.Load()), args=[ast.Name(id=tmp_data)], keywords=[]))
-            op_nodes.append(allgather_node)
-
-    if f_type == 'Learner':
-        depend_node = ast.Assign(targets=[ast.Name(id='actor_net_param', ctx=ast.Store())],\
-                                 value=ast.Call(func=ast.Name(id='self.depend', ctx=ast.Load()),\
-                                 args=[ast.Name(id='self.actor_net_param'),\
-                                 ast.Name(id='self.training_loss')], keywords=[]))
-        op_nodes.append(depend_node)
-
-        data_list = ['self.actor_net_param[0]', 'self.actor_net_param[1]',
-                     'self.actor_net_param[2]', 'self.actor_net_param[3]',
-                     'self.actor_net_param[4]', 'self.actor_net_param[5]',
-                     'self.actor_net_param[6]']
-        data_list2 = ['self.network_weigt_0', 'self.network_weigt_1',
-                      'self.network_weigt_2', 'self.network_weigt_3',
-                      'self.network_weigt_4', 'self.network_weigt_5',
-                      'self.network_weigt_6']
-        tmp_list = ['nw0', 'nw1', 'nw2', 'nw3', 'nw4', 'nw5', 'nw6']
-
-        for i, _ in enumerate(data_list):
-            data = data_list[i]
-            data2 = data_list2[i]
-            if i > 0:
-                dep_data = tmp_list[i-1]
-                depend_node = ast.Assign(targets=[ast.Name(id=tmp_list[i], ctx=ast.Store())],\
-                                         value=ast.Call(func=ast.Name(id='self.depend',\
-                                         ctx=ast.Load()), args=[ast.Name(id=data2), ast.Name(id=dep_data)],\
-                                         keywords=[]))
-                op_nodes.append(depend_node)
-
-            assign_node = ast.Expr(value=ast.Call(func=ast.Name(id='self.assign', ctx=ast.Load()),\
-                                  args=[ast.Name(id=data2), ast.Name(id=data)], keywords=[]))
-            op_nodes.append(assign_node)
-
-            if i == 0:
-                send_data = data_list2[i]
+            node = self.find_func(ast_body, learn_func)
+        if node:
+            new_node = ast.Assign(
+                lineno=node[1].lineno,
+                col_offset=node[1].col_offset,
+                targets=[node[1].target],
+                value=node[1].value,
+            )
+            if isinstance(ast_body, list):
+                ast_body[node[0]] = new_node
             else:
-                send_data = tmp_list[i]
-            allgather_node = ast.Assign(targets=[ast.Name(id=tmp_list[i], ctx=ast.Store())],\
-                                                 value=ast.Call(func=ast.Name(id='self.allgather',\
-                                                 ctx=ast.Load()), args=[ast.Name(id=send_data)], keywords=[]))
-            op_nodes.append(allgather_node)
-    return op_nodes
+                ast_body = new_node
+        return ast_body
 
+    @classmethod
+    # pylint: disable=W0102
+    def find_frag(cls, ast_source, func=["agent_learn"]):
+        """Find the boundary in func `train_one_episode`, we split this function by the keyword in `func`."""
+        actor_part = []
+        learner_part = []
+        boundary = False
+        for nodes in ast.iter_child_nodes(ast_source):
+            for node in ast.iter_child_nodes(nodes):
+                if (
+                    isinstance(node, ast.FunctionDef)
+                    and node.name == "train_one_episode"
+                ):
+                    for n_body in node.body:
+                        if (
+                            isinstance(n_body, (ast.AugAssign, ast.Assign))
+                            and isinstance(n_body.value, ast.Call)
+                            and n_body.value.func.attr in func
+                        ):
+                            print("Find boundary function ", n_body.value.func.attr)
+                            boundary = True
+                        if boundary:
+                            learner_part.append(n_body)
+                        else:
+                            actor_part.append(n_body)
+        return actor_part, learner_part
 
-def _build_allgather_receive(f_type):
-    '''build allgather on receiver side'''
-    op_nodes = []
-    if f_type == 'Learner':
-        data_list = ['self.state_list', 'self.reward_list', 'self.action_list',
-                     'self.next_state_list', 'self.miu_list', 'self.sigma_list']
-        tmp_data_list = ['state_list', 'reward_list', 'action_list',
-                         'next_state_list', 'miu_list', 'sigma_list']
-        pos_list = [(1, 0, 0, 0), (1, 0, 0, 0), (1, 0, 0, 0), (1, 0, 0, 0), (1, 0, 0, 0), (1, 0, 0, 0)]
-        shape_list = [('self.num_actor', 'self.num_collect_env', 'self.duration', 17),
-                      ('self.num_actor', 'self.num_collect_env', 'self.duration', 1),
-                      ('self.num_actor', 'self.num_collect_env', 'self.duration', 6),
-                      ('self.num_actor', 'self.num_collect_env', 'self.duration', 17),
-                      ('self.num_actor', 'self.num_collect_env', 'self.duration', 6),
-                      ('self.num_actor', 'self.num_collect_env', 'self.duration', 6),
-                     ]
+    # pylint: disable=R1702
+    @classmethod
+    def insert_to_target(cls, ast_target, fragment_type, frag):
+        """Insert fragment in to traget ast code, replace the pass part in template ast."""
+        for nodes in ast.iter_child_nodes(ast_target):
+            if isinstance(nodes, ast.ClassDef) and nodes.name == fragment_type:
+                for i in ast.iter_child_nodes(nodes):
+                    if isinstance(i, ast.FunctionDef) and i.name == "kernel":
+                        for j in ast.iter_child_nodes(i):
+                            if isinstance(j, ast.Pass):
+                                i.body.pop(0)
+                                if isinstance(frag, list):
+                                    i.body[-1:-1] = iter(frag[:-1])
+                                else:
+                                    i.body.insert(0, frag)
+        ast.fix_missing_locations(ast_target)
 
-        for i, _ in enumerate(data_list):
-            data = data_list[i]
-            tmp_data = tmp_data_list[i]
+    def split_trainer_to_fragment(self, ast_target, ast_source) -> ast.Module:
+        """Read ast source of Trainer, split Trainer into Actor and Learner."""
+        actor_frag, learner_frag = self.find_frag(copy.deepcopy(ast_source))
+        learner_frag = self.replace_augassign(learner_frag)
+        self.add_common_kernel(ast_target)
+        self.insert_to_target(ast_target, "Actor", actor_frag)
+        self.insert_to_target(ast_target, "Learner", learner_frag)
+        return ast_target
 
+    @classmethod
+    def build_send(cls, frag_type):
+        """TODO"""
+        print(frag_type)
+        return None, None
 
-            allgather_node = ast.Assign(targets=[ast.Name(id=tmp_data, ctx=ast.Store())],\
-                                        value=ast.Call(func=ast.Name(id='self.allgather',\
-                                        ctx=ast.Load()), args=[ast.Name(id=data)], keywords=[]))
-            op_nodes.append(allgather_node)
+    @classmethod
+    def build_allgather(
+        cls,
+        frag_type,
+        user_defined_buffer_name,
+        framework_buffer_name,
+        framework_weight_name,
+        learn_args,
+        learn_return,
+    ):
+        """
+        Build the communication nodes for AllGather.
+        For each Fragment type: `Learner` and `Actor`, the behaveior is different in AllGather.
+        For the usage of `Actor`, we AllGather the weight of each rank,
+        and get the first dim of it(the rank 0 replicate learner).
+        the assign the weight into local policy net.These code will add in the top of the Actor part,
+        we call it top_op_nodes. Then we will expand first dims for the buffer created by the each actor
+        and choose the dims except the first(the rank 0),and AllGather the buffer at last,
+        we call these code bottom_op_nodes.
+        For the usage of `Learner`, we AllGather all the buffer and strip the first dim as the top_op_nodes.
+        Then AllGather the policy net weight after update as the bottom_op_node.
+        ######
+        Actor:
+           weight  -->   local policy
+           generate actions and setp in environment to generate buffer.
+           broadcast buffer
 
-            if i < len(data_list)-1:
-                dep_data = tmp_data_list[i]
-                depend_node = ast.Assign(targets=[ast.Name(id=tmp_data_list[i+1], ctx=ast.Store())],\
-                                         value=ast.Call(func=ast.Name(id='self.depend',\
-                                         ctx=ast.Load()), args=[ast.Name(id=data_list[i+1]),\
-                                         ast.Name(id=dep_data)], keywords=[]))
-                op_nodes.append(depend_node)
+        Learner:
+           allgather buffer
+           feed the buffer into agent_learn and update the policy net
+           broadcast the weight
+        ######
 
-            pos_tuple = _create_tuple(pos_list[i])
-            shape_tuple = _create_tuple(shape_list[i])
-            slice_node = ast.Assign(targets=[ast.Name(id=tmp_data, ctx=ast.Store())],\
-                                    value=ast.Call(func=ast.Name(id='self.slice',\
-                                    ctx=ast.Load()), args=[ast.Name(id=tmp_data),\
-                                    pos_tuple, shape_tuple], keywords=[]))
-            op_nodes.append(slice_node)
+        """
+        top_op_nodes = []
+        bottom_op_nodes = []
+        buffer_name = []
+        # User may use a tuple or split variables to obtain buffer.
+        # buffer = msrl.get_replay_buffer()
+        # s, r, a = msrl.get_replay_buffer()
+        if len(user_defined_buffer_name) == 1:
+            for i in range(len(framework_buffer_name)):
+                buffer_name.append(user_defined_buffer_name[0])
+        else:
+            buffer_name = user_defined_buffer_name
+        weight_head = "self._weight_data"
+        net_weight_head = "self.weight"
+        buffer_head = "self._buffer_data"
+        if frag_type == "Actor":
+            # generate top node
+            for i, b in enumerate(buffer_name):
+                if len(user_defined_buffer_name) == 1:
+                    arg = ast.Subscript(
+                        value=ast.Name(buffer_name[0], ctx=ast.Load()),
+                        slice=ast.Index(value=ast.Num(n=i)),
+                        ctx=ast.Load(),
+                    )
+                else:
+                    arg = ast.Name(id=b)
+                tmp_buffer_all = "all_buffer_" + str(i)
+                src_buffer = buffer_head + "_" + str(i)
+                tmp_src_buffer = src_buffer.strip("self._")
+                expand_node = ast.Assign(
+                    targets=[ast.Name(id=tmp_src_buffer, ctx=ast.Store())],
+                    value=ast.Call(
+                        func=ast.Name(id="self.expanddims", ctx=ast.Load()),
+                        args=[ast.Name(id=arg), ast.Num(0)],
+                        keywords=[],
+                    ),
+                )
+                assign_node = ast.Assign(
+                    targets=[ast.Name(id=src_buffer, ctx=ast.Store())],
+                    value=ast.Name(id=tmp_src_buffer),
+                    ctx=ast.Load(),
+                )
+                allgather_node = ast.Assign(
+                    targets=[ast.Name(id=tmp_buffer_all, ctx=ast.Store())],
+                    value=ast.Call(
+                        func=ast.Name(id="self.allgather", ctx=ast.Load()),
+                        args=[ast.Name(id=src_buffer)],
+                        keywords=[],
+                    ),
+                )
+                depend_node = ast.Assign(
+                    targets=[ast.Name(id=tmp_buffer_all, ctx=ast.Store())],
+                    value=ast.Call(
+                        func=ast.Name(id="self.depend", ctx=ast.Load()),
+                        args=[
+                            ast.Name(id=tmp_buffer_all),
+                            ast.Name(id="all_buffer_" + str(i - 1)),
+                        ],
+                        keywords=[],
+                    ),
+                )
+                bottom_op_nodes.append(expand_node)
+                bottom_op_nodes.append(assign_node)
+                bottom_op_nodes.append(allgather_node)
+                if i == 0:
+                    depend_node = ast.Assign(
+                        targets=[ast.Name(id=tmp_buffer_all, ctx=ast.Store())],
+                        value=ast.Call(
+                            func=ast.Name(id="self.depend", ctx=ast.Load()),
+                            args=[
+                                ast.Name(id=tmp_buffer_all),
+                                ast.Name(id=tmp_src_buffer),
+                            ],
+                            keywords=[],
+                        ),
+                    )
+                bottom_op_nodes.append(depend_node)
+            # generate bottom node
+            for i in range(len(framework_weight_name)):
+                src_weight = weight_head + "_" + str(i)
+                tmp_data = "all_weight_data_" + str(i)
+                dst_weight = net_weight_head + "_" + str(i)
+                allgather_node = ast.Assign(
+                    targets=[ast.Name(id=tmp_data, ctx=ast.Store())],
+                    value=ast.Call(
+                        func=ast.Name(id="self.allgather", ctx=ast.Load()),
+                        args=[ast.Name(id=src_weight)],
+                        keywords=[],
+                    ),
+                )
+                assign_node = ast.Assign(
+                    targets=[ast.Name(id=dst_weight.strip("self."), ctx=ast.Store())],
+                    value=ast.Call(
+                        func=ast.Name(id="self.assign", ctx=ast.Load()),
+                        args=[ast.Name(id=dst_weight), ast.Name(id=tmp_data + "[0,:]")],
+                        keywords=[],
+                    ),
+                )
+                depend_node = ast.Assign(
+                    targets=[ast.Name(id=tmp_data, ctx=ast.Store())],
+                    value=ast.Call(
+                        func=ast.Name(id="self.depend", ctx=ast.Load()),
+                        args=[
+                            ast.Name(id=tmp_data),
+                            ast.Name(
+                                id=net_weight_head.strip("self.") + "_" + str(i - 1)
+                            ),
+                        ],
+                        keywords=[],
+                    ),
+                )
+                if i == 0:
+                    depend_node = ast.Assign(
+                        targets=[ast.Name(id=tmp_data, ctx=ast.Store())],
+                        value=ast.Call(
+                            func=ast.Name(id="self.depend", ctx=ast.Load()),
+                            args=[
+                                ast.Name(id=tmp_data),
+                                ast.Name(id="all_buffer_" + str(len(buffer_name) - 1)),
+                            ],
+                            keywords=[],
+                        ),
+                    )
+                bottom_op_nodes.append(allgather_node)
+                bottom_op_nodes.append(depend_node)
+                bottom_op_nodes.append(assign_node)
 
-    if f_type == 'Actor':
-        data_list = ['self.actor_net_param[0]', 'self.actor_net_param[1]',
-                     'self.actor_net_param[2]', 'self.actor_net_param[3]',
-                     'self.actor_net_param[4]', 'self.actor_net_param[5]',
-                     'self.actor_net_param[6]']
-        data_list2 = ['self.network_weigt_0', 'self.network_weigt_1',
-                      'self.network_weigt_2', 'self.network_weigt_3',
-                      'self.network_weigt_4', 'self.network_weigt_5',
-                      'self.network_weigt_6']
-        tmp_list = ['nw0', 'nw1', 'nw2', 'nw3', 'nw4', 'nw5', 'nw6']
-        pos_list = [(0,), (0, 0), (0,), (0, 0), (0,), (0, 0), (0,)]
-        shape_list = [(6,), (200, 17), (200,), (100, 200), (100,), (6, 100), (6,)]
+        if frag_type == "Learner":
+            exp_node = []
+            # generate top node
+            for i, b in enumerate(buffer_name):
+                if len(learn_args) == 1:
+                    learn_arg = learn_args[0] + str(i)
+                    exp_node.append(ast.Name(id=learn_arg, ctx=ast.Load()))
+                else:
+                    learn_arg = learn_args[i]
+                tmp_buffer_all = "all_buffer_" + str(i)
+                src_buffer = buffer_head + "_" + str(i)
+                allgather_node = ast.Assign(
+                    targets=[ast.Name(id=tmp_buffer_all, ctx=ast.Store())],
+                    value=ast.Call(
+                        func=ast.Name(id="self.allgather", ctx=ast.Load()),
+                        args=[ast.Name(id=src_buffer)],
+                        keywords=[],
+                    ),
+                )
+                assign_node = ast.Assign(
+                    targets=[ast.Name(id=learn_arg, ctx=ast.Store())],
+                    value=ast.Subscript(
+                        value=ast.Name(id=tmp_buffer_all, ctx=ast.Load()),
+                        slice=ast.Slice(lower=ast.Num(1), upper=None, step=None),
+                        ctx=ast.Load(),
+                    ),
+                )
+                depend_node = ast.Assign(
+                    targets=[ast.Name(id=tmp_buffer_all, ctx=ast.Store())],
+                    value=ast.Call(
+                        func=ast.Name(id="self.depend", ctx=ast.Load()),
+                        args=[
+                            ast.Name(id=tmp_buffer_all),
+                            ast.Name(id="all_buffer_" + str(i - 1)),
+                        ],
+                        keywords=[],
+                    ),
+                )
+                reshape_node = ast.Assign(
+                    targets=[ast.Name(id=learn_arg, ctx=ast.Store())],
+                    value=ast.Call(
+                        func=ast.Name(id=learn_arg + ".reshape", ctx=ast.Load()),
+                        args=[
+                            ast.Num(n=-1),
+                            ast.Name(id=learn_arg + ".shape[-2]"),
+                            ast.Name(id=learn_arg + ".shape[-1]"),
+                        ],
+                        keywords=[],
+                    ),
+                )
 
-        for i, _ in enumerate(data_list):
-            data = data_list[i]
-            pos_tuple = _create_tuple(pos_list[i])
-            shape_tuple = _create_tuple(shape_list[i])
+                top_op_nodes.append(allgather_node)
+                top_op_nodes.append(assign_node)
+                top_op_nodes.append(reshape_node)
+                if i > 0:
+                    top_op_nodes.append(depend_node)
+            if len(learn_args) == 1:
+                assign_node = ast.Assign(
+                    targets=[ast.Name(id=learn_arg, ctx=ast.Store())],
+                    value=ast.Tuple(elts=exp_node),
+                )
+                top_op_nodes.append(assign_node)
+            # generate bottom node
+            depend_node = ast.Assign(
+                targets=[ast.Name(id=learn_return[0], ctx=ast.Store())],
+                value=ast.Call(
+                    func=ast.Name(id="self.depend", ctx=ast.Load()),
+                    args=[
+                        ast.Name(id=learn_return[0]),
+                        ast.Name(id="all_buffer_" + str(len(buffer_name) - 1)),
+                    ],
+                    keywords=[],
+                ),
+            )
+            bottom_op_nodes.append(depend_node)
+            print_node = ast.Expr(
+                value=ast.Call(
+                    func=ast.Attribute(
+                        value=ast.Name(id="self", ctx=ast.Load()),
+                        attr="print",
+                        ctx=ast.Load(),
+                    ),
+                    args=[
+                        ast.Str(s=learn_return[0]),
+                        ast.Name(id=learn_return[0], ctx=ast.Load()),
+                    ],
+                    keywords=[],
+                )
+            )
+            bottom_op_nodes.append(print_node)
 
-            if i == 0:
-                send_data = data
-            else:
-                send_data = tmp_list[i]
-            allgather_node = ast.Assign(targets=[ast.Name(id=tmp_list[i], ctx=ast.Store())],\
-                                        value=ast.Call(func=ast.Name(id='self.allgather',\
-                                        ctx=ast.Load()), args=[ast.Name(id=send_data)], keywords=[]))
-            op_nodes.append(allgather_node)
+            for i in range(len(framework_weight_name)):
+                src_weight = net_weight_head + "_" + str(i)
+                dst_weight = weight_head + "_" + str(i)
+                tmp = "all_weight_data_" + str(i)
+                assign_node = ast.Assign(
+                    targets=[ast.Name(id=dst_weight, ctx=ast.Store())],
+                    value=ast.Name(id=src_weight),
+                    ctx=ast.Load(),
+                )
+                allgather_node = ast.Assign(
+                    targets=[ast.Name(id=tmp, ctx=ast.Store())],
+                    value=ast.Call(
+                        func=ast.Name(id="self.allgather", ctx=ast.Load()),
+                        args=[ast.Name(id=dst_weight)],
+                        keywords=[],
+                    ),
+                )
+                depend_node = ast.Assign(
+                    targets=[ast.Name(id=tmp, ctx=ast.Store())],
+                    value=ast.Call(
+                        func=ast.Name(id="self.depend", ctx=ast.Load()),
+                        args=[
+                            ast.Name(id=tmp),
+                            ast.Name(id="all_weight_data_" + str(i - 1)),
+                        ],
+                        keywords=[],
+                    ),
+                )
+                bottom_op_nodes.append(assign_node)
+                bottom_op_nodes.append(allgather_node)
+                if i > 0:
+                    bottom_op_nodes.append(depend_node)
+                else:
+                    depend_node = ast.Assign(
+                        targets=[ast.Name(id=tmp, ctx=ast.Store())],
+                        value=ast.Call(
+                            func=ast.Name(id="self.depend", ctx=ast.Load()),
+                            args=[ast.Name(id=tmp), ast.Name(id=dst_weight)],
+                            keywords=[],
+                        ),
+                    )
+                    bottom_op_nodes.append(depend_node)
 
-            if i < len(data_list)-1:
-                data2 = data_list2[i+1]
-                dep_data = tmp_list[i]
-                depend_node = ast.Assign(targets=[ast.Name(id=tmp_list[i+1], ctx=ast.Store())],\
-                                         value=ast.Call(func=ast.Name(id='self.depend',\
-                                         ctx=ast.Load()), args=[ast.Name(id=data2),\
-                                         ast.Name(id=dep_data)], keywords=[]))
-                op_nodes.append(depend_node)
+        return top_op_nodes, bottom_op_nodes
 
-            slice_node = ast.Assign(targets=[ast.Name(id=tmp_list[i], ctx=ast.Store())],\
-                                        value=ast.Call(func=ast.Name(id='self.slice',\
-                                        ctx=ast.Load()), args=[ast.Name(id=tmp_list[i]),\
-                                    pos_tuple, shape_tuple], keywords=[]))
-            op_nodes.append(slice_node)
-            assign_node = ast.Expr(value=ast.Call(func=ast.Name(id='self.assign',\
-                                   ctx=ast.Load()), args=[ast.Name(id=data),\
-                                   ast.Name(id=tmp_list[i])], keywords=[]))
-            op_nodes.append(assign_node)
+    def gen_commuicate_statement(
+        self,
+        frag_type,
+        communication_op,
+        user_defined_buffer_name,
+        framework_buffer_name,
+        framework_weight_name,
+        learn_args,
+        learn_return,
+    ):
+        """Genearte communicate statement by the input communicate ops"""
+        if "AllGather" in communication_op:
+            top_state, bottom_state = self.build_allgather(
+                frag_type,
+                user_defined_buffer_name,
+                framework_buffer_name,
+                framework_weight_name,
+                learn_args,
+                learn_return,
+            )
+        if "Send" in communication_op:
+            top_state, bottom_state = self.build_send(frag_type)
 
-    return op_nodes
+        return top_state, bottom_state
 
+    @classmethod
+    def insert_states(cls, ast_target, frag_type, top, bottom) -> ast.Module:
+        """Insert the states part into target ast code."""
+        for node in ast.iter_child_nodes(ast_target):
+            if isinstance(node, ast.ClassDef) and node.name == frag_type:
+                for i in ast.iter_child_nodes(node):
+                    if isinstance(i, ast.FunctionDef) and i.name == "kernel":
+                        i.body[-1:-1] = iter(bottom)
+                        i.body[0:0] = iter(top)
+        return ast_target
 
-# pylint: disable=R1710
-def _parse_func_name(d, c):
-    '''get function name from ast.Call'''
-    def _parse_chain(d, c, p):
-        if isinstance(d, ast.Name):
-            return [d.id]+p
-        if isinstance(d, ast.Call):
-            for i in d.args:
-                _parse_func_name(i, c)
-            return _parse_chain(d.func, c, p)
-        if isinstance(d, ast.Attribute):
-            return _parse_chain(d.value, c, [d.attr]+p)
-    if isinstance(d, (ast.Call, ast.Attribute)):
-        p = []
-        c.append('.'.join(_parse_chain(d, c, p)))
-    else:
-        for i in getattr(d, '_fields', []):
-            t = getattr(d, i)
-            if isinstance(t, list):
-                for j in t:
-                    _parse_func_name(j, c)
-            else:
-                _parse_func_name(t, c)
+    @classmethod
+    def get_fragment_types(cls, parameter_list) -> list:
+        """Get fragments names in parameter_list."""
+        fragment_list = list(parameter_list.keys())
+        return fragment_list
 
+    def insert_communication_states(
+        self, ast_target, ast_source, parameter_list, policy
+    ) -> ast.Module:
+        """Insert communication states into traget ast code."""
+        fragment_type = self.get_fragment_types(parameter_list)
+        (
+            user_defined_buffer_name,
+            learn_args,
+            learn_return,
+        ) = self.find_buffer_and_learn_args(ast_source)
+        framework_buffer_name = policy.communication_data.get("Data")
+        framework_weight_name = policy.communication_data.get("Weight")
+        for frag_type in fragment_type:
+            communication_op = parameter_list[frag_type]["operations"]
+            top, bottom = self.gen_commuicate_statement(
+                frag_type,
+                communication_op,
+                user_defined_buffer_name,
+                framework_buffer_name,
+                framework_weight_name,
+                learn_args,
+                learn_return,
+            )
+            ast_target = self.insert_states(ast_target, frag_type, top, bottom)
+        return ast_target
 
-def _is_learner(ast_source, f):
-    '''check fragment type'''
-    flag = f
-    if isinstance(ast_source, ast.Assign):
-        for nn in ast.iter_child_nodes(ast_source):
-            if isinstance(nn, ast.Call):
-                names = []
-                _parse_func_name(nn, names)
-                for name in names:
-                    if name == 'self.msrl.agent_learn':
-                        flag = True
-    return flag
+    @classmethod
+    def save_fragment(cls, ast_target) -> str:
+        """Save fragment in each process."""
+        pid = os.getpid()
+        f_name = "Fragments" + str(pid)
+        flags = os.O_WRONLY | os.O_CREAT
+        with os.fdopen(os.open(f_name + ".py", flags), "w") as f:
+            f.write(astor.to_source(ast_target))
+        return f_name
 
+    @classmethod
+    def clean_files(cls, files):
+        """Clean the template files."""
+        if isinstance(files, list):
+            for file in files:
+                os.remove(file)
+        else:
+            os.remove(files)
 
-def _select_statement(ast_src, f_type, statement_list):
-    '''iterate the source '''
-    flag = False
-    for j in ast.iter_child_nodes(ast_src):
-        flag = _is_learner(j, flag)
-        if not flag and f_type == 'Actor':
-            if not isinstance(j, ast.Return) and \
-               not isinstance(j, ast.Name) and \
-               not isinstance(j, ast.arguments):
-                statement_list[f_type].insert(0, j)
-        elif flag and f_type == 'Learner':
-            if not isinstance(j, ast.Return) and \
-               not isinstance(j, ast.Name) and \
-               not isinstance(j, ast.arguments):
-                statement_list[f_type].insert(0, j)
-    return statement_list
+    @classmethod
+    def add_common_kernel(cls, ast_target):
+        """add common kernels in trainer.__init__"""
+        kernel_names = {
+            "Assign": {},
+            "ExpandDims": {},
+            "Depend": {},
+            "Less": {},
+            "Print": {},
+            "AllGather": {"group": "NCCL_WORLD_COMM_GROUP"},
+        }
+        kernel_list = []
+        for key, var in kernel_names.items():
+            keyword = []
+            kernel = str(key)
+            if var:
+                keyword = [
+                    ast.keyword(
+                        arg=list(var.keys())[0],
+                        value=ast.Name(id=list(var.values())[0], ctx=ast.Load()),
+                    )
+                ]
+            node = ast.Assign(
+                targets=[
+                    ast.Attribute(
+                        value=ast.Name(id="self", ctx=ast.Load()),
+                        attr=kernel.lower(),
+                        ctx=ast.Store(),
+                    )
+                ],
+                value=ast.Call(
+                    func=ast.Attribute(
+                        value=ast.Name(id="P", ctx=ast.Load()),
+                        attr=kernel,
+                        ctx=ast.Load(),
+                    ),
+                    args=[],
+                    keywords=keyword,
+                ),
+            )
+            kernel_list.append(node)
+        for n in ast.iter_child_nodes(ast_target):
+            if isinstance(n, ast.ClassDef) and n.name in ["Actor", "Learner"]:
+                for i in ast.iter_child_nodes(n):
+                    if isinstance(i, ast.FunctionDef) and i.name == "__init__":
+                        i.body[-1:-1] = iter(kernel_list)
 
+    def interface_parser(self) -> list:
+        """Parsing the interface in distribution self.policy"""
+        interface_parameters = []
+        interfaces = copy.copy(self.policy.interface)
+        if self.policy.fuse:
+            for fused in self.policy.fuse:
+                for key in fused:
+                    for f_type in fused[key]:
+                        interfaces.pop(f_type)
+                    new_interface = {key: self.policy.interface[fused[key][-1]]}
+                    interface_parameters.append(new_interface)
+            for f_type in interfaces:
+                new_interface = {f_type: interfaces[f_type]}
+                interface_parameters.append(new_interface)
+        else:
+            interface_parameters = interfaces
+        return interface_parameters
 
-def _build_statement_list(f_type, ast_source, position, ast_target, statement_list):
-    'build statement list for to insert'
-    source_name = list(position.keys())[0]
-    for n in ast.iter_child_nodes(ast_source):
-        if isinstance(n, ast.ClassDef) and source_name in n.name:
-            for i in ast.iter_child_nodes(n):
-                if isinstance(i, ast.FunctionDef) and i.name == '__init__':
-                    _copy_constructor(ast_target, i, f_type)
-                if isinstance(i, ast.FunctionDef) and i.name == position[source_name]:
-                    _select_statement(i, f_type, statement_list)
-    return statement_list
-
-
-def _insert_statement(f_type, ast_target, statement_list, parameters):
-    '''insert statement'''
-    for j in ast.iter_child_nodes(ast_target):
-        if isinstance(j, ast.Pass):
-            ast_target.body.pop(0)
-            if 'Send' in parameters[f_type]['operations']:
-                statements = _build_sender(f_type)
-                for statement in statements:
-                    ast_target.body.insert(0, statement)
-            if 'AllGather' in parameters[f_type]['operations']:
-                statements = _build_allgather_send(f_type)
-                for idx in range(len(statements)-1, -1, -1):
-                    statement = statements[idx]
-                    ast_target.body.insert(0, statement)
-            for idx in range(len(statement_list[f_type])):
-                statement = statement_list[f_type][idx]
-                ast_target.body.insert(0, statement)
-            if 'Receive' in parameters[f_type]['operations']:
-                statements = _build_receiver(f_type)
-                for statement in statements:
-                    ast_target.body.insert(0, statement)
-            if 'AllGather' in parameters[f_type]['operations']:
-                statements = _build_allgather_receive(f_type)
-                for idx in range(len(statements)-1, -1, -1):
-                    statement = statements[idx]
-                    ast_target.body.insert(0, statement)
-
-
-def _insert_to_target(f_type, ast_target, statement_list, parameters):
-    '''insert statements into target AST'''
-    for n in ast.iter_child_nodes(ast_target):
-        if isinstance(n, ast.ClassDef) and n.name == f_type:
-            for i in ast.iter_child_nodes(n):
-                if isinstance(i, ast.FunctionDef) and i.name == 'kernel':
-                    _insert_statement(f_type, i, statement_list, parameters)
-    ast.fix_missing_locations(ast_target)
-
-
-def _insert_code(ast_source, ast_target, fragment_type, position, parameters):
-    '''insert code from source algorithlm'''
-    statement_list = {}
-    for f_type in fragment_type:
-        statement_list[f_type] = []
-    for f_type in fragment_type:
-        _build_statement_list(f_type, ast_source, position, ast_target, statement_list)
-        _insert_to_target(f_type, ast_target, statement_list, parameters)
-
-    return ast_target
-
-
-def _generate_ast(algorithm):
-    with open(algorithm, 'r', encoding='utf-8') as fsource:
-        source = fsource.read()
-    ast_source = ast.parse(source, type_comments=True)
-    return ast_source
-
-
-def _get_fragment_types(parameter_list):
-    fragment_types = list(parameter_list.keys())
-    return fragment_types
-
-
-def generate_fragment(algorithm, parameter_list, template, algorithm_config, position, policy):
-    '''fragment generation'''
-    path = os.path.dirname(os.path.abspath(template))
-    fragment_type = _get_fragment_types(parameter_list)
-    ast_target = _transfor_class_name(template, fragment_type)
-    ast_source = _generate_ast(algorithm)
-
-    ast_target = _insert_code(ast_source, ast_target, fragment_type, position, parameter_list)
-
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-    modes = stat.S_IWUSR | stat.S_IRUSR
-    with os.fdopen(os.open("Fragments.py", flags, modes), 'w') as f:
-        f.write(ast.unparse(ast_target))
-
-    sys.path.insert(0, path)
-    fragment_module = importlib.import_module("Fragments")
-    fragment_list = []
-
-    actor = getattr(fragment_module, 'Actor')
-    learner = getattr(fragment_module, 'Learner')
-    if list(policy.topology.keys())[0] == 'Actor':
-        for _ in range(algorithm_config['actor']['number']):
-            fragment_list.append(actor)
-        fragment_list.append(learner)
-    else:
-        fragment_list.append(learner)
-        for _ in range(algorithm_config['actor']['number']):
-            fragment_list.append(actor)
-
-    return fragment_list
+    def create_fragment(self) -> list:
+        """Main function to create fragment."""
+        # 1 read source code and transform to ast module. `train.py` and `template.py`
+        ast_source = self.generate_ast_from_py(self.src_file)
+        ast_target = self.generate_ast_from_py(self.template)
+        # 2 Split source func `train_one_episode` in Class Trainer and insert to ast_target.
+        ast_target = self.split_trainer_to_fragment(ast_target, ast_source)
+        # 3 Get parameter list from distribution policy adn insert communication kernels to ast_target.
+        parameter_list = self.interface_parser()
+        ast_target = self.insert_communication_states(
+            ast_target, ast_source, parameter_list, self.policy
+        )
+        # 4 Unparse the ast module to python code, and create the module of Actor and Learner.
+        frag_name = self.save_fragment(ast_target)
+        fragment_module = importlib.import_module(frag_name)
+        actor = getattr(fragment_module, "Actor")
+        learner = getattr(fragment_module, "Learner")
+        # 5 Create the fragments list across to the policy topology.
+        fragment_list = []
+        if list(self.policy.topology.keys())[0] == "Actor":
+            for _ in range(self.worker_num - 1):
+                fragment_list.append(actor)
+                fragment_list.append(learner)
+        else:
+            fragment_list.append(learner)
+            for _ in range(self.worker_num - 1):
+                fragment_list.append(actor)
+        print("Fragments generated: ", fragment_list)
+        self.clean_files([self.template])
+        return fragment_list

@@ -16,9 +16,6 @@
 """
 Component used to generate fragments.
 """
-
-from .annotation_parser import interface_parser
 from .fragment_generation import fragment_generation
-from .generate_code import generate_fragment
 
 __all__ = ["fragment_generation"]
