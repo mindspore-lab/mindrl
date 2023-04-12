@@ -13,7 +13,7 @@
 
 ## 如何运行GAIL
 
-在运行GAIL前，首先需要安装[MindSpore](https://www.mindspore.cn/install)(>=2.0.0)和[MindSpore-Reinforcement](https://gitee.com/mindspore/reinforcement/blob/master/README_CN.md#%E5%AE%89%E8%A3%85)。除此之外，还需要安装以下依赖。请根据官网的教程安装。
+在运行GAIL前，首先需要安装[MindSpore](https://www.mindspore.cn/install)(>=2.0.0)和[MindSpore-Reinforcement](https://github.com/mindspore-lab/mindrl/tree/master/README_CN.md#%E5%AE%89%E8%A3%85)。除此之外，还需要安装以下依赖。请根据官网的教程安装。
 
 - [gym](https://github.com/openai/gym) <= 0.21.3
 - [mujoco-py](https://github.com/openai/mujoco-py)<2.2,>=2.1

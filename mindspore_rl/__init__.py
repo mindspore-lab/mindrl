@@ -63,7 +63,7 @@ def _mindspore_version_check():
                        "version == {}.0 For more details about dependency setting, please check "
                        "the instructions at MindSpore official website https://www.mindspore.cn/install "
                        "or check the README.md at "
-                       "https://gitee.com/mindspore/reinforcement".format(required_mindspore_verision))
+                       "https://github.com/mindspore-lab/mindrl".format(required_mindspore_verision))
         warning_countdown = 3
         for i in range(warning_countdown, 0, -1):
             logger.warning(

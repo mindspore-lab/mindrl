@@ -2,30 +2,30 @@
 
 ## 相关论文
 
-1. Ilya Kostrikov, Ashvin Nair, Sergey Levine: ["Offline Reinforcement Learning with Implicit Q-Learning", 2021 ](https://link.zhihu.com/?target=http%3A//arxiv.org/abs/2110.06169)
+1. Ilya Kostrikov, Ashvin Nair, Sergey Levine: ["Offline Reinforcement Learning with Implicit Q-Learning", 2021 ](https://arxiv.org/abs/2110.06169)
 
-2. Justin Fu, Aviral Kumar, Ofir Nachum, George Tucker, and Sergey Levine.[D4rl: datasets for deep data-driven reinforcement learning,2021](https://gitee.com/link?target=https%3A%2F%2Farxiv.org%2Fabs%2F2004.07219)
+2. Justin Fu, Aviral Kumar, Ofir Nachum, George Tucker, and Sergey Levine.[D4rl: datasets for deep data-driven reinforcement learning,2021](https://arxiv.org/abs/2004.07219)
 
 IQL由伯克利的Sergey Levine团队于2021年提出，发表在ICLR2022上，提出了一种离线强化学习的新范式。IQL算法结合了期望分位数回归，聚焦于已经采样到的信息而避免了查询未出现过的动作的价值，实验表明算法可以在D4RL上实现SOTA的效果。
 
 ## 使用的游戏
 
-IQL使用了离线强化学习的一个标准benchmark[D4RL](https://gitee.com/link?target=https%3A%2F%2Farxiv.org%2Fabs%2F2004.07219)，包括MuJoCo locomotion和Ant Maze tasks等。D4RL为训练和基准测试算法提供了标准化的环境和数据集，它包括7个领域的40多个任务，覆盖机器人，导航，自动驾驶等应用领域。
+IQL使用了离线强化学习的一个标准benchmark[D4RL](https://arxiv.org/abs/2004.07219)，包括MuJoCo locomotion和Ant Maze tasks等。D4RL为训练和基准测试算法提供了标准化的环境和数据集，它包括7个领域的40多个任务，覆盖机器人，导航，自动驾驶等应用领域。
 
-本次默认示例使用[D4RL](https://gitee.com/link?target=https%3A%2F%2Fgithub.com%2FFarama-Foundation%2FD4RL)的walker2d-medium-v2数据集，控制环境需要[MuJoCo](https://gitee.com/link?target=https%3A%2F%2Fgithub.com%2Fopenai%2Fmujoco-py)作为依赖项。关于更多D4RL的介绍，可参考[网页介绍](https://gitee.com/link?target=https%3A%2F%2Fsites.google.com%2Fview%2Fd4rl%2Fhome)。
+本次默认示例使用[D4RL](https://github.com/Farama-Foundation/D4RL)的walker2d-medium-v2数据集，控制环境需要[MuJoCo](https://github.com/openai/mujoco-py)作为依赖项。关于更多D4RL的介绍，可参考[网页介绍](https://sites.google.com/view/d4rl/home)。
 
 <img src="../../docs/images/walker2d.gif" alt="ant" style="zoom:80%;" />
 
 ## 如何运行IQL
 
-在配置环境时，首先需要安装[MindSpore](https://gitee.com/link?target=https%3A%2F%2Fwww.mindspore.cn%2Finstall)和MindSpore-Reinforcement。除此之外，还需要安装以下依赖。
+在配置环境时，首先需要安装[MindSpore](https://www.mindspore.cn/install)和MindSpore-Reinforcement。除此之外，还需要安装以下依赖。
 
 - MindSpore >= 1.9.0
 - Reinforcement >= 0.6
 - numpy >= 1.17.0
-- [gym](https://gitee.com/link?target=https%3A%2F%2Fgithub.com%2Fopenai%2Fgym) >= 0.18.3
+- [gym](https://github.com/openai/gym) >= 0.18.3
 - mujoco200
-- [mujoco-py](https://gitee.com/link?target=https%3A%2F%2Fgithub.com%2Fopenai%2Fmujoco-py)<2.2,>=2.1
+- [mujoco-py](https://github.com/openai/mujoco-py)<2.2,>=2.1
 - [D4RL](https://github.com/Farama-Foundation/D4RL)
 
 ### 训练
