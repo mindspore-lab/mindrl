@@ -330,6 +330,16 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center">✔️</td>
         <td align="center"><a href="https://pettingzoo.farama.org/environments/mpe/simple_spread/">simple_spread</a></td>
     </tr>
+    <tr>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/double_dqn">Double DQN</a></td>
+        <td align="center">>= 0.6</td>
+        <td align="center">✔️</td>
+        <td align="center">/</td>
+        <td align="center">✔️</td>
+        <td align="center">✔️</td>
+        <td align="center">✔️</td>
+        <td align="center"><a href="https://www.gymlibrary.dev/environments/classic_control/cart_pole/">CartPole-v0</a></td>
+    </tr>
 </table>
 
 ### Environment
@@ -373,7 +383,7 @@ In reinforcement learning, ReplayBuffer is a commonly used basic data storage me
 
 2. It can provide temporary storage of data and improve the utilization rate of data.
 
-In general, researchers use native Python data structures or numpy data structures to construct ReplayBuffer, or the general reinforcement learning framework also provides standard API encapsulation. The difference is that MindSpore implements the ReplayBuffer structure on the device. On the one hand, it can reduce the frequent copying of data between the host and the device when using GPU/Ascend hardware. On the other hand, it can express the ReplayBuffer in the form of MindSpore operators, which can build a complete IR graph and enable MindSpore GRAPH_MODE optimization to improve the overall performance.  
+In general, researchers use native Python data structures or numpy data structures to construct ReplayBuffer, or the general reinforcement learning framework also provides standard API encapsulation. The difference is that MindSpore implements the ReplayBuffer structure on the device. On the one hand, it can reduce the frequent copying of data between the host and the device when using GPU/Ascend hardware. On the other hand, it can express the ReplayBuffer in the form of MindSpore operators, which can build a complete IR graph and enable MindSpore GRAPH_MODE optimization to improve the overall performance.
 
 <table>
     <tr>
