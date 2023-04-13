@@ -58,6 +58,8 @@ mindspore_rl.environment
 
 .. include:: environment/mindspore_rl.environment.DeepMindControlEnvironment.rst
 
+.. include:: environment/mindspore_rl.environment.PettingZooMPEEnvironment.rst
+
 .. automodule:: mindspore_rl.environment
     :members:
 
