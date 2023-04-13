@@ -32,15 +32,15 @@ class PettingZooMPEEnvironment(Environment):
     Args:
         params (dict): A dictionary contains all the parameters which are used in this class.
 
-            +------------------------------+-------------------------------+
-            |  Configuration Parameters    |  Notices                      |
-            +==============================+===============================+
-            |  scenario_name               |  the name of game             |
-            +------------------------------+-------------------------------+
-            |  num                         |  Number of Environment        |
-            +------------------------------+-------------------------------+
-            |  continuous_actions          |  type of actions space        |
-            +------------------------------+-------------------------------+
+        +------------------------------+-------------------------------+
+        |  Configuration Parameters    |  Notices                      |
+        +==============================+===============================+
+        |  scenario_name               |  the name of game             |
+        +------------------------------+-------------------------------+
+        |  num                         |  Number of Environment        |
+        +------------------------------+-------------------------------+
+        |  continuous_actions          |  type of actions space        |
+        +------------------------------+-------------------------------+
         env_id (int, optional): A integer which is used to set the seed of this environment,
             default value means the 0th environment. Default: 0.
 
