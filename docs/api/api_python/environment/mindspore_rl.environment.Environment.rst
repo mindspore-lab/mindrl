@@ -10,7 +10,7 @@
         返回：
             - **action_space** (Space) - 返回环境的动作空间。
 
-    .. py:method:: bacthed
+    .. py:method:: batched
         :property:
 
         环境是否batched
@@ -65,6 +65,20 @@
         返回：
             - **observation_space** (Space) - 返回环境的状态空间。
 
+    .. py:method:: recv()
+
+        接受和环境交互的结果。
+
+        参数：
+            - **action** (Union[Tensor, np.ndarray]) - 包含动作信息的Tensor。
+
+        返回：
+            - **state** (Union[np.ndarray, Tensor]) - 输入动作后的环境返回的新状态。
+            - **reward** (Union[np.ndarray, Tensor]) - 输入动作后环境返回的奖励。
+            - **done** (Union[np.ndarray, Tensor]) - 输入动作后环境是否终止。
+            - **env_id** (Union[np.ndarray, Tensor]) - 哪些环境被交互到了。
+            - **arg** (Union[np.ndarray, Tensor]) - 支持任意输出，但是用户需要保证它的shape和dtype。
+
     .. py:method:: reset()
 
         将环境重置为初始状态。reset方法一般在每一局游戏开始时使用，并返回环境的初始状态值以及其reset方法初始信息。
@@ -81,19 +95,26 @@
         返回：
             - **reward_space** (Space) - 返回环境的奖励空间。
 
-    .. py:method:: recv()
+    .. py:method:: send(action: Union[Tensor, np.ndarray], env_id: Union[Tensor, np.ndarray])
 
-        接受和环境交互的结果。
+        执行环境Step函数来和环境交互一回合。
 
         参数：
-            - **action** (Union[Tensor, np.ndarray]) - 包含动作信息的Tensor。
+            - **action** (Union[Tensor, np.ndarray]) - 一个包含动作信息的Tensor或者array。
+            - **env_id** (Union[Tensor, np.ndarray]) - 与哪些环境交互。
 
         返回：
-            - **state** (Union[np.ndarray, Tensor]) - 输入动作后的环境返回的新状态。
-            - **reward** (Union[np.ndarray, Tensor]) - 输入动作后环境返回的奖励。
-            - **done** (Union[np.ndarray, Tensor]) - 输入动作后环境是否终止。
-            - **env_id** (Union[np.ndarray, Tensor]) - 哪些环境被交互到了。
-            - **arg** (Union[np.ndarray, Tensor]) - 支持任意输出，但是用户需要保证它的shape和dtype。
+            - **Success** (bool) - 是否传输的动作成功和环境交互。
+
+    .. py:method:: set_seed(seed_value: Union[int, Sequence[int]])
+
+        设置种子去控制环境的随机性。
+
+        参数：
+            - **seed_value** (Union[int, Sequence[int]]) - 用于设置的种子值。
+
+        返回：
+            - **Success** (bool) - 是否成功设置种子。
 
     .. py:method:: step(action: Union[Tensor, np.ndarray])
 
@@ -107,24 +128,3 @@
             - **reward** (Tensor) - 输入动作后环境返回的奖励。
             - **done** (Tensor) - 输入动作后环境是否终止。
             - **other** (Tensor) - \_step方法中剩下的返回值。
-
-    .. py:method:: set_seed(seed_value: Union[int, Sequence[int]])
-
-        设置种子去控制环境的随机性。
-
-        参数：
-            - **seed_value** (Union[int, Sequence[int]]) - 用于设置的种子值。
-
-        返回：
-            - **Success** (bool) - 是否成功设置种子。
-
-    .. py:method:: send(action: Union[Tensor, np.ndarray], env_id: Union[Tensor, np.ndarray])
-
-        执行环境Step函数来和环境交互一回合。
-
-        参数：
-            - **action** (Union[Tensor, np.ndarray]) - 一个包含动作信息的Tensor或者array。
-            - **env_id** (Union[Tensor, np.ndarray]) - 与哪些环境交互。
-
-        返回：
-            - **Success** (bool) - 是否传输的动作成功和环境交互。

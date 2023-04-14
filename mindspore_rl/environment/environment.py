@@ -201,7 +201,7 @@ class Environment(nn.Cell):
         Set seed to control the randomness of environment.
 
         Args:
-            seed_value (int): The value that is used to set
+            seed_value (Union[int, Sequence[int]]): The value that is used to set.
 
         Returns:
             Success (np.bool\_), Whether successfully set the seed.
