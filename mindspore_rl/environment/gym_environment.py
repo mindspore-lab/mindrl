@@ -16,12 +16,18 @@
 The GymEnvironment base class.
 """
 
+# pylint: disable=W0223
+# pylint: disable=W0707
 import gym
-from gym import spaces
 import numpy as np
+from gym import spaces
 from mindspore.ops import operations as P
+from packaging import version
+
 from mindspore_rl.environment.environment import Environment
 from mindspore_rl.environment.space import Space
+
+is_old_gym = version.parse(gym.__version__) < version.parse("0.26.0")
 
 
 class GymEnvironment(Environment):
@@ -53,14 +59,15 @@ class GymEnvironment(Environment):
     """
 
     def __init__(self, params, env_id=0):
-        super(GymEnvironment, self).__init__()
+        super().__init__()
         self.params = params
-        self._name = params['name']
+        self._name = params["name"]
+        self._seed = params.get("seed")
         self._env = gym.make(self._name)
-        if 'seed' in params:
-            self._env.seed(params['seed'] + env_id * 1000)
-        self._observation_space = self._space_adapter(
-            self._env.observation_space)
+        self._env_id = env_id
+        if is_old_gym and (self._seed is not None):
+            self._env.seed(self._seed + self._env_id * 1000)
+        self._observation_space = self._space_adapter(self._env.observation_space)
         self._action_space = self._space_adapter(self._env.action_space)
         self._reward_space = Space((1,), np.float32)
         self._done_space = Space((1,), np.bool_, low=0, high=2)
@@ -68,20 +75,40 @@ class GymEnvironment(Environment):
         # reset op
         reset_input_type = []
         reset_input_shape = []
-        reset_output_type = [self._observation_space.ms_dtype,]
-        reset_output_shape = [self._observation_space.shape,]
-        self._reset_op = P.PyFunc(self._reset, reset_input_type,
-                                  reset_input_shape, reset_output_type, reset_output_shape)
+        reset_output_type = [
+            self._observation_space.ms_dtype,
+        ]
+        reset_output_shape = [
+            self._observation_space.shape,
+        ]
+        self._reset_op = P.PyFunc(
+            self._reset,
+            reset_input_type,
+            reset_input_shape,
+            reset_output_type,
+            reset_output_shape,
+        )
 
         # step op
         step_input_type = (self._action_space.ms_dtype,)
         step_input_shape = (self._action_space.shape,)
-        step_output_type = (self.observation_space.ms_dtype,
-                            self._reward_space.ms_dtype, self._done_space.ms_dtype)
-        step_output_shape = (self._observation_space.shape,
-                             self._reward_space.shape, self._done_space.shape)
+        step_output_type = (
+            self.observation_space.ms_dtype,
+            self._reward_space.ms_dtype,
+            self._done_space.ms_dtype,
+        )
+        step_output_shape = (
+            self._observation_space.shape,
+            self._reward_space.shape,
+            self._done_space.shape,
+        )
         self._step_op = P.PyFunc(
-            self._step, step_input_type, step_input_shape, step_output_type, step_output_shape)
+            self._step,
+            step_input_type,
+            step_input_shape,
+            step_output_type,
+            step_output_shape,
+        )
         self.action_dtype = self._action_space.ms_dtype
         self.cast = P.Cast()
 
@@ -153,8 +180,10 @@ class GymEnvironment(Environment):
         """
         try:
             self._env.render()
-        except:
-            raise RuntimeError("Failed to render, run in PyNative mode and comment the ms_function.")
+        except BaseException:
+            raise RuntimeError(
+                "Failed to render, run in PyNative mode and comment the ms_function."
+            )
 
     def reset(self):
         """
@@ -194,8 +223,12 @@ class GymEnvironment(Environment):
         Returns:
             A numpy array which states for the initial state of environment.
         """
-
-        s0 = self._env.reset()
+        if is_old_gym:
+            s0 = self._env.reset()
+        else:
+            if self._seed is not None:
+                self._seed = self._env_id * 1000 + self._seed
+            s0, _ = self._env.reset(seed=self._seed)
         # In some gym version, the obvervation space is announced to be float32, but get float64 from reset and step.
         s0 = s0.astype(self.observation_space.np_dtype)
         return s0
@@ -215,8 +248,11 @@ class GymEnvironment(Environment):
             - r1 (numpy.array), the reward after performing the action.
             - done (boolean), whether the simulation finishes or not.
         """
-
-        s, r, done, _ = self._env.step(action)
+        if is_old_gym:
+            s, r, done, _ = self._env.step(action)
+        else:
+            s, r, term, trunc, _ = self._env.step(action)
+            done = term or trunc
         # In some gym version, the obvervation space is announced to be float32, but get float64 from reset and step.
         s = s.astype(self.observation_space.np_dtype)
         r = np.array([r]).astype(np.float32)

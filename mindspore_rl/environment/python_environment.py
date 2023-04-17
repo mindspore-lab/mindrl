@@ -1,6 +1,22 @@
-import numpy as np
-from typing import Union, Tuple, List, Sequence, Optional
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ============================================================================
+"""Python Environment"""
 
+from typing import List, Optional, Sequence, Union
+
+import numpy as np
 from mindspore import Tensor
 
 from mindspore_rl.environment.environment import Environment
@@ -29,23 +45,35 @@ class PythonEnvironment(Environment):
         ``Ascend`` ``GPU`` ``CPU``
     """
 
-    def __init__(self,
-                 action_space: Union[Space, List[Space]],
-                 observation_space: Union[Space, List[Space]],
-                 reward_space: Optional[Space] = None,
-                 done_space: Optional[Space] = None,
-                 config: Optional[dict] = None,
-                 need_auto_reset: bool = False):
+    def __init__(
+        self,
+        action_space: Union[Space, List[Space]],
+        observation_space: Union[Space, List[Space]],
+        reward_space: Optional[Space] = None,
+        done_space: Optional[Space] = None,
+        config: Optional[dict] = None,
+        need_auto_reset: bool = False,
+    ):
         super().__init__()
 
         # Set environment space
-        self._action_space, _ = check_type(Space, action_space, 'action_space')
-        self._observation_space, _ = check_type(Space, observation_space, 'observation_space')
-        self._reward_space = check_type(Space, reward_space, 'reward_space') \
-            if reward_space is not None else Space((), dtype=np.float32)
-        self._done_space = check_type(Space, done_space, 'done_space') \
-            if done_space is not None else Space((), low=0, high=2, dtype=np.bool_)
-        self._config = check_type(dict, config, 'config') if config is not None else {}
+        self._action_space, _ = check_type(Space, action_space, "action_space")
+        self._observation_space, _ = check_type(
+            Space, observation_space, "observation_space"
+        )
+        self._reward_space = (
+            check_type(Space, reward_space, "reward_space")[0]
+            if reward_space is not None
+            else Space((), dtype=np.float32)
+        )
+        self._done_space = (
+            check_type(Space, done_space, "done_space")[0]
+            if done_space is not None
+            else Space((), low=0, high=2, dtype=np.bool_)
+        )
+        self._config = (
+            check_type(dict, config, "config")[0] if config is not None else {}
+        )
 
         self._need_auto_reset = need_auto_reset
         self._env_status = np.array(False)
@@ -54,8 +82,8 @@ class PythonEnvironment(Environment):
         action = self._action_space.sample()
         step_out = self._step(action)
         # Obtain the output number of reset and step
-        self._num_env_reset_out = check_valid_return_value(reset_out, 'reset')
-        self._num_env_step_out = check_valid_return_value(step_out, 'step')
+        self._num_env_reset_out = check_valid_return_value(reset_out, "reset")
+        self._num_env_step_out = check_valid_return_value(step_out, "step")
 
     @property
     def action_space(self) -> Space:
@@ -158,19 +186,26 @@ class PythonEnvironment(Environment):
             reset_out = self.reset()
             init_reward = np.array(0, np.float32)
             self._env_status = np.array(False)
-            step_out = (reset_out, init_reward, self._env_status) \
-                if self._num_reset_out == 0 else (reset_out, init_reward, self._env_status, *reset_out[1:])
+            step_out = (
+                (reset_out, init_reward, self._env_status)
+                if self._num_reset_out == 0
+                else (reset_out, init_reward, self._env_status, *reset_out[1:])
+            )
         else:
             step_out = self._step(action)
             if self._num_step_out < 3:
                 raise ValueError(
-                    f"The return number of _step must be larger and equal to 3, but got {self._num_step_out}")
+                    f"The return number of _step must be larger and equal to 3, but got {self._num_step_out}"
+                )
             next_state = step_out[0].astype(self.observation_space.np_dtype)
             reward = step_out[1].astype(self.reward_space.np_dtype)
             done = step_out[2].astype(self.done_space.np_dtype)
             self._env_status = done
-            step_out = (next_state, reward, done, *step_out[3:]
-                        ) if self._num_step_out > 3 else (next_state, reward, done)
+            step_out = (
+                (next_state, reward, done, *step_out[3:])
+                if self._num_step_out > 3
+                else (next_state, reward, done)
+            )
         return step_out
 
     def reset(self):
@@ -187,10 +222,13 @@ class PythonEnvironment(Environment):
         reset_out = self._reset()
         if self._num_reset_out < 1:
             raise ValueError(
-                f"The return number of _reset must be larger and equal to 1, but got {self._num_reset_out}")
+                f"The return number of _reset must be larger and equal to 1, but got {self._num_reset_out}"
+            )
         state_value = reset_out if self._num_reset_out == 1 else reset_out[0]
         new_state = state_value.astype(self.observation_space.np_dtype)
-        reset_out = (new_state, *reset_out[1:]) if self._num_reset_out > 1 else new_state
+        reset_out = (
+            (new_state, *reset_out[1:]) if self._num_reset_out > 1 else new_state
+        )
         return reset_out
 
     def set_seed(self, seed_value: Union[int, Sequence[int]]) -> bool:
@@ -205,7 +243,9 @@ class PythonEnvironment(Environment):
         """
         return self._set_seed(seed_value)
 
-    def send(self, action: Union[Tensor, np.ndarray], env_id: Union[Tensor, np.ndarray]):
+    def send(
+        self, action: Union[Tensor, np.ndarray], env_id: Union[Tensor, np.ndarray]
+    ):
         r"""
         Execute the environment step asynchronously. User can obtain result by using recv.
 
@@ -290,7 +330,9 @@ class PythonEnvironment(Environment):
         """
         raise NotImplementedError("Method render should be overridden by subclass.")
 
-    def _send(self, action: Union[Tensor, np.ndarray], env_id: Union[Tensor, np.ndarray]):
+    def _send(
+        self, action: Union[Tensor, np.ndarray], env_id: Union[Tensor, np.ndarray]
+    ):
         r"""
         Execute the environment step asynchronously. User can obtain result by using recv.
 

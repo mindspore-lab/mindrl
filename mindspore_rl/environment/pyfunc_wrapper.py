@@ -15,15 +15,19 @@
 """
 The environment base class.
 """
-#pylint: disable=R1710
+from typing import Callable, Sequence, Union
+
+# pylint: disable=R1710
 import numpy as np
-from typing import Union, Sequence
 from mindspore import Tensor
 from mindspore import log as logger
 from mindspore.common import dtype as mstype
 from mindspore.ops import operations as P
-from mindspore_rl.environment.space import Space
+
 from mindspore_rl.environment.environment import Environment
+from mindspore_rl.environment.space import Space
+
+EnvCreator = Callable[[], Environment]
 
 
 class PyFuncWrapper(Environment):
@@ -38,39 +42,69 @@ class PyFuncWrapper(Environment):
         ``Ascend`` ``GPU`` ``CPU``
     """
 
-    def __init__(self, env_instance: Environment):
+    def __init__(self, env_creator: EnvCreator):
         super().__init__()
-        self._env = env_instance
-        env_name = env_instance.__class__.__name__
-        if not isinstance(env_instance, Environment):
+        if not callable(env_creator):
             raise TypeError(
-                f"The input of PyFuncWrapper must be Environment, but got {type(env_instance)} for {env_name}")
+                f"The input env_creators must be a list of callable, but got {env_creator}"
+            )
+        self._env = env_creator()
+        env_name = self._env.__class__.__name__
 
         # pre-run environment
         reset_out = self._env.reset()
-        action = self._env.action_space.sample()
+        if self._env.batched:
+            action = []
+            for _ in range(self._env.num_environment):
+                action.append(self._env.action_space.sample())
+            action = np.array(action)
+        else:
+            action = self._env.action_space.sample()
         step_out = self._env.step(action)
 
         # Check whether the output of reset/step func is a numpy array
         self._check_ndarray(reset_out, "reset")
         self._check_ndarray(step_out, " step")
 
-        reset_out_dtype, reset_out_msdtype, reset_output_full_shape, _, \
-            reset_batch_shape = self._get_dtype_shape(reset_out)
-        step_input_dtype, step_input_msdtype, step_input_full_shape, _, \
-            step_in_batch_shape = self._get_dtype_shape(action)
-        step_output_dtype, step_output_msdtype, step_output_full_shape, _, \
-            step_out_batch_shape = self._get_dtype_shape(step_out)
+        (
+            reset_out_dtype,
+            reset_out_msdtype,
+            reset_output_full_shape,
+            _,
+            reset_batch_shape,
+        ) = self._get_dtype_shape(reset_out)
+        (
+            step_input_dtype,
+            step_input_msdtype,
+            step_input_full_shape,
+            _,
+            step_in_batch_shape,
+        ) = self._get_dtype_shape(action)
+        (
+            step_output_dtype,
+            step_output_msdtype,
+            step_output_full_shape,
+            _,
+            step_out_batch_shape,
+        ) = self._get_dtype_shape(step_out)
 
         logger.info(f"Start create PyFunc of {env_name}...")
-        logger.info(f"Please check whether the dtype/shape of input/output meet the expectation.")
-        logger.info(f"The output dtype of reset is [MS]{reset_out_msdtype}, [Numpy]{reset_out_dtype}")
+        logger.info(
+            "Please check whether the dtype/shape of input/output meet the expectation."
+        )
+        logger.info(
+            f"The output dtype of reset is [MS]{reset_out_msdtype}, [Numpy]{reset_out_dtype}"
+        )
         logger.info(f"The output shape of reset is {reset_output_full_shape}")
         logger.info(f"The output batch axis of reset is {reset_batch_shape}")
-        logger.info(f"The input dtype of step is [MS]{step_input_msdtype}, [Numpy]{step_input_dtype}")
+        logger.info(
+            f"The input dtype of step is [MS]{step_input_msdtype}, [Numpy]{step_input_dtype}"
+        )
         logger.info(f"The input shape of step is {step_input_full_shape}")
         logger.info(f"The input batch axis of step is {step_in_batch_shape}")
-        logger.info(f"The output dtype of step is [MS]{step_output_msdtype}, [Numpy]{step_output_dtype}")
+        logger.info(
+            f"The output dtype of step is [MS]{step_output_msdtype}, [Numpy]{step_output_dtype}"
+        )
         logger.info(f"The output shape of step is {step_output_full_shape}")
         logger.info(f"The output batch axis of step is {step_out_batch_shape}")
         logger.info(f"Start create Space of {env_name}...")
@@ -79,9 +113,16 @@ class PyFuncWrapper(Environment):
         logger.info(f"Reward space is {self._env.reward_space}")
         logger.info(f"Done space is {self._env.done_space}")
 
-        self.reset_ops = P.PyFunc(self._env.reset, [], [], reset_out_msdtype, reset_output_full_shape)
-        self.step_ops = P.PyFunc(self._env.step, step_input_msdtype, step_input_full_shape,
-                                 step_output_msdtype, step_output_full_shape)
+        self.reset_ops = P.PyFunc(
+            self._env.reset, [], [], reset_out_msdtype, reset_output_full_shape
+        )
+        self.step_ops = P.PyFunc(
+            self._env.step,
+            step_input_msdtype,
+            step_input_full_shape,
+            step_output_msdtype,
+            step_output_full_shape,
+        )
 
     @property
     def action_space(self) -> Space:
@@ -164,7 +205,7 @@ class PyFuncWrapper(Environment):
         Returns:
             int, The number of return value of reset.
         """
-        return getattr(self._env, '_num_env_reset_out')
+        return getattr(self._env, "_num_reset_out")
 
     @property
     def _num_step_out(self) -> int:
@@ -174,7 +215,7 @@ class PyFuncWrapper(Environment):
         Returns:
             int, The number of return value of step.
         """
-        return getattr(self._env, '_num_env_step_out')
+        return getattr(self._env, "_num_step_out")
 
     def set_seed(self, seed_value: Union[int, Sequence[int]]) -> bool:
         r"""
@@ -294,7 +335,11 @@ class PyFuncWrapper(Environment):
                     adapted_item = item
                     out_ms_dtype.append(mstype.pytype_to_dtype(adapted_item.dtype.type))
                     out_np_dtype.append(adapted_item.dtype.type)
-                    item_full_shape, item_split_shape, adapted_batch_shape = self._shape_adapter(adapted_item.shape)
+                    (
+                        item_full_shape,
+                        item_split_shape,
+                        adapted_batch_shape,
+                    ) = self._shape_adapter(adapted_item.shape)
                     batch_shape.append(adapted_batch_shape)
                     out_split_shape.append(item_split_shape)
                     out_full_shape.append(item_full_shape)
@@ -302,7 +347,11 @@ class PyFuncWrapper(Environment):
             adapted_result = result
             out_np_dtype.append(adapted_result.dtype.type)
             out_ms_dtype.append(mstype.pytype_to_dtype(adapted_result.dtype.type))
-            result_full_shape, result_split_shape, adapted_batch_shape = self._shape_adapter(adapted_result.shape)
+            (
+                result_full_shape,
+                result_split_shape,
+                adapted_batch_shape,
+            ) = self._shape_adapter(adapted_result.shape)
             batch_shape.append(adapted_batch_shape)
             out_split_shape.append(result_split_shape)
             out_full_shape.append(result_full_shape)
