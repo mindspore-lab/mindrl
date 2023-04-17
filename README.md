@@ -350,6 +350,16 @@ For more details about the installation guide, tutorials, and APIs, see [MindSpo
         <td align="center">✔️</td>
         <td align="center"><a href="https://www.gymlibrary.dev/environments/classic_control/cart_pole/">CartPole-v0</a></td>
     </tr>
+    <tr>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/dueling_dqn">Dueling DQN</a></td>
+        <td align="center">>= 0.6</td>
+        <td align="center">✔️</td>
+        <td align="center">/</td>
+        <td align="center">✔️</td>
+        <td align="center">✔️</td>
+        <td align="center">✔️</td>
+        <td align="center"><a href="https://www.gymlibrary.dev/environments/classic_control/cart_pole/">CartPole-v0</a></td>
+    </tr>
 </table>
 
 ### Environment
