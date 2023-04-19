@@ -16,12 +16,10 @@
 Discounted return.
 """
 
-import mindspore
-import mindspore.nn as nn
-from mindspore import Tensor
-from mindspore.ops import operations as P
-from mindspore import context
+import mindspore as ms
 import mindspore.ops.operations._rl_inner_ops as rl_ops
+from mindspore import Tensor, context, nn
+from mindspore.ops import operations as P
 
 
 class DiscountedReturn(nn.Cell):
@@ -51,25 +49,27 @@ class DiscountedReturn(nn.Cell):
 
     Examples:
         >>> net = DiscountedReturn(gamma=0.99)
-        >>> reward = Tensor([[1, 1, 1, 1]], dtype=mindspore.float32)
+        >>> reward = Tensor([[1, 1, 1, 1]], dtype=ms.float32)
         >>> done = Tensor([[False, False, True, False]])
-        >>> last_state_value = Tensor([2.], dtype=mindspore.float32)
+        >>> last_state_value = Tensor([2.], dtype=ms.float32)
         >>> ret = net(reward, done, last_state_value)
         >>> print(output.shape)
         (2, 2)
     """
 
-    def __init__(self, gamma, need_bprop=False):
-        super(DiscountedReturn, self).__init__()
+    def __init__(self, gamma, need_bprop=False, dtype=ms.float32):
+        super().__init__()
         if gamma > 1.0 or gamma < 0.0:
-            raise ValueError('The discounted factor should be a number in range [0, 1], but got {}.'.format(gamma))
+            raise ValueError(
+                f"The discounted factor should be a number in range [0, 1], but got {gamma}."
+            )
 
         # Fused operator only supported in GPU backend so far. Ascend and CPU backends will support it soon.
-        self.enable_op_fusion = context.get_context('device_target') in ['GPU']
+        self.enable_op_fusion = context.get_context("device_target") in ["GPU"]
         self.need_bprop = need_bprop
         self.fused_op = rl_ops.DiscountedReturn(gamma)
 
-        self.gamma = Tensor([gamma], mindspore.float32)
+        self.gamma = Tensor([gamma], dtype)
         self.zeros_like = P.ZerosLike()
 
     def construct(self, reward, done, last_state_value):
@@ -83,7 +83,9 @@ class DiscountedReturn(nn.Cell):
         discounted_return = self.zeros_like(reward)
         step = reward.shape[0] - 1
         while step >= 0:
-            last_state_value = reward[step] + (1 - done[step]) * self.gamma * last_state_value
+            last_state_value = (
+                reward[step] + (1 - done[step]) * self.gamma * last_state_value
+            )
             discounted_return[step] = last_state_value
             step -= 1
         return discounted_return

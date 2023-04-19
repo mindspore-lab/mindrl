@@ -308,7 +308,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center">✔️</td>
         <td align="center">/</td>
         <td align="center">✔️</td>
-        <td align="center">/</td>
+        <td align="center">✔️</td>
         <td align="center"><a href="https://github.com/deepmind/dm_control">Walker-walk</a></td>
     </tr>
     <tr>

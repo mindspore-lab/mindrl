@@ -13,33 +13,35 @@
 # limitations under the License.
 # ============================================================================
 """TanhMultivariateNormalDiag"""
-import numpy as np
-import mindspore
-import mindspore.ops as ops
-import mindspore.nn.probability.distribution as msd
+import mindspore as ms
 import mindspore.nn.probability.bijector as msb
-from mindspore.ops import operations as P
+import mindspore.nn.probability.distribution as msd
+import numpy as np
+from mindspore import Tensor, ops
 from mindspore.ops import composite as C
-from mindspore import Tensor
+from mindspore.ops import operations as P
 
 
 class TanhBijector(msb.Bijector):
     """Tanh Bijector"""
-    def __init__(self, reduce_axis=None, name='Tanh'):
+
+    def __init__(self, reduce_axis=None, name="Tanh"):
         """
         Constructor of Tanh Bijector.
         """
         param = dict(locals())
-        super(TanhBijector, self).__init__(
+        super().__init__(
             is_constant_jacobian=False,
             is_injective=True,
-            name=name, dtype=None,
-            param=param)
+            name=name,
+            dtype=None,
+            param=param,
+        )
 
         self.reduce_axis = reduce_axis
         self.tanh = P.Tanh()
         self.softplus = P.Softplus()
-        self.log2 = Tensor([np.log(2.0)], mindspore.float32)
+        self.log2 = Tensor([np.log(2.0)], ms.float32)
 
     def forward_log_jacobian(self, x):
         log_jac = 2.0 * (self.log2 - x - self.softplus(-2.0 * x))
@@ -51,23 +53,27 @@ class TanhBijector(msb.Bijector):
         return self.tanh(x)
 
 
-#pylint: disable=W0613
-#pylint: disable=E1130
+# pylint: disable=W0613
+# pylint: disable=E1130
 class MultivariateNormalDiag(msd.Normal):
     """MultivariateNormalDiag distribute"""
-    def __init__(self,
-                 loc=None,
-                 scale=None,
-                 reduce_axis=None,
-                 seed=None,
-                 dtype=mindspore.float32,
-                 name="MultivariateNormalDiag"):
-        super(MultivariateNormalDiag, self).__init__(loc, scale, seed, dtype, name)
+
+    def __init__(
+        self,
+        loc=None,
+        scale=None,
+        reduce_axis=None,
+        seed=None,
+        dtype=ms.float32,
+        name="MultivariateNormalDiag",
+    ):
+        super().__init__(loc, scale, seed, dtype, name)
         self.reduce_axis = reduce_axis
 
         self.reduce_sum = P.ReduceSum()
         self.square = P.Square()
         self.expand_dims = P.ExpandDims()
+        self.output_dtype = dtype
 
     def _log_prob(self, value, mean=None, sd=None):
         log_prob = super()._log_prob(value, mean=mean, sd=sd)
@@ -79,17 +85,35 @@ class MultivariateNormalDiag(msd.Normal):
         return self.reduce_sum(self.square(x), [-2, -1])
 
     def _kl_loss(self, dist, mean_b, sd_b, mean=None, sd=None):
+        """Inner kl loss"""
+        mean_b = ops.cast(mean_b, ms.float32)
+        sd_b = ops.cast(sd_b, ms.float32)
+        mean = ops.cast(mean, ms.float32)
+        sd = ops.cast(sd, ms.float32)
+        # Does not support float16 cast to 32
         diag_b_std = ops.matrix_diag(sd_b)
         diag_a_std = ops.matrix_diag(sd)
         b_inv_a = self.expand_dims(sd / sd_b, -1)
-        solved_value = self.expand_dims((1. / sd_b), -1) * (self.expand_dims((mean_b - mean), -1))
-        kl_div = (diag_b_std.slogdet()[1] - diag_a_std.slogdet()[1] + 0.5 * (
-            (-sd_b.shape[-1]) + self._squared_frobenius_norm(b_inv_a) + self._squared_frobenius_norm(solved_value)))
+        solved_value = self.expand_dims((1.0 / sd_b), -1) * (
+            self.expand_dims((mean_b - mean), -1)
+        )
+        kl_div = (
+            diag_b_std.slogdet()[1]
+            - diag_a_std.slogdet()[1]
+            + 0.5
+            * (
+                (-sd_b.shape[-1])
+                + self._squared_frobenius_norm(b_inv_a)
+                + self._squared_frobenius_norm(solved_value)
+            )
+        )
+        # Cast to user specified dtype
+        kl_div = ops.cast(kl_div, self.output_dtype)
         return kl_div
 
     def _sample(self, shape=(), mean=None, sd=None, independent=None):
         """sample function for multivariate normal diag with independent input"""
-        shape = self.checktuple(shape, 'shape')
+        shape = self.checktuple(shape, "shape")
         mean, sd = self._check_param_type(mean, sd)
         batch_shape = self.shape(mean + sd)
         origin_shape = shape + batch_shape
@@ -106,27 +130,33 @@ class MultivariateNormalDiag(msd.Normal):
         return value
 
 
-
 class TanhMultivariateNormalDiag(msd.TransformedDistribution):
     """MultivariateNormalDiag with Tanh Bijector"""
-    def __init__(self,
-                 loc=None,
-                 scale=None,
-                 reduce_axis=None,
-                 seed=0,
-                 dtype=mindspore.float32,
-                 name="TanhMultivariateNormalDiag"):
-        distribution = MultivariateNormalDiag(loc=loc, scale=scale, reduce_axis=reduce_axis, seed=seed, dtype=dtype)
-        super(TanhMultivariateNormalDiag, self).__init__(distribution=distribution,
-                                                         bijector=TanhBijector(reduce_axis=reduce_axis),
-                                                         seed=seed,
-                                                         name=name)
+
+    def __init__(
+        self,
+        loc=None,
+        scale=None,
+        reduce_axis=None,
+        seed=0,
+        dtype=ms.float32,
+        name="TanhMultivariateNormalDiag",
+    ):
+        distribution = MultivariateNormalDiag(
+            loc=loc, scale=scale, reduce_axis=reduce_axis, seed=seed, dtype=dtype
+        )
+        super().__init__(
+            distribution=distribution,
+            bijector=TanhBijector(reduce_axis=reduce_axis),
+            seed=seed,
+            name=name,
+        )
 
     def sample_and_log_prob(self, shape, means, stds):
-        '''
+        """
         Combine sample() and log_prob() to improve numeric stable:
         x' = atanh(tanh(x).clip()) will result error results when x is in the saturation ragion.
-        '''
+        """
         x = self.distribution.sample(shape, means, stds)
         y = self.bijector.forward(x)
 

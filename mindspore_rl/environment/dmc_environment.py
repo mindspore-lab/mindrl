@@ -14,17 +14,23 @@
 # ============================================================================
 """DeepMind Control Suite"""
 
-from concurrent.futures import ThreadPoolExecutor
+# pylint: disable=W0223
+# pylint: disable=C0415
 import os
-import numpy as np
+from concurrent.futures import ThreadPoolExecutor
 
 import mindspore as ms
+import numpy as np
+from mindspore import context
 from mindspore.ops import operations as P
 
 from mindspore_rl.environment.environment import Environment
 from mindspore_rl.environment.space import Space
 
-os.environ['MUJOCO_GL'] = 'egl'
+if context.get_context("device_target") in ["GPU"]:
+    os.environ["MUJOCO_GL"] = "egl"
+else:
+    os.environ["MUJOCO_GL"] = "osmesa"
 
 
 class DeepMindControlEnvironment(Environment):
@@ -68,18 +74,19 @@ class DeepMindControlEnvironment(Environment):
 
     def __init__(self, params, env_id=0):
         super().__init__()
-        env_name = params['env_name']
-        camera = params.get('camera', None)
-        self._size = params['img_size']
-        seed = params['seed'] + env_id * 1000
-        self._action_repeat = params['action_repeat']
-        self._normalize_action = params['normalize_action']
-        domain, task = env_name.split('_', 1)
-        if domain == 'cup':
-            domain = 'ball_in_cup'
+        env_name = params["env_name"]
+        camera = params.get("camera", None)
+        self._size = params["img_size"]
+        seed = params["seed"] + env_id * 1000
+        self._action_repeat = params["action_repeat"]
+        self._normalize_action = params["normalize_action"]
+        domain, task = env_name.split("_", 1)
+        if domain == "cup":
+            domain = "ball_in_cup"
         if isinstance(domain, str):
             from dm_control import suite
-            self._env = suite.load(domain, task, task_kwargs={'random': seed})
+
+            self._env = suite.load(domain, task, task_kwargs={"random": seed})
         else:
             self._env = domain()
         if camera is None:
@@ -93,8 +100,12 @@ class DeepMindControlEnvironment(Environment):
         if self._normalize_action:
             low = np.where(self._mask, low, -1)
             high = np.where(self._mask, high, 1)
-        self._action_space = Space(action_spec.shape, self._dtype_adaptor(action_spec.dtype),
-                                   low=low, high=high)
+        self._action_space = Space(
+            action_spec.shape,
+            self._dtype_adaptor(action_spec.dtype),
+            low=low,
+            high=high,
+        )
         self.pool = ThreadPoolExecutor(max_workers=1)
         # get img
         demo_future = self.pool.submit(self._render, self._env)
@@ -106,20 +117,42 @@ class DeepMindControlEnvironment(Environment):
         # reset op
         reset_input_type = []
         reset_input_shape = []
-        reset_output_type = [self._observation_space.ms_dtype,]
-        reset_output_shape = [self._observation_space.shape,]
-        self._reset_op = P.PyFunc(self._reset, reset_input_type,
-                                  reset_input_shape, reset_output_type, reset_output_shape)
+        reset_output_type = [
+            self._observation_space.ms_dtype,
+        ]
+        reset_output_shape = [
+            self._observation_space.shape,
+        ]
+        self._reset_op = P.PyFunc(
+            self._reset,
+            reset_input_type,
+            reset_input_shape,
+            reset_output_type,
+            reset_output_shape,
+        )
 
         # step op
         step_input_type = (self._action_space.ms_dtype,)
         step_input_shape = (self._action_space.shape,)
-        step_output_type = (self.observation_space.ms_dtype,
-                            self._reward_space.ms_dtype, self._done_space.ms_dtype, ms.float32)
-        step_output_shape = (self._observation_space.shape,
-                             self._reward_space.shape, self._done_space.shape, self._done_space.shape)
+        step_output_type = (
+            self.observation_space.ms_dtype,
+            self._reward_space.ms_dtype,
+            self._done_space.ms_dtype,
+            ms.float32,
+        )
+        step_output_shape = (
+            self._observation_space.shape,
+            self._reward_space.shape,
+            self._done_space.shape,
+            self._done_space.shape,
+        )
         self._step_op = P.PyFunc(
-            self._step, step_input_type, step_input_shape, step_output_type, step_output_shape)
+            self._step,
+            step_input_type,
+            step_input_shape,
+            step_output_type,
+            step_output_shape,
+        )
 
     @property
     def action_space(self):
@@ -216,8 +249,11 @@ class DeepMindControlEnvironment(Environment):
     def _step(self, action):
         """Python implementation of step"""
         low, high = self.action_space.boundary
-        action = np.where(self._mask, (action + 1) / 2 * (high - low) +
-                          low, action) if self._normalize_action else action
+        action = (
+            np.where(self._mask, (action + 1) / 2 * (high - low) + low, action)
+            if self._normalize_action
+            else action
+        )
         done = False
         total_reward = 0
         i = 0
@@ -229,7 +265,12 @@ class DeepMindControlEnvironment(Environment):
             i += 1
         obs_future = self.pool.submit(self._render, self._env)
         obs = obs_future.result()
-        return obs, total_reward.astype(np.float32), np.array(done), np.array(time_step.discount, np.float32)
+        return (
+            obs,
+            total_reward.astype(np.float32),
+            np.array(done),
+            np.array(time_step.discount, np.float32),
+        )
 
     def _reset(self):
         """Python implementation of reset"""
