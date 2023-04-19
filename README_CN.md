@@ -392,6 +392,14 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center"><a href="https://www.deepmind.com/open-source/deepmind-control-suite">DMC</a></td>
         <td align="center">>= v0.6</td>
     </tr>
+    <tr>
+        td align="center"><a href="https://pettingzoo.farama.org/environments/mpe/simple_spread/">PettingZoo-mpe</a></td>
+        <td align="center">>= v0.6</td>
+    </tr>
+    <tr>
+        <td align="center"><a href="https://github.com/Farama-Foundation/D4RL">D4RL</a></td>
+        <td align="center">>= v0.6</td>
+    </tr>
 </table>
 
 <center><img src=docs/images/environment-uml.png width=500 height=350></center>
