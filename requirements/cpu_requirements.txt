@@ -6,6 +6,5 @@ pylint
 pytest
 numpy
 matplotlib
-gym >= 0.18.3, <= 0.21.0
+gym >= 0.18.3
 pyyaml
-importlib-metadata == 4.11.3

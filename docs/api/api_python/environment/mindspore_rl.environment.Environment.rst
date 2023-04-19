@@ -79,6 +79,13 @@
             - **env_id** (Union[np.ndarray, Tensor]) - 哪些环境被交互到了。
             - **arg** (Union[np.ndarray, Tensor]) - 支持任意输出，但是用户需要保证它的shape和dtype。
 
+    .. py:method:: render()
+
+        生成环境当前帧的图像。
+
+        返回：
+            - **img** (Union[np.ndarray, Tensor]) - 环境当前帧的图像。
+
     .. py:method:: reset()
 
         将环境重置为初始状态。reset方法一般在每一局游戏开始时使用，并返回环境的初始状态值以及其reset方法初始信息。

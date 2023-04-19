@@ -12,15 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+"""Process Environment"""
 
-import numpy as np
+# pylint:disable=W0703
+# pylint:disable=W0106
 import traceback
-import cloudpickle
-from typing import Callable, Union, Sequence
-from multiprocessing import Process, Pipe
+from multiprocessing import Pipe, Process
+from typing import Callable, Iterable, Sequence, Union
 
-from mindspore import log as logger
+import cloudpickle
+import numpy as np
 from mindspore import Tensor
+from mindspore import log as logger
 
 from mindspore_rl.environment.environment import Environment
 from mindspore_rl.environment.space import Space
@@ -29,6 +32,13 @@ EnvCreator = Callable[[], Environment]
 
 
 class ProcessEnvironment(Environment):
+    """
+    Run an environment in a separate process.
+
+    Args:
+        env_creators (Union[EnvCreator, Sequence[EnvCreator]): The environment constructor.
+        env_id (Iterable): A iterable environment id.
+    """
 
     _CALL = "call"
     _CLOSE = "close"
@@ -36,9 +46,12 @@ class ProcessEnvironment(Environment):
     _RESULT = "result"
     _GETATTR = "getattr"
 
-    def __init__(self, env_creators: Union[EnvCreator, Sequence[EnvCreator]]):
+    def __init__(
+        self, env_creators: Union[EnvCreator, Sequence[EnvCreator]], env_id: Iterable
+    ):
         super().__init__()
         self._pickled_env_creators = cloudpickle.dumps(env_creators)
+        self._pickled_env_id = cloudpickle.dumps(env_id)
         self._num_env_per_worker = len(env_creators)
         self._local_conn = None
         self._process = None
@@ -157,7 +170,7 @@ class ProcessEnvironment(Environment):
         Returns:
             img (Union[Tensor, np.ndarray]), The image of environment at current frame.
         """
-        raise ValueError(f"ProcessEnvironment does not support render yet.")
+        raise ValueError("ProcessEnvironment does not support render yet.")
 
     def set_seed(self, seed_value: Union[int, Sequence[int]]) -> bool:
         r"""
@@ -169,8 +182,9 @@ class ProcessEnvironment(Environment):
         Returns:
             Success (np.bool\_), Whether successfully set the seed.
         """
-        self.call("set_seed", seed_value)
-        return True
+        promise = self.call("set_seed", seed_value)
+        success = promise()
+        return success
 
     def start(self):
         """
@@ -259,7 +273,9 @@ class ProcessEnvironment(Environment):
             self._process.join()
         return True
 
-    def send(self, action: Union[Tensor, np.ndarray], env_id: Union[Tensor, np.ndarray]):
+    def send(
+        self, action: Union[Tensor, np.ndarray], env_id: Union[Tensor, np.ndarray]
+    ):
         r"""
         Execute the environment step asynchronously. User can obtain result by using recv.
 
@@ -292,25 +308,32 @@ class ProcessEnvironment(Environment):
         if message == self._EXCEPTION:
             trace_back = payload
             raise Exception(trace_back)
-        elif message == self._RESULT:
+        if message == self._RESULT:
             return payload
-        else:
-            self.close()
-            raise KeyError(f"Received unknown message {message}")
+        self.close()
+        raise KeyError(f"Received unknown message {message}")
 
     def _worker(self, worker_conn):
         """Inner worker for each process"""
         try:
             env_creators = cloudpickle.loads(self._pickled_env_creators)
-            envs = [env_creator() for env_creator in env_creators]
+            env_id = cloudpickle.loads(self._pickled_env_id)
+            envs = [
+                env_creator(env_id[i]) for i, env_creator in enumerate(env_creators)
+            ]
             while True:
                 message, payload = worker_conn.recv()
                 if message == self._CALL:
                     name, args, kwargs = payload
-                    if self._num_env_per_worker > 1 and (name == 'step' or name == 'set_seed'):
-                        result = [getattr(env, name)(args[0][i]) for i, env in enumerate(envs)]
+                    if self._num_env_per_worker > 1 and (name in ("step", "set_seed")):
+                        result = [
+                            getattr(env, name)(args[0][i]) for i, env in enumerate(envs)
+                        ]
                     else:
-                        result = [getattr(env, name)(*args, **kwargs) for i, env in enumerate(envs)]
+                        result = [
+                            getattr(env, name)(*args, **kwargs)
+                            for i, env in enumerate(envs)
+                        ]
                     worker_conn.send((self._RESULT, result))
                 elif message == self._GETATTR:
                     name = payload

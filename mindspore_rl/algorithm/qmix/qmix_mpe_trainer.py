@@ -14,13 +14,13 @@
 # ============================================================================
 """QMIX Trainer"""
 
-import numpy as np
 import mindspore as ms
+import numpy as np
+from mindspore import Parameter, Tensor
 from mindspore.common.api import ms_function
-from mindspore import Tensor, Parameter
 from mindspore.ops import operations as P
-from mindspore_rl.agent import Trainer
-from mindspore_rl.agent import trainer
+
+from mindspore_rl.agent import Trainer, trainer
 
 
 class QMIXTrainer(Trainer):
@@ -31,7 +31,7 @@ class QMIXTrainer(Trainer):
     def __init__(self, msrl, params):
         super().__init__(msrl)
         self.msrl = msrl
-        self.batch = params['batch_size']
+        self.batch = params["batch_size"]
         self.false = Tensor([False], ms.bool_)
         self.true = Tensor(True, ms.bool_)
         self.zero_int = Tensor(0, ms.int32)
@@ -57,32 +57,36 @@ class QMIXTrainer(Trainer):
         done_space = self.msrl.collect_environment.done_space
         reward_space = self.msrl.collect_environment.reward_space
 
-        self.num_agent = env_config['num_agent']
-        self.agent_id = Tensor(np.expand_dims(
-            np.eye(self.num_agent), 0).reshape(self.num_agent, -1), ms.float32)
-        self.episode_limit = env_config['episode_limit']
+        self.num_agent = env_config["num_agent"]
+        self.agent_id = Tensor(
+            np.expand_dims(np.eye(self.num_agent), 0).reshape(self.num_agent, -1),
+            ms.float32,
+        )
+        self.episode_limit = env_config["episode_limit"]
         self.action_dim = action_space.num_values
-        self.observation_dim = (observation_space.shape[-1])
-        self.global_obs_dim = env_config['global_observation_dim']
+        self.observation_dim = observation_space.shape[-1]
+        self.global_obs_dim = env_config["global_observation_dim"]
         self.num_envs = 1
 
-        self.reward_dim = reward_space.shape[-1]
-        self.done_dim = done_space.shape[-1]
+        self.reward_dim = 1 if len(reward_space.shape) == 0 else reward_space.shape[-1]
+        self.done_dim = 1 if len(done_space.shape) == 0 else done_space.shape[-1]
 
         self.epsilon_steps = Parameter(
-            Tensor(0, ms.int32), requires_grad=False, name='epsilon_steps')
+            Tensor(0, ms.int32), requires_grad=False, name="epsilon_steps"
+        )
         self.squeeze = P.Squeeze(axis=0)
         self.greater_equal = P.GreaterEqual()
 
     def trainable_variables(self):
         """trainable variables uses to save model"""
-        trainable_variables = {"policy_net": self.msrl.learner.policy_net,
-                               "mixer_net": self.msrl.learner.mixer_net}
+        trainable_variables = {
+            "policy_net": self.msrl.learner.policy_net,
+            "mixer_net": self.msrl.learner.mixer_net,
+        }
         return trainable_variables
 
     @ms_function
     def train_one_episode(self):
-
         total_reward = self.zero_float
         steps = 0
         loss = self.zero_float
@@ -102,8 +106,11 @@ class QMIXTrainer(Trainer):
         while steps < self.episode_limit:
             global_obs = local_obs.reshape((-1,))
             action, hy = self.msrl.actors.get_action(
-                trainer.COLLECT, (local_obs, hy, avail_action, self.epsilon_steps))
-            new_local_obs, reward, done = self.msrl.collect_environment.step(action.astype(ms.int32))
+                trainer.COLLECT, (local_obs, hy, avail_action, self.epsilon_steps)
+            )
+            new_local_obs, reward, done = self.msrl.collect_environment.step(
+                action.astype(ms.int32)
+            )
             reward = reward[0]
             done = done[0]
 
@@ -128,8 +135,16 @@ class QMIXTrainer(Trainer):
         episode_reward = self.stack(episode_reward)
         episode_done = self.stack(episode_done)
         episode_done_env = self.stack(episode_done_env)
-        self.msrl.replay_buffer_insert((episode_local_obs, episode_global_obs, episode_action,
-                                        episode_reward, episode_done, episode_done_env))
+        self.msrl.replay_buffer_insert(
+            (
+                episode_local_obs,
+                episode_global_obs,
+                episode_action,
+                episode_reward,
+                episode_done,
+                episode_done_env,
+            )
+        )
 
         self.epsilon_steps += steps
         if self.greater_equal(self.msrl.buffers.count, self.batch):
@@ -148,8 +163,11 @@ class QMIXTrainer(Trainer):
         local_obs = self.msrl.eval_environment.reset()
         while steps < self.episode_limit:
             action, hy = self.msrl.actors.get_action(
-                trainer.COLLECT, (local_obs, hy, avail_action, self.epsilon_steps))
-            new_local_obs, reward, done = self.msrl.collect_environment.step(action.astype(ms.int32))
+                trainer.COLLECT, (local_obs, hy, avail_action, self.epsilon_steps)
+            )
+            new_local_obs, reward, _ = self.msrl.collect_environment.step(
+                action.astype(ms.int32)
+            )
             total_reward += reward
             local_obs = new_local_obs
 

@@ -12,13 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+"""Sync Parallel Wrapper"""
+# pylint:disable=W0106
+from typing import Callable, Optional, Sequence, Union
 
 import numpy as np
-from typing import Sequence, Union, Callable, Optional
 from mindspore import Tensor
+
 from mindspore_rl.environment.environment import Environment
-from mindspore_rl.environment.space import Space
 from mindspore_rl.environment.process_environment import ProcessEnvironment
+from mindspore_rl.environment.space import Space
 
 EnvCreator = Callable[[], Environment]
 
@@ -36,13 +39,19 @@ class SyncParallelWrapper(Environment):
             functionality is not implemented yet. Default: False
     """
 
-    def __init__(self,
-                 env_creators: Sequence[EnvCreator],
-                 num_proc: int = 0,
-                 shared_memory: bool = False):
+    def __init__(
+        self,
+        env_creators: Sequence[EnvCreator],
+        num_proc: int = 0,
+        shared_memory: bool = False,
+    ):
         super().__init__()
-        if any([not callable(env_creator) for env_creator in env_creators]):
-            raise TypeError(f"The input env_creators must be a list of callable, but got {env_creators}")
+        self._shared_memory = shared_memory
+        type_check = [not callable(env_creator) for env_creator in env_creators]
+        if any(type_check):
+            raise TypeError(
+                f"The input env_creators must be a list of callable, but got {env_creators}"
+            )
         if num_proc < 0:
             raise ValueError(f"num_proc must be a positive integer, but got {num_proc}")
         self._num_env = len(env_creators)
@@ -50,7 +59,8 @@ class SyncParallelWrapper(Environment):
         if self._num_proc > self._num_env:
             raise ValueError(
                 "The number of processes must be less or equal to number of environment, "
-                f"but got number of processes {self._num_proc}, number of environment {self._num_env}")
+                f"but got number of processes {self._num_proc}, number of environment {self._num_env}"
+            )
         self._envs = []
         avg_env_per_proc = int(self._num_env / self._num_proc)
         for i in range(self._num_proc):
@@ -59,7 +69,10 @@ class SyncParallelWrapper(Environment):
                 env_num = avg_env_per_proc
             else:
                 env_num = self._num_env - assigned_env_num
-            proc_env = ProcessEnvironment(env_creators[env_num * i: env_num * (i + 1)])
+            proc_env = ProcessEnvironment(
+                env_creators[env_num * i : env_num * (i + 1)],
+                range(env_num * i, env_num * (i + 1)),
+            )
             self._envs.append(proc_env)
             proc_env.start()
 
@@ -153,7 +166,7 @@ class SyncParallelWrapper(Environment):
         Returns:
             int, The number of return value of reset.
         """
-        return getattr(self._envs[0], '_num_reset_out')
+        return getattr(self._envs[0], "_num_reset_out")
 
     @property
     def _num_step_out(self) -> int:
@@ -163,7 +176,7 @@ class SyncParallelWrapper(Environment):
         Returns:
             int, The number of return value of step.
         """
-        return getattr(self._envs[0], '_num_step_out')
+        return getattr(self._envs[0], "_num_step_out")
 
     def start(self) -> bool:
         """
@@ -216,9 +229,11 @@ class SyncParallelWrapper(Environment):
         promise_list = []
         accum_env_num = 0
         for i in range(self._num_proc):
-            worker_env_num = getattr(self._envs[i], '_num_env_per_worker')
-            action_i = action[accum_env_num: worker_env_num + accum_env_num]
-            if (not len(self.action_space.shape)) and (len(action_i) == 1):
+            worker_env_num = getattr(self._envs[i], "_num_env_per_worker")
+            action_i = action[accum_env_num : worker_env_num + accum_env_num]
+            if (len(action_i.shape) - len(self.action_space.shape) > 0) and (
+                action_i.shape[0] == 1
+            ):
                 action_i = action_i.squeeze(0)
             promise_list.append(self._envs[i].step(action_i))
             accum_env_num += worker_env_num
@@ -239,11 +254,13 @@ class SyncParallelWrapper(Environment):
             Success (np.bool\_), Whether successfully set the seed.
         """
         accum_env_num = 0
+        success_list = []
         for i in range(self._num_proc):
-            worker_env_num = getattr(self._envs[i], '_num_env_per_worker')
-            seed_list = seed_value[accum_env_num: worker_env_num + accum_env_num]
-            self._envs[i].set_seed(seed_list)
-        return True
+            worker_env_num = getattr(self._envs[i], "_num_env_per_worker")
+            seed_list = seed_value[accum_env_num : worker_env_num + accum_env_num]
+            accum_env_num += worker_env_num
+            success_list.append(self._envs[i].set_seed(seed_list))
+        return np.array(success_list).all()
 
     def close(self):
         r"""
@@ -282,3 +299,12 @@ class SyncParallelWrapper(Environment):
                 dtype. This output is optional.
         """
         raise ValueError("SyncParallelWrapper does not support recv yet")
+
+    def render(self) -> Union[Tensor, np.ndarray]:
+        """
+        Generate the image for current frame of environment.
+
+        Returns:
+            img (Union[Tensor, np.ndarray]), The image of environment at current frame.
+        """
+        raise ValueError("Parallel rendering does not support yet")

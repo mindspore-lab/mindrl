@@ -17,10 +17,16 @@ Space adapter utils
 """
 import numpy as np
 from gym import spaces
+
 from mindspore_rl.environment.space import Space
 
 
 def gym2ms_adapter(gym_space):
+    """gym space to ms space adapter"""
+    batch_shape = None
+    if isinstance(gym_space, list):
+        batch_shape = (len(gym_space),)
+        gym_space = gym_space[0]
     shape = gym_space.shape
     gym_type = gym_space.dtype.type
     # The dtype get from gym.space is np.int64, but step() accept np.int32 actually.
@@ -33,6 +39,8 @@ def gym2ms_adapter(gym_space):
         dtype = gym_type
 
     if isinstance(gym_space, spaces.Discrete):
-        return Space(shape, dtype, low=0, high=gym_space.n)
+        return Space(shape, dtype, low=0, high=gym_space.n, batch_shape=batch_shape)
 
-    return Space(shape, dtype, low=gym_space.low, high=gym_space.high)
+    return Space(
+        shape, dtype, low=gym_space.low, high=gym_space.high, batch_shape=batch_shape
+    )

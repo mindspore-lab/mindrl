@@ -13,34 +13,40 @@
 # limitations under the License.
 # ============================================================================
 """MPEMultiEnvironment class."""
-#pylint: disable=E0402
-#pylint: disable=W0212
-import pdb
 import os
 import sys
-import numpy as np
 from collections import namedtuple
-from gym import spaces
-from mindspore_rl.environment.environment import DeprecatedEnvironment
+
+import numpy as np
+
+from mindspore_rl.environment.python_environment import PythonEnvironment
+from mindspore_rl.environment.space_adapter import gym2ms_adapter
+
+# pylint: disable=E0402
+# pylint: disable=W0212
+# pylint: disable=C0415
 
 
 def _prepare_mpe_env(current_path):
-    '''prepare mpe env'''
+    """prepare mpe env"""
     # Clone mpe environment from marlbenchmark
-    os.system('git clone https://github.com/marlbenchmark/on-policy.git')
+    os.system("git clone https://github.com/marlbenchmark/on-policy.git")
     # Copy mpe folder to current directory
-    os.system('cp -r on-policy/onpolicy/envs/mpe ./')
+    os.system("cp -r on-policy/onpolicy/envs/mpe ./")
     # patch mpe folder
-    splited_path = current_path.split('/')
+    splited_path = current_path.split("/")
+    i = 0
     for i, path in enumerate(reversed(splited_path)):
         if path == "mindrl":
             break
-    msrl_root_dir = current_path.rsplit('/', i)
-    mpe_patch = os.path.join(msrl_root_dir[0], 'third_party/patch/mpe_environment.patch')
-    os.system(f'patch -p0 < {mpe_patch}')
+    msrl_root_dir = current_path.rsplit("/", i)
+    mpe_patch = os.path.join(
+        msrl_root_dir[0], "third_party/patch/mpe_environment.patch"
+    )
+    os.system(f"patch -p0 < {mpe_patch}")
 
 
-class MultiAgentParticleEnvironment(DeprecatedEnvironment):
+class MultiAgentParticleEnvironment(PythonEnvironment):
     """
     This is the wrapper of Multi-Agent Particle Environment(MPE) which is modified by MAPPO author from
     (https://github.com/marlbenchmark/on-policy/tree/main/onpolicy). A simple multi-agent particle world with
@@ -74,43 +80,52 @@ class MultiAgentParticleEnvironment(DeprecatedEnvironment):
         >>> print(environment)
     """
 
-    def __init__(self,
-                 params,
-                 env_id=0):
+    def __init__(self, params, env_id=0):
         self.params = params
-        self._env_name = params['name']
-        self._num_agent = params['num_agent']
-        self._auto_reset = params.get('auto_reset', False)
+        self._env_name = params["name"]
+        self._num_agent = params["num_agent"]
+        self._auto_reset = params.get("auto_reset", False)
+        self._render_mode = params.get("render_mode", "rgb_array")
+        self._env_id = env_id
 
         current_path = os.getcwd()
-        mpe_path = os.path.join(current_path, 'mpe')
+        mpe_path = os.path.join(current_path, "mpe")
         sys.path.append(mpe_path)
         all_files = os.listdir(current_path)
-        has_mpe = np.array(['mpe' == file for file in all_files]).any()
+        has_mpe = np.array(["mpe" == file for file in all_files]).any()
         if not has_mpe:
             _prepare_mpe_env(current_path)
 
         from mpe.MPE_env import MPEEnv
-        mpe_args = namedtuple("mpe_args", "episode_length, num_agents, scenario_name, num_landmarks")
-        all_args = mpe_args(episode_length=25, num_agents=self._num_agent,
-                            scenario_name=self._env_name, num_landmarks=self._num_agent)
+
+        mpe_args = namedtuple(
+            "mpe_args", "episode_length, num_agents, scenario_name, num_landmarks"
+        )
+        all_args = mpe_args(
+            episode_length=25,
+            num_agents=self._num_agent,
+            scenario_name=self._env_name,
+            num_landmarks=self._num_agent,
+        )
 
         self._env = MPEEnv(all_args)
-        seed = params.get('seed')
-        if seed:
-            self._env.seed(seed + env_id * 1000)
-        mpe_config = {'global_observation_dim': self._env.share_observation_space[0].shape[-1],
-                      'num_agent': self._num_agent,
-                      "episode_limit": self._env.world_length}
+        mpe_config = {
+            "global_observation_dim": self._env.share_observation_space[0].shape[-1],
+            "num_agent": self._num_agent,
+            "episode_limit": self._env.world_length,
+        }
 
-        super().__init__(env_name="MultiAgentParticleEnvironment", env=self._env, config=mpe_config)
+        action_space = gym2ms_adapter(self._env.action_space)
+        observation_space = gym2ms_adapter(self._env.observation_space)
 
-    def _step(self, actions):
+        super().__init__(action_space, observation_space, config=mpe_config)
+
+    def _step(self, action):
         """Inner step function implementation"""
-        onehot_action = np.eye(self._env.action_space[0].n)[actions].squeeze(1)
+        onehot_action = np.eye(self._env.action_space[0].n)[action]
         local_obs, rewards, done, _ = self._env.step(onehot_action)
         done = np.expand_dims(np.array(done), -1)
-        if (self._auto_reset and done.all()):
+        if self._auto_reset and done.all():
             local_obs = self._reset()
         return np.array(local_obs, np.float32), np.array(rewards, np.float32), done
 
@@ -119,21 +134,12 @@ class MultiAgentParticleEnvironment(DeprecatedEnvironment):
         s0 = self._env.reset()
         return np.array(s0, np.float32)
 
-    def _get_action(self):
-        r"""Inner get\_action function implementation"""
-        action = []
-        for space in self._env.action_space:
-            action.append(space.sample())
-        return np.expand_dims(np.array(action, np.int32), -1)
+    def _render(self):
+        """Inner render function implementation"""
+        img = self._env.render(mode=self._render_mode)
+        return img
 
-    def _get_min_max_action(self):
-        r"""Inner get\_min\_max\_action function implementation"""
-        gym_space = self._env.action_space[0]
-        if isinstance(gym_space, spaces.Discrete):
-            return 0, gym_space.n
-        return gym_space.low, gym_space.high
-
-    def _get_min_max_observation(self):
-        r"""Inner get\_min\_max\_observation function implementation"""
-        space = self._env.observation_space[0]
-        return space.low, space.high
+    def _set_seed(self, seed_value: int) -> bool:
+        """Inner set seed function"""
+        self._env.seed(seed_value)
+        return True

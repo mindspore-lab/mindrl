@@ -15,8 +15,9 @@
 """
 Implementation of MSRL class.
 """
-
+# pylint: disable=R1719
 import inspect
+from functools import partial
 
 from mindspore import nn
 from mindspore.ops import operations as P
@@ -157,7 +158,9 @@ class MSRL(nn.Cell):
         return MultiEnvironmentWrapper(env_list, proc_num)
 
     # pylint: disable=W0613
-    def __create_environments(self, config, num_agent=1):
+    def __create_environments(
+        self, config, env_type, need_batched=False, new_api=False
+    ):
         """
         Create the environments object from the configuration file, and return the instance
         of environment and evaluate environment.
@@ -169,68 +172,41 @@ class MSRL(nn.Cell):
             - env (object), created environment object.
             - eval_env (object), created evaluate environment object.
         """
-
-        collect_env_config = config["collect_environment"]
-        eval_env_config = config["eval_environment"]
-        self.num_collect_env = collect_env_config.get("number")
-        num_eval_env = eval_env_config.get("number")
-        collect_num_parallel = collect_env_config.get("num_parallel")
-        eval_num_parallel = eval_env_config.get("num_parallel")
-
-        if self.num_collect_env is None:
-            self.num_collect_env = 1
-        if num_eval_env is None:
-            num_eval_env = 1
-
-        if collect_num_parallel:
-            if collect_num_parallel < 1:
-                raise ValueError(
-                    "num_parallel of collect_environment can not be non-positive"
-                )
-            collect_proc_num = collect_num_parallel
-        else:
-            collect_proc_num = self.num_collect_env
-
-        if eval_num_parallel:
-            if eval_num_parallel < 1:
-                raise ValueError(
-                    "num_parallel of eval_environment can not be non-positive"
-                )
-            eval_proc_num = eval_num_parallel
-        else:
-            eval_proc_num = num_eval_env
-
+        env_config = config[env_type]
+        num_env = env_config.get("number")
+        num_parallel = (
+            0
+            if env_config.get("num_parallel") is None
+            else env_config.get("num_parallel")
+        )
         compulsory_item = ["type"]
-        self._compulsory_items_check(
-            collect_env_config, compulsory_item, "collect_environment"
-        )
-        self._compulsory_items_check(
-            eval_env_config, compulsory_item, "eval_environment"
-        )
+        self._compulsory_items_check(env_config, compulsory_item, env_type)
+        if not config[env_type].get("params"):
+            config[env_type]["params"] = {}
 
-        if not config["collect_environment"].get("params"):
-            config["collect_environment"]["params"] = {}
-        if not config["eval_environment"].get("params"):
-            config["eval_environment"]["params"] = {}
-
-        if self.num_collect_env > 1:
-            collect_env = self._create_batch_env(
-                config["collect_environment"], self.num_collect_env, collect_proc_num
-            )
-            eval_env = self._create_batch_env(
-                config["eval_environment"], num_eval_env, eval_proc_num
-            )
-        else:
-            collect_env = self._create_instance(config["collect_environment"], None)
-            if num_eval_env > 1:
-                collect_env = MultiEnvironmentWrapper([collect_env], collect_proc_num)
-                eval_env = self._create_batch_env(
-                    config["eval_environment"], num_eval_env, eval_proc_num
-                )
+        if not new_api:
+            if num_env > 1:
+                env = self._create_batch_env(config[env_type], num_env, num_parallel)
             else:
-                eval_env = self._create_instance(config["eval_environment"], None)
+                env = self._create_instance(config[env_type], None)
+                if need_batched:
+                    env = MultiEnvironmentWrapper([env], num_parallel)
+        else:
+            wrappers = env_config.get("wrappers")
+            env_creator = partial(config[env_type]["type"], config[env_type]["params"])
+            if wrappers is not None:
+                for wrapper in reversed(wrappers):
+                    if wrapper.__name__ == "SyncParallelWrapper":
+                        env_creator = partial(
+                            wrapper, [env_creator] * num_env, num_parallel
+                        )
+                    else:
+                        env_creator = partial(wrapper, env_creator)
+            env = env_creator()
+            if env_config.get("seed") is not None:
+                env.set_seed(env_config.get("seed"))
 
-        return collect_env, eval_env
+        return env, num_env
 
     def __params_generate(self, config, obj, target, attribute):
         """
@@ -422,10 +398,23 @@ class MSRL(nn.Cell):
             if "share_env" in config["actor"]:
                 share_env = config["actor"]["share_env"]
             # ---------------------- Environment ----------------------
-            (
-                self.collect_environment,
-                self.eval_environment,
-            ) = self.__create_environments(config)
+            collect_new_api = (
+                True
+                if config["collect_environment"].get("wrappers") is not None
+                else False
+            )
+            eval_new_api = (
+                True
+                if config["eval_environment"].get("wrappers") is not None
+                else False
+            )
+            self.collect_environment, self.num_collect_env = self.__create_environments(
+                config, "collect_environment", new_api=collect_new_api
+            )
+            need_batched = True if (self.num_collect_env > 1) else False
+            self.eval_environment, _ = self.__create_environments(
+                config, "eval_environment", need_batched, new_api=eval_new_api
+            )
             # ---------------------------------------------------------
             if self.distributed:
                 self.policy_and_network = self.__create_policy_and_network(config)
@@ -450,7 +439,9 @@ class MSRL(nn.Cell):
                     for i in range(num_actors):
                         if not share_env:
                             self.collect_environment.append(
-                                self.__create_environments(config)[0]
+                                self.__create_environments(
+                                    config, "collect_environment"
+                                )[0]
                             )
                         self.policy_and_network = self.__create_policy_and_network(
                             config
@@ -479,10 +470,23 @@ class MSRL(nn.Cell):
 
             config["agent"]["params"]["num_agent"] = self.num_agent
             # ---------------------- Environment ----------------------
-            (
-                self.collect_environment,
-                self.eval_environment,
-            ) = self.__create_environments(config, self.num_agent)
+            collect_new_api = (
+                True
+                if config["collect_environment"].get("wrappers") is not None
+                else False
+            )
+            eval_new_api = (
+                True
+                if config["eval_environment"].get("wrappers") is not None
+                else False
+            )
+            self.collect_environment, self.num_collect_env = self.__create_environments(
+                config, "collect_environment", new_api=collect_new_api
+            )
+            need_batched = True if (self.num_collect_env > 1) else False
+            self.eval_environment, _ = self.__create_environments(
+                config, "eval_environment", need_batched, new_api=eval_new_api
+            )
             # ---------------------------------------------------------
             for i in range(self.num_agent):
                 policy_and_network = self.__create_policy_and_network(config)
