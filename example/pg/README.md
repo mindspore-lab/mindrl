@@ -1,4 +1,4 @@
-# Policy Grandient Algorithm (PG)
+# Policy Gradient Algorithm (PG)
 
 ## Related Paper
 
