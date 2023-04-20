@@ -14,16 +14,16 @@
 # ============================================================================
 """Dreamer Models"""
 
-import numpy as np
-
 import mindspore as ms
-import mindspore.nn as nn
-from mindspore import Tensor
 import mindspore.nn.probability.distribution as msd
+import numpy as np
+from mindspore import Tensor, nn
 from mindspore.ops import operations as P
 
-from mindspore_rl.algorithm.sac.tanh_normal import MultivariateNormalDiag
-from mindspore_rl.algorithm.sac.tanh_normal import TanhMultivariateNormalDiag
+from mindspore_rl.algorithm.sac.tanh_normal import (
+    MultivariateNormalDiag,
+    TanhMultivariateNormalDiag,
+)
 from mindspore_rl.network import FullyConnectedLayers, GruNet
 
 
@@ -32,25 +32,54 @@ class ConvEncoder(nn.Cell):
 
     def __init__(self, params):
         super().__init__()
-        self.depth = params['depth']
-        stride = params['stride_conv_encoder']
-        self.conv1 = nn.Conv2d(3, 1 * self.depth, 4, stride, pad_mode='valid',
-                               has_bias=True, weight_init='xavier_uniform')
+        self.depth = params["depth"]
+        stride = params["stride_conv_encoder"]
+        self.conv1 = nn.Conv2d(
+            3,
+            1 * self.depth,
+            4,
+            stride,
+            pad_mode="valid",
+            has_bias=True,
+            weight_init="xavier_uniform",
+        )
         self.relu1 = nn.ReLU()
-        self.conv2 = nn.Conv2d(1 * self.depth, 2 * self.depth, 4, stride,
-                               pad_mode='valid', has_bias=True, weight_init='xavier_uniform')
+        self.conv2 = nn.Conv2d(
+            1 * self.depth,
+            2 * self.depth,
+            4,
+            stride,
+            pad_mode="valid",
+            has_bias=True,
+            weight_init="xavier_uniform",
+        )
         self.relu2 = nn.ReLU()
-        self.conv3 = nn.Conv2d(2 * self.depth, 4 * self.depth, 4, stride,
-                               pad_mode='valid', has_bias=True, weight_init='xavier_uniform')
+        self.conv3 = nn.Conv2d(
+            2 * self.depth,
+            4 * self.depth,
+            4,
+            stride,
+            pad_mode="valid",
+            has_bias=True,
+            weight_init="xavier_uniform",
+        )
         self.relu3 = nn.ReLU()
-        self.conv4 = nn.Conv2d(4 * self.depth, 8 * self.depth, 4, stride,
-                               pad_mode='valid', has_bias=True, weight_init='xavier_uniform')
+        self.conv4 = nn.Conv2d(
+            4 * self.depth,
+            8 * self.depth,
+            4,
+            stride,
+            pad_mode="valid",
+            has_bias=True,
+            weight_init="xavier_uniform",
+        )
         self.relu4 = nn.ReLU()
         self.reshape = P.Reshape()
         self.concat = P.Concat()
 
     def construct(self, images):
         """Forward of conv encoder"""
+        # images = ops.cast(images, ms.float16)
         x = self.reshape(images, (-1,) + tuple(images.shape[-3:]))
         x = x.transpose(0, 3, 1, 2)
         x = self.conv1(x)
@@ -62,6 +91,7 @@ class ConvEncoder(nn.Cell):
         x = self.conv4(x)
         x = self.relu4(x)
         x = x.transpose(0, 2, 3, 1)
+        # x = ops.cast(x, ms.float32)
         return self.reshape(x, (images.shape[:-3] + (32 * self.depth,)))
 
 
@@ -70,24 +100,51 @@ class ConvDecoder(nn.Cell):
 
     def __init__(self, params):
         super().__init__()
-        self.shape = params['conv_decoder_shape']
-        self.depth = params['depth']
-        stride = params['stride_conv_decoder']
-        self.fc1 = nn.Dense(in_channels=230, out_channels=32*self.depth, weight_init='xavier_uniform')
-        self.deconv1 = nn.Conv2dTranspose(in_channels=32*self.depth, out_channels=4 * self.depth,
-                                          kernel_size=5, stride=stride, pad_mode='valid', has_bias=True,
-                                          weight_init='xavier_uniform')
+        self.shape = params["conv_decoder_shape"]
+        self.depth = params["depth"]
+        stride = params["stride_conv_decoder"]
+        self.fc1 = nn.Dense(
+            in_channels=238, out_channels=32 * self.depth, weight_init="xavier_uniform"
+        )
+        self.deconv1 = nn.Conv2dTranspose(
+            in_channels=32 * self.depth,
+            out_channels=4 * self.depth,
+            kernel_size=5,
+            stride=stride,
+            pad_mode="valid",
+            has_bias=True,
+            weight_init="xavier_uniform",
+        )
         self.relu1 = nn.ReLU()
-        self.deconv2 = nn.Conv2dTranspose(in_channels=4*self.depth, out_channels=2 *
-                                          self.depth, kernel_size=5, stride=stride, pad_mode='valid',
-                                          has_bias=True, weight_init='xavier_uniform')
+        self.deconv2 = nn.Conv2dTranspose(
+            in_channels=4 * self.depth,
+            out_channels=2 * self.depth,
+            kernel_size=5,
+            stride=stride,
+            pad_mode="valid",
+            has_bias=True,
+            weight_init="xavier_uniform",
+        )
         self.relu2 = nn.ReLU()
-        self.deconv3 = nn.Conv2dTranspose(in_channels=2*self.depth, out_channels=1*self.depth, kernel_size=6,
-                                          stride=stride, pad_mode='valid', has_bias=True, weight_init='xavier_uniform')
+        self.deconv3 = nn.Conv2dTranspose(
+            in_channels=2 * self.depth,
+            out_channels=1 * self.depth,
+            kernel_size=6,
+            stride=stride,
+            pad_mode="valid",
+            has_bias=True,
+            weight_init="xavier_uniform",
+        )
         self.relu3 = nn.ReLU()
-        self.deconv4 = nn.Conv2dTranspose(in_channels=1*self.depth, pad_mode='valid',
-                                          out_channels=self.shape[-1], kernel_size=6, stride=stride,
-                                          has_bias=True, weight_init='xavier_uniform')
+        self.deconv4 = nn.Conv2dTranspose(
+            in_channels=1 * self.depth,
+            pad_mode="valid",
+            out_channels=self.shape[-1],
+            kernel_size=6,
+            stride=stride,
+            has_bias=True,
+            weight_init="xavier_uniform",
+        )
 
         self.reshape = P.Reshape()
         self.transpose = P.Transpose()
@@ -118,10 +175,16 @@ class DenseDecoder(nn.Cell):
         super().__init__()
         self.shape = dense_decoder_shape
         layers_param = dense_decoder_layers
-        self.fc = FullyConnectedLayers(fc_layer_params=layers_param,
-                                       activation_fn=nn.ELU(), weight_init='xavier_uniform')
-        self.fc_out = nn.Dense(in_channels=layers_param[-1],
-                               out_channels=int(np.prod(self.shape)), weight_init='xavier_uniform')
+        self.fc = FullyConnectedLayers(
+            fc_layer_params=layers_param,
+            activation_fn=nn.ELU(),
+            weight_init="xavier_uniform",
+        )
+        self.fc_out = nn.Dense(
+            in_channels=layers_param[-1],
+            out_channels=int(np.prod(self.shape)),
+            weight_init="xavier_uniform",
+        )
 
         self.reshape = P.Reshape()
 
@@ -138,24 +201,32 @@ class ActionDecoder(nn.Cell):
 
     def __init__(self, params):
         super().__init__()
-        layers_param = params['action_decoder_layers']
-        size = params['size']
-        self.min_std = Tensor(params['min_std'], params['dtype'])
-        self.mean_scale = Tensor(params['mean_scale'], params['dtype'])
-        self.init_std = Tensor(params['init_std'], params['dtype'])
-        self.zero_float = Tensor(0, params['dtype'])
+        layers_param = params["action_decoder_layers"]
+        size = params["size"]
+        self.min_std = Tensor(params["min_std"], ms.float16)
+        self.mean_scale = Tensor(params["mean_scale"], ms.float16)
+        self.init_std = Tensor(params["init_std"], ms.float16)
+        self.zero_float = Tensor(0, ms.float16)
 
-        self.fc = FullyConnectedLayers(fc_layer_params=layers_param,
-                                       activation_fn=nn.ELU(), weight_init='xavier_uniform')
-        self.fc_out = nn.Dense(in_channels=layers_param[-1], out_channels=2 * size, weight_init='xavier_uniform')
+        self.fc = FullyConnectedLayers(
+            fc_layer_params=layers_param,
+            activation_fn=nn.ELU(),
+            weight_init="xavier_uniform",
+        )
+        self.fc_out = nn.Dense(
+            in_channels=layers_param[-1],
+            out_channels=2 * size,
+            weight_init="xavier_uniform",
+        )
         self.split = P.Split(-1, 2)
         self.softplus = P.Softplus()
         self.tanh = P.Tanh()
-        self.normal = msd.Normal()
-        self.transformed_dist = TanhMultivariateNormalDiag()
+        self.normal = msd.Normal(dtype=ms.float16)
+        self.transformed_dist = TanhMultivariateNormalDiag(dtype=ms.float16)
 
         self.log = P.Log()
         self.exp = P.Exp()
+        self.select = P.Select()
 
     def construct(self, features, training):
         raw_init_std = self.log(self.exp(self.init_std) - 1)
@@ -174,23 +245,45 @@ class RSSM(nn.Cell):
 
     def __init__(self, params):
         super().__init__()
-        hidden_size = params['hidden_size']
-        stoch_size = params['stoch_size']
-        deter_size = params['deter_size']
-        self.batch_size = params['batch_size']
+        hidden_size = params["hidden_size"]
+        stoch_size = params["stoch_size"]
+        deter_size = params["deter_size"]
+        self.batch_size = params["batch_size"]
         # ImgStepNet
-        self.fc1_img = nn.Dense(in_channels=36, out_channels=hidden_size,
-                                activation=nn.ELU(), weight_init='xavier_uniform')
-        self.gru_img = GruNet(input_size=hidden_size, hidden_size=deter_size, weight_init='xavier_uniform')
-        self.fc2_img = nn.Dense(in_channels=deter_size, out_channels=hidden_size,
-                                activation=nn.ELU(), weight_init='xavier_uniform')
-        self.fc3_img = nn.Dense(in_channels=hidden_size, out_channels=2 * stoch_size, weight_init='xavier_uniform')
+        self.fc1_img = nn.Dense(
+            in_channels=36,
+            out_channels=hidden_size,
+            activation=nn.ELU(),
+            weight_init="xavier_uniform",
+        ).to_float(ms.float16)
+        self.gru_img = GruNet(
+            input_size=hidden_size, hidden_size=deter_size, weight_init="xavier_uniform"
+        ).to_float(ms.float16)
+        self.fc2_img = nn.Dense(
+            in_channels=deter_size,
+            out_channels=hidden_size,
+            activation=nn.ELU(),
+            weight_init="xavier_uniform",
+        ).to_float(ms.float16)
+        self.fc3_img = nn.Dense(
+            in_channels=hidden_size,
+            out_channels=2 * stoch_size,
+            weight_init="xavier_uniform",
+        ).to_float(ms.float16)
         self.softplus_img = P.Softplus()
 
         # ObsStepNet
-        self.fc1_obs = nn.Dense(in_channels=1224, out_channels=hidden_size,
-                                activation=nn.ELU(), weight_init='xavier_uniform')
-        self.fc2_obs = nn.Dense(in_channels=hidden_size, out_channels=2 * stoch_size, weight_init='xavier_uniform')
+        self.fc1_obs = nn.Dense(
+            in_channels=1232,
+            out_channels=hidden_size,
+            activation=nn.ELU(),
+            weight_init="xavier_uniform",
+        ).to_float(ms.float16)
+        self.fc2_obs = nn.Dense(
+            in_channels=hidden_size,
+            out_channels=2 * stoch_size,
+            weight_init="xavier_uniform",
+        ).to_float(ms.float16)
         self.softplus_obs = P.Softplus()
 
         self.split = P.Split(-1, 2)
@@ -200,24 +293,45 @@ class RSSM(nn.Cell):
         self.expand_dims = P.ExpandDims()
         self.squeeze = P.Squeeze(axis=0)
         self.transpose = P.Transpose()
-        self.multivariate_norm_diag = MultivariateNormalDiag()
+        self.multivariate_norm_diag = MultivariateNormalDiag(dtype=ms.float16)
 
         self.zero_int = Tensor(0, ms.int32)
 
     def obs_step(self, prev_stoch, prev_deter, prev_action, embed):
         """obs step, which returns the the posterior and prior info"""
-        prior_mean, prior_std, prior_stoch, deter = self.img_step(prev_stoch, prev_deter, prev_action)
+        prior_mean, prior_std, prior_stoch, deter = self.img_step(
+            prev_stoch, prev_deter, prev_action
+        )
+        # deter = ops.cast(deter, ms.float16)
+        # embed = ops.cast(embed, ms.float16)
         x = self.concat([deter, embed])
         x = self.fc1_obs(x)
         x = self.fc2_obs(x)
         post_mean, post_std = self.split(x)
         post_std = self.softplus_obs(post_std) + 0.1
-        post_stoch = self.multivariate_norm_diag.sample((), post_mean, post_std, independent=1)
+        post_stoch = self.multivariate_norm_diag.sample(
+            (), post_mean, post_std, independent=1
+        )
 
-        return post_mean, post_std, post_stoch, prior_mean, prior_std, prior_stoch, deter
+        # post_mean = ops.cast(post_mean, ms.float32)
+        # post_std = ops.cast(post_std, ms.float32)
+        # post_stoch = ops.cast(post_stoch, ms.float32)
+        # deter = ops.depend(ops.cast(deter, ms.float32), post_mean)
+        return (
+            post_mean,
+            post_std,
+            post_stoch,
+            prior_mean,
+            prior_std,
+            prior_stoch,
+            deter,
+        )
 
     def img_step(self, prev_stoch, prev_deter, prev_action):
         """img step, which returns the prior info"""
+        # prev_stoch = ops.cast(prev_stoch, ms.float16)
+        # prev_deter = ops.cast(prev_deter, ms.float16)
+        # prev_action = ops.cast(prev_action, ms.float32)
         x = self.concat([prev_stoch, prev_action])
         x = self.fc1_img(x)
         x = self.expand_dims(x, 0)
@@ -230,6 +344,10 @@ class RSSM(nn.Cell):
         mean, std = self.split(x)
         std = self.softplus_img(std) + 0.1
         stoch = self.multivariate_norm_diag.sample((), mean, std, independent=1)
+        # mean = ops.cast(mean, ms.float32)
+        # std = ops.cast(std, ms.float32)
+        # stoch = ops.cast(stoch, ms.float32)
+        # deter = ops.cast(deter, ms.float32)
         return mean, std, stoch, deter
 
     def observe(self, embed, action, start_stoch, start_deter):
@@ -239,22 +357,40 @@ class RSSM(nn.Cell):
         prev_stoch = start_stoch
         prev_deter = start_deter
 
-        mean_post = self.zeros((embed.shape[0], self.batch_size, 30), ms.float32)
-        std_post = self.zeros((embed.shape[0], self.batch_size, 30), ms.float32)
-        stoch_post = self.zeros((embed.shape[0], self.batch_size, 30), ms.float32)
+        mean_post = self.zeros((embed.shape[0], self.batch_size, 30), ms.float16)
+        std_post = self.zeros((embed.shape[0], self.batch_size, 30), ms.float16)
+        stoch_post = self.zeros((embed.shape[0], self.batch_size, 30), ms.float16)
 
-        mean_prior = self.zeros((embed.shape[0], self.batch_size, 30), ms.float32)
-        std_prior = self.zeros((embed.shape[0], self.batch_size, 30), ms.float32)
-        stoch_prior = self.zeros((embed.shape[0], self.batch_size, 30), ms.float32)
+        mean_prior = self.zeros((embed.shape[0], self.batch_size, 30), ms.float16)
+        std_prior = self.zeros((embed.shape[0], self.batch_size, 30), ms.float16)
+        stoch_prior = self.zeros((embed.shape[0], self.batch_size, 30), ms.float16)
 
-        deter = self.zeros((embed.shape[0], self.batch_size, 200), ms.float32)
+        deter = self.zeros((embed.shape[0], self.batch_size, 208), ms.float16)
+
+        # mean_post = []
+        # std_post = []
+        # stoch_post = []
+        #
+        # mean_prior = []
+        # std_prior = []
+        # stoch_prior = []
+        #
+        # deter = []
 
         i = self.zero_int
+        # i = 0
         while i < embed.shape[0]:
             embed_i = embed[i]
             action_i = action[i]
-            post_mean, post_std, prev_stoch, prior_mean, prior_std, prior_stoch, prev_deter = self.obs_step(
-                prev_stoch, prev_deter, action_i, embed_i)
+            (
+                post_mean,
+                post_std,
+                prev_stoch,
+                prior_mean,
+                prior_std,
+                prior_stoch,
+                prev_deter,
+            ) = self.obs_step(prev_stoch, prev_deter, action_i, embed_i)
             mean_post[i] = post_mean
             std_post[i] = post_std
             stoch_post[i] = prev_stoch
@@ -262,7 +398,23 @@ class RSSM(nn.Cell):
             std_prior[i] = prior_std
             stoch_prior[i] = prior_stoch
             deter[i] = prev_deter
+
+            # mean_post.append(post_mean)
+            # std_post.append(post_std)
+            # stoch_post.append(prev_stoch)
+            # mean_prior.append(prior_mean)
+            # std_prior.append(prior_std)
+            # stoch_prior.append(prior_stoch)
+            # deter.append(prev_deter)
             i += 1
+
+        # mean_post = self.stack(mean_post)
+        # std_post = self.stack(std_post)
+        # stoch_post = self.stack(stoch_post)
+        # mean_prior = self.stack(mean_prior)
+        # std_prior = self.stack(std_prior)
+        # stoch_prior = self.stack(stoch_prior)
+        # deter = self.stack(deter)
 
         post_mean_tensor = self.transpose(mean_post, (1, 0, 2))
         post_std_tensor = self.transpose(std_post, (1, 0, 2))
@@ -272,5 +424,12 @@ class RSSM(nn.Cell):
         prior_stoch_tensor = self.transpose(stoch_prior, (1, 0, 2))
         deter_tensor = self.transpose(deter, (1, 0, 2))
 
-        return post_mean_tensor, post_std_tensor, post_stoch_tensor, prior_mean_tensor, \
-            prior_std_tensor, prior_stoch_tensor, deter_tensor
+        return (
+            post_mean_tensor,
+            post_std_tensor,
+            post_stoch_tensor,
+            prior_mean_tensor,
+            prior_std_tensor,
+            prior_stoch_tensor,
+            deter_tensor,
+        )
