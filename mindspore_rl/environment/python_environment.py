@@ -76,7 +76,7 @@ class PythonEnvironment(Environment):
         )
 
         self._need_auto_reset = need_auto_reset
-        self._env_status = np.array(False)
+        self._done_flag = np.array(False)
         # Pre-run environment
         reset_out = self._reset()
         action = self._action_space.sample()
@@ -182,14 +182,14 @@ class PythonEnvironment(Environment):
             - args (Union[np.ndarray, Tensor], optional), Support arbitrary outputs, but user needs to ensure the
                 dtype. This output is optional.
         """
-        if self.should_reset(self._env_status):
+        if self.should_reset(self._done_flag):
             reset_out = self.reset()
             init_reward = np.array(0, np.float32)
-            self._env_status = np.array(False)
+            self._done_flag = np.array(False)
             step_out = (
-                (reset_out, init_reward, self._env_status)
+                (reset_out, init_reward, self._done_flag)
                 if self._num_reset_out == 0
-                else (reset_out, init_reward, self._env_status, *reset_out[1:])
+                else (reset_out, init_reward, self._done_flag, *reset_out[1:])
             )
         else:
             step_out = self._step(action)
@@ -200,12 +200,24 @@ class PythonEnvironment(Environment):
             next_state = step_out[0].astype(self.observation_space.np_dtype)
             reward = step_out[1].astype(self.reward_space.np_dtype)
             done = step_out[2].astype(self.done_space.np_dtype)
-            self._env_status = done
-            step_out = (
-                (next_state, reward, done, *step_out[3:])
-                if self._num_step_out > 3
-                else (next_state, reward, done)
-            )
+            if not self._done_flag:
+                self._done_flag = done
+                step_out = (
+                    (next_state, reward, done, *step_out[3:])
+                    if self._num_step_out > 3
+                    else (next_state, reward, done)
+                )
+            else:
+                new_step_out = [
+                    np.zeros_like(step_out[0]),
+                    np.zeros_like(step_out[1]),
+                    np.ones_like(step_out[2]),
+                ]
+                if self._num_step_out > 3:
+                    for i in range(3, len(step_out)):
+                        new_step_out.append(np.zeros_like(step_out[i]))
+                step_out = tuple(new_step_out)
+
         return step_out
 
     def reset(self):
@@ -219,6 +231,7 @@ class PythonEnvironment(Environment):
             - args (Union[np.ndarray, Tensor], optional), Support arbitrary outputs, but user needs to ensure the
                 dtype. This output is optional.
         """
+        self._done_flag = np.array(False)
         reset_out = self._reset()
         if self._num_reset_out < 1:
             raise ValueError(
