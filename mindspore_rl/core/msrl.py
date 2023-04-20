@@ -174,17 +174,17 @@ class MSRL(nn.Cell):
         """
         env_config = config[env_type]
         num_env = env_config.get("number")
-        num_parallel = (
-            0
-            if env_config.get("num_parallel") is None
-            else env_config.get("num_parallel")
-        )
         compulsory_item = ["type"]
         self._compulsory_items_check(env_config, compulsory_item, env_type)
         if not config[env_type].get("params"):
             config[env_type]["params"] = {}
 
         if not new_api:
+            num_parallel = (
+                num_env
+                if env_config.get("num_parallel") is None
+                else env_config.get("num_parallel")
+            )
             if num_env > 1:
                 env = self._create_batch_env(config[env_type], num_env, num_parallel)
             else:
@@ -192,6 +192,11 @@ class MSRL(nn.Cell):
                 if need_batched:
                     env = MultiEnvironmentWrapper([env], num_parallel)
         else:
+            num_parallel = (
+                0
+                if env_config.get("num_parallel") is None
+                else env_config.get("num_parallel")
+            )
             wrappers = env_config.get("wrappers")
             env_creator = partial(config[env_type]["type"], config[env_type]["params"])
             if wrappers is not None:
