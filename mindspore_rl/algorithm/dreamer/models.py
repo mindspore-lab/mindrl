@@ -357,28 +357,17 @@ class RSSM(nn.Cell):
         prev_stoch = start_stoch
         prev_deter = start_deter
 
-        mean_post = self.zeros((embed.shape[0], self.batch_size, 30), ms.float16)
-        std_post = self.zeros((embed.shape[0], self.batch_size, 30), ms.float16)
-        stoch_post = self.zeros((embed.shape[0], self.batch_size, 30), ms.float16)
+        mean_post = []
+        std_post = []
+        stoch_post = []
 
-        mean_prior = self.zeros((embed.shape[0], self.batch_size, 30), ms.float16)
-        std_prior = self.zeros((embed.shape[0], self.batch_size, 30), ms.float16)
-        stoch_prior = self.zeros((embed.shape[0], self.batch_size, 30), ms.float16)
+        mean_prior = []
+        std_prior = []
+        stoch_prior = []
 
-        deter = self.zeros((embed.shape[0], self.batch_size, 208), ms.float16)
+        deter = []
 
-        # mean_post = []
-        # std_post = []
-        # stoch_post = []
-        #
-        # mean_prior = []
-        # std_prior = []
-        # stoch_prior = []
-        #
-        # deter = []
-
-        i = self.zero_int
-        # i = 0
+        i = 0
         while i < embed.shape[0]:
             embed_i = embed[i]
             action_i = action[i]
@@ -391,30 +380,23 @@ class RSSM(nn.Cell):
                 prior_stoch,
                 prev_deter,
             ) = self.obs_step(prev_stoch, prev_deter, action_i, embed_i)
-            mean_post[i] = post_mean
-            std_post[i] = post_std
-            stoch_post[i] = prev_stoch
-            mean_prior[i] = prior_mean
-            std_prior[i] = prior_std
-            stoch_prior[i] = prior_stoch
-            deter[i] = prev_deter
 
-            # mean_post.append(post_mean)
-            # std_post.append(post_std)
-            # stoch_post.append(prev_stoch)
-            # mean_prior.append(prior_mean)
-            # std_prior.append(prior_std)
-            # stoch_prior.append(prior_stoch)
-            # deter.append(prev_deter)
+            mean_post.append(post_mean)
+            std_post.append(post_std)
+            stoch_post.append(prev_stoch)
+            mean_prior.append(prior_mean)
+            std_prior.append(prior_std)
+            stoch_prior.append(prior_stoch)
+            deter.append(prev_deter)
             i += 1
 
-        # mean_post = self.stack(mean_post)
-        # std_post = self.stack(std_post)
-        # stoch_post = self.stack(stoch_post)
-        # mean_prior = self.stack(mean_prior)
-        # std_prior = self.stack(std_prior)
-        # stoch_prior = self.stack(stoch_prior)
-        # deter = self.stack(deter)
+        mean_post = self.stack(mean_post)
+        std_post = self.stack(std_post)
+        stoch_post = self.stack(stoch_post)
+        mean_prior = self.stack(mean_prior)
+        std_prior = self.stack(std_prior)
+        stoch_prior = self.stack(stoch_prior)
+        deter = self.stack(deter)
 
         post_mean_tensor = self.transpose(mean_post, (1, 0, 2))
         post_std_tensor = self.transpose(std_post, (1, 0, 2))

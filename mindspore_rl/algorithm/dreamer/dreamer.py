@@ -256,32 +256,22 @@ class DreamerLearner(Learner):
             prev_stoch = self.reshape(post_stoch, (-1,) + post_stoch.shape[2:])
             prev_deter = self.reshape(deter, (-1,) + deter.shape[2:])
 
-            stoch_tensor = self.zeros(
-                (self.horizon, self.batch_size * 50, self.stoch_size), ms.float16
-            )
-            deter_tensor = self.zeros(
-                (self.horizon, self.batch_size * 50, self.deter_size), ms.float16
-            )
+            stoch_tensor = []
+            deter_tensor = []
 
-            # stoch_tensor = []
-            # deter_tensor = []
-
-            k = self.zero_int
-            # k = 0
+            k = 0
             while k < self.horizon:
                 prev_feat = ops.stop_gradient(self.concat([prev_stoch, prev_deter]))
                 prev_action = self.action_decoder(prev_feat, self.true)
                 _, _, prev_stoch, prev_deter = self.rssm.img_step(
                     prev_stoch, prev_deter, prev_action
                 )
-                stoch_tensor[k] = prev_stoch
-                deter_tensor[k] = prev_deter
-                # stoch_tensor.append(prev_stoch)
-                # deter_tensor.append(prev_deter)
+                stoch_tensor.append(prev_stoch)
+                deter_tensor.append(prev_deter)
                 k += 1
 
-            # stoch_tensor = self.stack(stoch_tensor)
-            # deter_tensor = self.stack(deter_tensor)
+            stoch_tensor = self.stack(stoch_tensor)
+            deter_tensor = self.stack(deter_tensor)
 
             imagine_feat = self.concat([stoch_tensor, deter_tensor])
             reward = self.reward_decoder(imagine_feat)
