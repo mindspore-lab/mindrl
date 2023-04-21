@@ -20,8 +20,8 @@ The game solved in A3C from Gym is [**CartPole-v0**](https://www.gymlibrary.dev/
 
 Before running A3C, you should first install [MindSpore](https://www.mindspore.cn/install) and MindSpore-Reinforcement. Besides, you should also install following dependencies. Please follow the instruction on the official website.
 
-- MindSpore >= 1.9.0
-- Reinforcement >= 0.6
+- MindSpore > 2.0.0
+- Reinforcement > 0.6
 - numpy >= 1.17.0
 - [gym](https://github.com/openai/gym) >= 0.18.3
 
@@ -67,4 +67,4 @@ Train in actor 0, episode 9, rewards 56, loss 22.34567676
 
 ## Supported Platform
 
-A3C algorithm supports GPU platform.
+A3C algorithm supports Ascend and GPU platform.

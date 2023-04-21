@@ -15,6 +15,7 @@
 """
 Implementation of the session class.
 """
+from mindspore import nn
 from mindspore.communication import get_rank, init
 
 from mindspore_rl.core import MSRL
@@ -114,6 +115,14 @@ class Session:
 
         # Close the environment to release the resource
         if self.msrl.collect_environment is not None:
-            self.msrl.collect_environment.close()
+            if isinstance(self.msrl.collect_environment, nn.CellList):
+                for env in self.msrl.collect_environment:
+                    env.close()
+            else:
+                self.msrl.collect_environment.close()
         if self.msrl.eval_environment is not None:
-            self.msrl.eval_environment.close()
+            if isinstance(self.msrl.eval_environment, nn.CellList):
+                for env in self.msrl.eval_environment:
+                    env.close()
+            else:
+                self.msrl.eval_environment.close()

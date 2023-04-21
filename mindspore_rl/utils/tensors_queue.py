@@ -17,14 +17,15 @@ TensorsQueue, each element in the queue is a list of tensors.
 """
 from __future__ import absolute_import
 
+from mindspore import _checkparam as validator
+from mindspore import context
+from mindspore.common import dtype as mstype
 from mindspore.nn.cell import Cell
 from mindspore.ops.operations import _rl_inner_ops as rl_ops
-from mindspore.common import dtype as mstype
-from mindspore import _checkparam as validator
 
 
 class TensorsQueue(Cell):
-    r'''
+    r"""
     TensorsQueue: a queue which stores tensors lists.
 
     .. warning::
@@ -53,22 +54,34 @@ class TensorsQueue(Cell):
         >>> tq = TensorsQueue(dtype=ms.float32, shapes=((2, 2), (1,)), size=5)
         >>> tq.put((data1, data2))
         >>> ans = tq.pop()
-    '''
+    """
 
     def __init__(self, dtype, shapes, size=0, name="TQ"):
         """Initialize TensorsQueue"""
+        # pylint: disable=R1725
         super(TensorsQueue, self).__init__()
-        validator.check_subclass("dtype", dtype, mstype.number_type + (mstype.bool_,), self.cls_name)
+        validator.check_subclass(
+            "dtype", dtype, mstype.number_type + (mstype.bool_,), self.cls_name
+        )
         validator.check_int(size, 0, validator.GE, "size", self.cls_name)
         elements_num = len(shapes)
         validator.check_int(elements_num, 1, validator.GE, "len(shapes)", self.cls_name)
-        self.handle_ = rl_ops.TensorsQueueCreate(dtype, shapes, size, name)()
+        handle = rl_ops.TensorsQueueCreate(dtype, shapes, size, name)
         self.tensors_q_put = rl_ops.TensorsQueuePut(dtype, shapes)
         self.tensors_q_get = rl_ops.TensorsQueueGet(dtype, shapes)
         self.tensors_q_pop = rl_ops.TensorsQueueGet(dtype, shapes, pop_after_get=True)
         self.tensors_q_clear = rl_ops.TensorsQueueClear()
         self.tensors_q_close = rl_ops.TensorsQueueClose()
         self.tensors_q_size = rl_ops.TensorsQueueSize()
+        if context.get_context("device_target") in ["Ascend"]:
+            handle.add_prim_attr("primitive_target", "CPU")
+            self.tensors_q_put.add_prim_attr("primitive_target", "CPU")
+            self.tensors_q_get.add_prim_attr("primitive_target", "CPU")
+            self.tensors_q_pop.add_prim_attr("primitive_target", "CPU")
+            self.tensors_q_clear.add_prim_attr("primitive_target", "CPU")
+            self.tensors_q_close.add_prim_attr("primitive_target", "CPU")
+            self.tensors_q_size.add_prim_attr("primitive_target", "CPU")
+        self.handle_ = handle()
 
     def put(self, element):
         """

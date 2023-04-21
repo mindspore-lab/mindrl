@@ -71,7 +71,7 @@ Evaluate for episode 590 total rewards is 200.000
 ### Eval
 
 ```shell
-> cd example/ac/scripts
+> cd example/pg/scripts
 > bash run_standalone_eval.sh [CKPT_FILE_PATH] [DEVICE_TARGET](optional)
 ```
 
