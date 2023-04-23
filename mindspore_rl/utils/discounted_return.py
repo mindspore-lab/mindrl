@@ -43,6 +43,7 @@ class DiscountedReturn(nn.Cell):
           The data type must be bool.
         - **last_state_value** (Tensor) - The value after final step of last episode.
           Tensor of shape :math:`(Batch, ...)`
+        - **dtype** (mindspore.dtype): Data type for the output. Default: mindspore.float32.
 
     Returns:
         Discounted return.

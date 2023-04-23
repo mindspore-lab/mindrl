@@ -13,14 +13,13 @@
 # limitations under the License.
 # ============================================================================
 """MAPPO Trainer"""
-#pylint: disable=W0613
+# pylint: disable=W0613
 import mindspore as ms
-from mindspore.common.api import ms_function
-from mindspore import Tensor, Parameter, set_seed
+from mindspore import Parameter, Tensor, set_seed
 from mindspore.ops import operations as P
 
-from mindspore_rl.utils.callback import CallbackParam, CallbackManager
 from mindspore_rl.agent.trainer import Trainer
+from mindspore_rl.utils.callback import CallbackManager, CallbackParam
 
 set_seed(19)
 
@@ -29,7 +28,7 @@ class MAPPOTrainer(Trainer):
     """This is the trainer class of MAPPO algorithm. It arranges the MAPPO algorithm"""
 
     def __init__(self, msrl, params):
-        super(MAPPOTrainer, self).__init__(msrl)
+        super().__init__(msrl)
         self.msrl = msrl
         self.params = params
         self.zero = Tensor(0, ms.int32)
@@ -53,31 +52,45 @@ class MAPPOTrainer(Trainer):
 
         self.num_agent = self.msrl.num_agent
         self.local_obs_dim = self.msrl.collect_environment.observation_space.shape[-1]
-        self.global_obs_dim = self.msrl.collect_environment.config['global_observation_dim']
+        self.global_obs_dim = self.msrl.collect_environment.config[
+            "global_observation_dim"
+        ]
 
-        self.concated_action = Parameter(self.zeros(
-            (self.num_agent, 128, 1), ms.int32), requires_grad=False)
-        self.concated_log_prob = Parameter(self.zeros(
-            (self.num_agent, 128, 1), ms.float32), requires_grad=False)
-        self.concated_ht_actor = Parameter(self.zeros(
-            (self.num_agent, 128, 1, 64), ms.float32), requires_grad=False)
-        self.concated_value_prediction = Parameter(self.zeros(
-            (self.num_agent, 128, 1), ms.float32), requires_grad=False)
-        self.concated_ht_critic = Parameter(self.zeros(
-            (self.num_agent, 128, 1, 64), ms.float32), requires_grad=False)
-        self.onehot_action = Parameter(self.zeros(
-            (128, self.num_agent, 5), ms.float32), requires_grad=False)
+        self.concated_action = Parameter(
+            self.zeros((self.num_agent, 128, 1), ms.int32), requires_grad=False
+        )
+        self.concated_log_prob = Parameter(
+            self.zeros((self.num_agent, 128, 1), ms.float32), requires_grad=False
+        )
+        self.concated_ht_actor = Parameter(
+            self.zeros((self.num_agent, 128, 1, 64), ms.float32), requires_grad=False
+        )
+        self.concated_value_prediction = Parameter(
+            self.zeros((self.num_agent, 128, 1), ms.float32), requires_grad=False
+        )
+        self.concated_ht_critic = Parameter(
+            self.zeros((self.num_agent, 128, 1, 64), ms.float32), requires_grad=False
+        )
+        self.onehot_action = Parameter(
+            self.zeros((128, self.num_agent, 5), ms.float32), requires_grad=False
+        )
 
-        self.agent_last_local_obs = Parameter(self.zeros(
-            (128, self.num_agent, self.local_obs_dim), ms.float32), requires_grad=False)
-        self.agent_last_global_obs = Parameter(self.zeros(
-            (128, self.global_obs_dim), ms.float32), requires_grad=False)
-        self.agent_last_hn_actor = Parameter(self.zeros(
-            (self.num_agent, 128, 1, 64), ms.float32), requires_grad=False)
-        self.agent_last_hn_critic = Parameter(self.zeros(
-            (self.num_agent, 128, 1, 64), ms.float32), requires_grad=False)
+        self.agent_last_local_obs = Parameter(
+            self.zeros((128, self.num_agent, self.local_obs_dim), ms.float32),
+            requires_grad=False,
+        )
+        self.agent_last_global_obs = Parameter(
+            self.zeros((128, self.global_obs_dim), ms.float32), requires_grad=False
+        )
+        self.agent_last_hn_actor = Parameter(
+            self.zeros((self.num_agent, 128, 1, 64), ms.float32), requires_grad=False
+        )
+        self.agent_last_hn_critic = Parameter(
+            self.zeros((self.num_agent, 128, 1, 64), ms.float32), requires_grad=False
+        )
         self.agent_last_mask = Parameter(
-            self.ones((self.num_agent, 128, 1), ms.float32), requires_grad=False)
+            self.ones((self.num_agent, 128, 1), ms.float32), requires_grad=False
+        )
 
     def train(self, episodes, callbacks=None, ckpt_path=None):
         """
@@ -95,7 +108,6 @@ class MAPPOTrainer(Trainer):
 
         # 1 Using `CallbackManager` to traverse each callback.
         with CallbackManager(callbacks) as callback_list:
-
             # 2 Init or restore the variables if the checkpoint files exist.
             cb_params.cur_episode = 0
             if self.vars:
@@ -104,14 +116,16 @@ class MAPPOTrainer(Trainer):
             callback_list.begin(cb_params)
 
             # 3 Get `evaluate` function if meet the conditions.
-            if 'eval_rate' in cb_params and cb_params.eval_rate > 0:
+            if "eval_rate" in cb_params and cb_params.eval_rate > 0:
                 cb_params.evaluate = self.evaluate
 
             self.init()
             self.agent_last_local_obs = Tensor(
-                self.agent_last_local_obs.asnumpy(), ms.float32)
+                self.agent_last_local_obs.asnumpy(), ms.float32
+            )
             self.agent_last_global_obs = Tensor(
-                self.agent_last_global_obs.asnumpy(), ms.float32)
+                self.agent_last_global_obs.asnumpy(), ms.float32
+            )
 
             for i in range(episodes):
                 callback_list.episode_begin(cb_params)
@@ -128,8 +142,10 @@ class MAPPOTrainer(Trainer):
                 elif len(ans) == 4:
                     loss, rewards, steps, others = ans
                 else:
-                    raise RuntimeError("The output number of function `train_one_episode` must be 3 or 4, \
-                        and represent for `loss, rewards, steps, [optional]others.` in order")
+                    raise RuntimeError(
+                        "The output number of function `train_one_episode` must be 3 or 4, \
+                        and represent for `loss, rewards, steps, [optional]others.` in order"
+                    )
 
                 cb_params.loss = loss
                 cb_params.total_rewards = rewards
@@ -139,8 +155,8 @@ class MAPPOTrainer(Trainer):
                 cb_params.cur_episode = i + 1
 
                 for j in range(self.num_agent):
-                    self.msrl.buffers['local_replaybuffer'][j].reset()
-                self.msrl.buffers['global_replaybuffer'].reset()
+                    self.msrl.buffers["local_replaybuffer"][j].reset()
+                self.msrl.buffers["global_replaybuffer"].reset()
 
             callback_list.end(cb_params)
             for collect_env in self.msrl.collect_environment.mpe_env_procs:
@@ -149,37 +165,41 @@ class MAPPOTrainer(Trainer):
             for eval_env in self.msrl.eval_environment.mpe_env_procs:
                 eval_env.terminate()
 
-    @ms_function
+    @ms.jit
     def init(self):
         """Init method, it will be called once"""
         # ---------------------- initialize ------------------------- #
         state = self.msrl.collect_environment.reset()
         self.agent_last_local_obs = state
-        self.agent_last_global_obs = self.reshape(
-            state, (128, self.global_obs_dim))
+        self.agent_last_global_obs = self.reshape(state, (128, self.global_obs_dim))
         # ------------------------------------------------------------ #
         return self.true
 
-    @ms_function
+    @ms.jit
     def train_one_episode(self):
         """the algorithm in one episode"""
         # ----------------------------------------- actor -------------------------------------------
 
         zero_reward = self.zeros((self.num_agent, 128, 1), ms.float32)
 
-        local_replaybuffer = self.msrl.buffers['local_replaybuffer']
-        global_replaybuffer = self.msrl.buffers['global_replaybuffer']
+        local_replaybuffer = self.msrl.buffers["local_replaybuffer"]
+        global_replaybuffer = self.msrl.buffers["global_replaybuffer"]
 
         agent_num = 0
         while agent_num < self.num_agent:
-            local_replaybuffer[agent_num]([self.agent_last_local_obs[:, agent_num],
-                                           self.concated_ht_actor[agent_num, :],
-                                           self.concated_ht_critic[agent_num, :],
-                                           self.agent_last_mask[agent_num, :],
-                                           self.concated_action[agent_num, :],
-                                           self.concated_log_prob[agent_num, :],
-                                           self.concated_value_prediction[agent_num, :],
-                                           zero_reward[agent_num, :]], self.true)
+            local_replaybuffer[agent_num](
+                [
+                    self.agent_last_local_obs[:, agent_num],
+                    self.concated_ht_actor[agent_num, :],
+                    self.concated_ht_critic[agent_num, :],
+                    self.agent_last_mask[agent_num, :],
+                    self.concated_action[agent_num, :],
+                    self.concated_log_prob[agent_num, :],
+                    self.concated_value_prediction[agent_num, :],
+                    zero_reward[agent_num, :],
+                ],
+                self.true,
+            )
             agent_num += 1
         global_replaybuffer([self.agent_last_global_obs], self.true)
 
@@ -195,12 +215,22 @@ class MAPPOTrainer(Trainer):
             ht_critic_list = []
 
             while num_agent < self.num_agent:
-                samples = [self.agent_last_local_obs[:, num_agent], self.agent_last_global_obs,
-                           self.agent_last_hn_actor[num_agent], self.agent_last_hn_critic[num_agent],
-                           self.agent_last_mask[num_agent]]
+                samples = [
+                    self.agent_last_local_obs[:, num_agent],
+                    self.agent_last_global_obs,
+                    self.agent_last_hn_actor[num_agent],
+                    self.agent_last_hn_critic[num_agent],
+                    self.agent_last_mask[num_agent],
+                ]
 
-                onehot_action, actions, log_prob, ht_actor, \
-                    value_prediction, ht_critic = self.msrl.agent[num_agent](1, samples)
+                (
+                    onehot_action,
+                    actions,
+                    log_prob,
+                    ht_actor,
+                    value_prediction,
+                    ht_critic,
+                ) = self.msrl.agent[num_agent](1, samples)
 
                 onehot_list.append(onehot_action)
                 action_list.append(actions)
@@ -219,13 +249,16 @@ class MAPPOTrainer(Trainer):
             ht_critic_list = self.stack_first(ht_critic_list)
 
             new_local_obs, rewards, dones = self.msrl.collect_environment.step(
-                (action_list.transpose(1, 0, 2)).astype(ms.int32))
+                (action_list.transpose(1, 0, 2)).astype(ms.int32)
+            )
+            if dones.all():
+                new_local_obs = self.msrl.collect_environment.reset()
 
             dones = self.reshape(
-                (1-dones).astype(ms.float32), (self.num_agent, 128, 1, 1))
+                (1 - dones).astype(ms.float32), (self.num_agent, 128, 1, 1)
+            )
 
-            new_global_obs = self.reshape(
-                new_local_obs, (128, self.global_obs_dim))
+            new_global_obs = self.reshape(new_local_obs, (128, self.global_obs_dim))
 
             masked_concated_ht_actor = ht_actor_list * dones
             masked_concated_ht_critic = ht_critic_list * dones
@@ -234,14 +267,19 @@ class MAPPOTrainer(Trainer):
 
             agent_num = 0
             while agent_num < self.num_agent:
-                local_replaybuffer[agent_num]([new_local_obs[:, agent_num],
-                                               masked_concated_ht_actor[agent_num, :],
-                                               masked_concated_ht_critic[agent_num, :],
-                                               episode_masks[agent_num, :],
-                                               action_list[agent_num, :],
-                                               log_prob_list[agent_num, :],
-                                               value_prediction_list[agent_num, :],
-                                               rewards[:, agent_num]], self.true)
+                local_replaybuffer[agent_num](
+                    [
+                        new_local_obs[:, agent_num],
+                        masked_concated_ht_actor[agent_num, :],
+                        masked_concated_ht_critic[agent_num, :],
+                        episode_masks[agent_num, :],
+                        action_list[agent_num, :],
+                        log_prob_list[agent_num, :],
+                        value_prediction_list[agent_num, :],
+                        rewards[:, agent_num],
+                    ],
+                    self.true,
+                )
                 agent_num += 1
             global_replaybuffer([new_global_obs], self.true)
 
@@ -254,14 +292,16 @@ class MAPPOTrainer(Trainer):
             duration += 1
 
         # ----------------------------------------- learner -------------------------------------------
-        dummy = [self.agent_last_local_obs[:, 0],
-                 self.concated_ht_actor[0, :],
-                 self.concated_ht_critic[0, :],
-                 self.agent_last_mask[0, :],
-                 self.concated_action[0, :],
-                 self.concated_log_prob[0, :],
-                 self.concated_value_prediction[0, :],
-                 zero_reward[0, :]]
+        dummy = [
+            self.agent_last_local_obs[:, 0],
+            self.concated_ht_actor[0, :],
+            self.concated_ht_critic[0, :],
+            self.agent_last_mask[0, :],
+            self.concated_action[0, :],
+            self.concated_log_prob[0, :],
+            self.concated_value_prediction[0, :],
+            zero_reward[0, :],
+        ]
         dummy_2 = [self.agent_last_global_obs]
 
         agent_id = 0

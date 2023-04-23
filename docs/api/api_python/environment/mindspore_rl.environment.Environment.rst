@@ -69,9 +69,6 @@
 
         接受和环境交互的结果。
 
-        参数：
-            - **action** (Union[Tensor, np.ndarray]) - 包含动作信息的Tensor。
-
         返回：
             - **state** (Union[np.ndarray, Tensor]) - 输入动作后的环境返回的新状态。
             - **reward** (Union[np.ndarray, Tensor]) - 输入动作后环境返回的奖励。

@@ -76,7 +76,7 @@ class PythonEnvironment(Environment):
         )
 
         self._need_auto_reset = need_auto_reset
-        self._done_flag = np.array(False)
+        self._done_flag = np.zeros(self._done_space.shape, self._done_space.np_dtype)
         # Pre-run environment
         reset_out = self._reset()
         action = self._action_space.sample()
@@ -185,7 +185,7 @@ class PythonEnvironment(Environment):
         if self.should_reset(self._done_flag):
             reset_out = self.reset()
             init_reward = np.array(0, np.float32)
-            self._done_flag = np.array(False)
+            self._done_flag = np.zeros_like(self._done_flag)
             step_out = (
                 (reset_out, init_reward, self._done_flag)
                 if self._num_reset_out == 0
@@ -200,7 +200,14 @@ class PythonEnvironment(Environment):
             next_state = step_out[0].astype(self.observation_space.np_dtype)
             reward = step_out[1].astype(self.reward_space.np_dtype)
             done = step_out[2].astype(self.done_space.np_dtype)
-            if not self._done_flag:
+            done_flag = (
+                self._done_flag
+                if not (
+                    (len(self._done_flag.shape) <= 1) or (self._done_flag.shape[0] <= 1)
+                )
+                else self._done_flag.all()
+            )
+            if not done_flag:
                 self._done_flag = done
                 step_out = (
                     (next_state, reward, done, *step_out[3:])
@@ -231,7 +238,7 @@ class PythonEnvironment(Environment):
             - args (Union[np.ndarray, Tensor], optional), Support arbitrary outputs, but user needs to ensure the
                 dtype. This output is optional.
         """
-        self._done_flag = np.array(False)
+        self._done_flag = np.zeros_like(self._done_flag)
         reset_out = self._reset()
         if self._num_reset_out < 1:
             raise ValueError(
