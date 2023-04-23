@@ -1,4 +1,4 @@
-.. py:class:: mindspore_rl.environment.Space(feature_shape, dtype, low=None, high=None, batch_shape=None)
+.. py:class:: mindspore_rl.environment.Space(feature_shape, dtype, low=None, high=None, batch_shape=None, mask=None)
 
     包含环境动作/状态空间的类。
 
@@ -8,6 +8,7 @@
         - **low** (Union[int, float]，可选) - 动作/状态空间的下边界。默认：None。
         - **high** (Union[int, float]，可选) - 动作/状态空间的上边界。默认：None。
         - **batch_shape** (Union[list(int), tuple(int), int]，可选) - 矢量化的批量Shape。通常用于多环境和多智能体的场景。默认：None。
+        - **mask** (Sequence[int], 可选) - 离散动作的mask。默认None。
 
     .. py:method:: boundary
         :property:

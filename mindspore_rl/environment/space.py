@@ -46,6 +46,7 @@ class Space:
         high (Union[int, float], optional): The action/observation space upper boundary.
         batch_shape (Union[list(int), tuple(int), int], optional): The batch shape for vectorization.
           It usually be used in multi-environment and multi-agent cases.
+        mask (Sequence[int], optional): The mask for discrete action space.
 
     Examples:
         >>> action_space = Space(feature_shape=(6,), dtype=np.int32)

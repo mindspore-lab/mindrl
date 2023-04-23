@@ -1,5 +1,5 @@
 
-.. py:class:: mindspore_rl.utils.DiscountedReturn(gamma, need_bprop=False)
+.. py:class:: mindspore_rl.utils.DiscountedReturn(gamma, need_bprop=False, dtype=ms.float32)
 
     计算折扣回报。
 
@@ -16,6 +16,7 @@
         - **reward** (Tensor) - 包含多个episode的奖励序列。 张量的维度 :math:`(Timestep, Batch, ...)`。
         - **done** (Tensor) - Episode结束标识。 张量维度 :math:`(Timestep, Batch)`。
         - **last_state_value** (Tensor) - 表示最后一个epsode的最后一个step的价值， 张量的维度 :math:`(Batch, ...)`。
+        - **dtype** (mindspore.dtype) - 张量数据类型，默认值：ms.float32。
 
     返回：
         折扣回报。

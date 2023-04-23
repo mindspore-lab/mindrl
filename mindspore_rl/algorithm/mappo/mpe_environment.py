@@ -20,6 +20,7 @@ from collections import namedtuple
 import numpy as np
 
 from mindspore_rl.environment.python_environment import PythonEnvironment
+from mindspore_rl.environment.space import Space
 from mindspore_rl.environment.space_adapter import gym2ms_adapter
 
 # pylint: disable=E0402
@@ -84,7 +85,6 @@ class MultiAgentParticleEnvironment(PythonEnvironment):
         self.params = params
         self._env_name = params["name"]
         self._num_agent = params["num_agent"]
-        self._auto_reset = params.get("auto_reset", False)
         self._render_mode = params.get("render_mode", "rgb_array")
         self._env_id = env_id
 
@@ -117,17 +117,22 @@ class MultiAgentParticleEnvironment(PythonEnvironment):
 
         action_space = gym2ms_adapter(self._env.action_space)
         observation_space = gym2ms_adapter(self._env.observation_space)
+        reward_space = Space((), np.float32, batch_shape=(self._num_agent,))
+        done_space = Space((), np.bool_, low=0, high=2, batch_shape=(self._num_agent,))
 
-        super().__init__(action_space, observation_space, config=mpe_config)
+        super().__init__(
+            action_space, observation_space, reward_space, done_space, config=mpe_config
+        )
 
     def _step(self, action):
         """Inner step function implementation"""
         onehot_action = np.eye(self._env.action_space[0].n)[action]
         local_obs, rewards, done, _ = self._env.step(onehot_action)
-        done = np.expand_dims(np.array(done), -1)
-        if self._auto_reset and done.all():
-            local_obs = self._reset()
-        return np.array(local_obs, np.float32), np.array(rewards, np.float32), done
+        return (
+            np.array(local_obs, np.float32),
+            np.array(rewards, np.float32),
+            np.array(done),
+        )
 
     def _reset(self):
         """Inner reset function implementation"""
