@@ -13,6 +13,8 @@
 # limitations under the License.
 # ============================================================================
 """A3C Trainer"""
+import os
+
 import mindspore
 from mindspore import context, jit
 from mindspore.communication.management import (
@@ -24,6 +26,7 @@ from mindspore.communication.management import (
 )
 from mindspore.ops import operations as ops
 from mindspore.ops.operations._rl_inner_ops import MuxReceive, MuxSend
+from mindspore.parallel._ps_context import _is_role_sched
 
 from mindspore_rl.agent import trainer
 from mindspore_rl.agent.trainer import Trainer
@@ -84,6 +87,9 @@ class A3CTrainer(Trainer):
             episodes *= self.actor_nums
         for i in range(episodes):
             one_step = self.train_one_episode()
+            if _is_role_sched():
+                # pylint: disable=W0212
+                os._exit(0)
             if rank_id != self.learner_rank:
                 print(
                     f"Train in actor {rank_id}, episode {i}, rewards {one_step[0].asnumpy()}, "
