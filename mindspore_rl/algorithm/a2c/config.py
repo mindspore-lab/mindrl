@@ -18,6 +18,7 @@ A2C config.
 import mindspore
 
 from mindspore_rl.environment import GymEnvironment
+from mindspore_rl.environment.pyfunc_wrapper import PyFuncWrapper
 
 from .a2c import A2CActor, A2CLearner, A2CPolicyAndNetwork
 
@@ -60,11 +61,13 @@ algorithm_config = {
     "collect_environment": {
         "number": 1,
         "type": GymEnvironment,
+        "wrappers": [PyFuncWrapper],
         "params": collect_env_params,
     },
     "eval_environment": {
         "number": 1,
         "type": GymEnvironment,
+        "wrappers": [PyFuncWrapper],
         "params": collect_env_params,
     },
 }

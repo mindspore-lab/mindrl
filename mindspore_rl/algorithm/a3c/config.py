@@ -17,51 +17,55 @@ A3C config.
 """
 
 from mindspore_rl.environment import GymEnvironment
-from .a3c import A3CPolicyAndNetwork, A3CLearner, A3CActor
+from mindspore_rl.environment.pyfunc_wrapper import PyFuncWrapper
 
-collect_env_params = {'name': 'CartPole-v0', 'seed': 42,}
-eval_env_params = {'name': 'CartPole-v0'}
+from .a3c import A3CActor, A3CLearner, A3CPolicyAndNetwork
+
+collect_env_params = {
+    "name": "CartPole-v0",
+    "seed": 42,
+}
+eval_env_params = {"name": "CartPole-v0"}
 policy_params = {
-    'state_space_dim': 4,
-    'action_space_dim': 2,
-    'hidden_size': 256,
-    'gamma': 0.99,
+    "state_space_dim": 4,
+    "action_space_dim": 2,
+    "hidden_size": 256,
+    "gamma": 0.99,
 }
 learner_params = {
-    'lr': 0.01,
-    'state_space_dim': 4,
-    'action_space_dim': 2,
+    "lr": 0.01,
+    "state_space_dim": 4,
+    "action_space_dim": 2,
 }
 algorithm_config = {
-    'actor': {
-        'number': 3,
-        'type': A3CActor,
-        'params': policy_params,
-        'policies': [],
-        'networks': ['a3c_net'],
-        'envirnment': True,
-        'share_env': False,
+    "actor": {
+        "number": 3,
+        "type": A3CActor,
+        "params": policy_params,
+        "policies": [],
+        "networks": ["a3c_net"],
+        "envirnment": True,
+        "share_env": False,
     },
-    'learner': {
-        'number': 1,
-        'type': A3CLearner,
-        'params': learner_params,
-        'networks': ['a3c_net_learn', 'a3c_net_copy']
+    "learner": {
+        "number": 1,
+        "type": A3CLearner,
+        "params": learner_params,
+        "networks": ["a3c_net_learn", "a3c_net_copy"],
     },
-    'policy_and_network': {
-        'type': A3CPolicyAndNetwork,
-        'params': policy_params
+    "policy_and_network": {"type": A3CPolicyAndNetwork, "params": policy_params},
+    "collect_environment": {
+        "number": 1,
+        "type": GymEnvironment,
+        "wrappers": [PyFuncWrapper],
+        "params": collect_env_params,
+        "share_env": False,
     },
-    'collect_environment': {
-        'number': 1,
-        'type': GymEnvironment,
-        'params': collect_env_params,
-        'share_env': False,
-    },
-    'eval_environment': {
-        'number': 1,
-        'type': GymEnvironment,
-        'params': collect_env_params,
-        'share_env': True,
+    "eval_environment": {
+        "number": 1,
+        "type": GymEnvironment,
+        "wrappers": [PyFuncWrapper],
+        "params": collect_env_params,
+        "share_env": True,
     },
 }

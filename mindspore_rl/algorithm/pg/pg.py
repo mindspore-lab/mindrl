@@ -112,6 +112,8 @@ class PGActor(Actor):
             action = self.collect_policy(ts0)
             action = self.cast(action, mindspore.int32)
             new_state, reward, done = self._environment.step(action)
+            reward = self.expand_dims(reward, 0)
+            done = self.expand_dims(done, 0)
             return done, reward, new_state, action
         if phase == 3:
             # Evaluate the trained policy
@@ -120,6 +122,8 @@ class PGActor(Actor):
             new_state, reward, done = self._eval_env.step(
                 self.cast(action, mindspore.int32)
             )
+            reward = self.expand_dims(reward, 0)
+            done = self.expand_dims(done, 0)
             return done, reward, new_state
 
         self.print("Phase is incorrect")

@@ -251,8 +251,7 @@ class PyFuncWrapper(Environment):
         if self._num_reset_out == 1:
             state = self.reset_ops()[0]
             return state
-        if self._num_reset_out != 1:
-            return self.reset_ops()
+        return self.reset_ops()
 
     def step(self, action: Tensor):
         r"""

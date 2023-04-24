@@ -17,50 +17,51 @@ AC config.
 """
 
 from mindspore_rl.environment import GymEnvironment
-from .ac import ACPolicyAndNetwork, ACLearner, ACActor
+from mindspore_rl.environment.pyfunc_wrapper import PyFuncWrapper
 
-collect_env_params = {'name': 'CartPole-v0', 'seed': 42}
-eval_env_params = {'name': 'CartPole-v0'}
+from .ac import ACActor, ACLearner, ACPolicyAndNetwork
+
+collect_env_params = {"name": "CartPole-v0", "seed": 42}
+eval_env_params = {"name": "CartPole-v0"}
 policy_params = {
-    'state_space_dim': 4,
-    'action_space_dim': 2,
-    'hidden_size': 20,
+    "state_space_dim": 4,
+    "action_space_dim": 2,
+    "hidden_size": 20,
 }
 trainer_params = {
-    'num_evaluate_episode': 10,
-    'ckpt_path': './ckpt',
+    "num_evaluate_episode": 10,
+    "ckpt_path": "./ckpt",
 }
 learner_params = {
-    'gamma': 0.9,
-    'state_space_dim': 4,
-    'action_space_dim': 2,
-    'alr': 0.001,
-    'clr': 0.01,
+    "gamma": 0.9,
+    "state_space_dim": 4,
+    "action_space_dim": 2,
+    "alr": 0.001,
+    "clr": 0.01,
 }
 algorithm_config = {
-    'actor': {
-        'number': 1,
-        'type': ACActor,
-        'policies': ['collect_policy', 'eval_policy'],
+    "actor": {
+        "number": 1,
+        "type": ACActor,
+        "policies": ["collect_policy", "eval_policy"],
     },
-    'learner': {
-        'number': 1,
-        'type': ACLearner,
-        'params': learner_params,
-        'networks': ['actor_net', 'critic_net']
+    "learner": {
+        "number": 1,
+        "type": ACLearner,
+        "params": learner_params,
+        "networks": ["actor_net", "critic_net"],
     },
-    'policy_and_network': {
-        'type': ACPolicyAndNetwork,
-        'params': policy_params
+    "policy_and_network": {"type": ACPolicyAndNetwork, "params": policy_params},
+    "collect_environment": {
+        "number": 1,
+        "type": GymEnvironment,
+        "wrappers": [PyFuncWrapper],
+        "params": collect_env_params,
     },
-    'collect_environment': {
-        'number': 1,
-        'type': GymEnvironment,
-        'params': collect_env_params
-    },
-    'eval_environment': {
-        'number': 1,
-        'type': GymEnvironment,
-        'params': collect_env_params
+    "eval_environment": {
+        "number": 1,
+        "type": GymEnvironment,
+        "wrappers": [PyFuncWrapper],
+        "params": collect_env_params,
     },
 }

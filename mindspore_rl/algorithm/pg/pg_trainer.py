@@ -90,7 +90,7 @@ class PGTrainer(Trainer):
     @jit
     def evaluate(self):
         """evaluate"""
-        total_reward = self.zero_value
+        total_reward = Tensor(0, mindspore.float32)
         eval_iter = self.zero_value
         while self.less(eval_iter, self.num_evaluate_episode):
             episode_reward = self.zero_value

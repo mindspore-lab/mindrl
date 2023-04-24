@@ -48,7 +48,7 @@ class DoubleDQNSession(Session):
         config.algorithm_config["replay_buffer"]["data_shape"] = [
             env.observation_space.shape,
             (1,),
-            env.reward_space.shape,
+            (1,),
             env.observation_space.shape,
         ]
         config.algorithm_config["replay_buffer"]["data_type"] = [

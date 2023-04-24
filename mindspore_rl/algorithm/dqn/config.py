@@ -16,59 +16,63 @@
 DQN config.
 """
 import mindspore
-from mindspore_rl.environment import GymEnvironment
+
 from mindspore_rl.core.uniform_replay_buffer import UniformReplayBuffer
+from mindspore_rl.environment import GymEnvironment
+from mindspore_rl.environment.pyfunc_wrapper import PyFuncWrapper
+
 from .dqn import DQNActor, DQNLearner, DQNPolicy
 
-learner_params = {'gamma': 0.99, 'lr': 0.001}
+learner_params = {"gamma": 0.99, "lr": 0.001}
 trainer_params = {
-    'num_evaluate_episode': 10,
-    'ckpt_path': './ckpt',
-    'save_per_episode': 50,
-    'eval_per_episode': 10,
+    "num_evaluate_episode": 10,
+    "ckpt_path": "./ckpt",
+    "save_per_episode": 50,
+    "eval_per_episode": 10,
 }
 
-collect_env_params = {'name': 'CartPole-v0'}
-eval_env_params = {'name': 'CartPole-v0'}
+collect_env_params = {"name": "CartPole-v0"}
+eval_env_params = {"name": "CartPole-v0"}
 
 policy_params = {
-    'epsi_high': 0.1,
-    'epsi_low': 0.1,
-    'decay': 200,
-    'state_space_dim': 0,
-    'action_space_dim': 0,
-    'hidden_size': 100,
-    'compute_type': mindspore.float32
+    "epsi_high": 0.1,
+    "epsi_low": 0.1,
+    "decay": 200,
+    "state_space_dim": 0,
+    "action_space_dim": 0,
+    "hidden_size": 100,
+    "compute_type": mindspore.float32,
 }
 
 algorithm_config = {
-    'actor': {
-        'number': 1,
-        'type': DQNActor,
-        'policies': ['init_policy', 'collect_policy', 'evaluate_policy'],
+    "actor": {
+        "number": 1,
+        "type": DQNActor,
+        "policies": ["init_policy", "collect_policy", "evaluate_policy"],
     },
-    'learner': {
-        'number': 1,
-        'type': DQNLearner,
-        'params': learner_params,
-        'networks': ['policy_network', 'target_network']
+    "learner": {
+        "number": 1,
+        "type": DQNLearner,
+        "params": learner_params,
+        "networks": ["policy_network", "target_network"],
     },
-    'policy_and_network': {
-        'type': DQNPolicy,
-        'params': policy_params
+    "policy_and_network": {"type": DQNPolicy, "params": policy_params},
+    "collect_environment": {
+        "number": 1,
+        "type": GymEnvironment,
+        "wrappers": [PyFuncWrapper],
+        "" "params": collect_env_params,
     },
-    'collect_environment': {
-        'number': 1,
-        'type': GymEnvironment,
-        'params': collect_env_params
+    "eval_environment": {
+        "number": 1,
+        "type": GymEnvironment,
+        "wrappers": [PyFuncWrapper],
+        "params": eval_env_params,
     },
-    'eval_environment': {
-        'number': 1,
-        'type': GymEnvironment,
-        'params': eval_env_params
+    "replay_buffer": {
+        "number": 1,
+        "type": UniformReplayBuffer,
+        "capacity": 100000,
+        "sample_size": 64,
     },
-    'replay_buffer': {'number': 1,
-                      'type': UniformReplayBuffer,
-                      'capacity': 100000,
-                      'sample_size': 64},
 }
