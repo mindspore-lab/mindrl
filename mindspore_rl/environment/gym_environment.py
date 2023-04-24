@@ -16,21 +16,22 @@
 The GymEnvironment base class.
 """
 
+from operator import itemgetter
+from typing import Union
+
 # pylint: disable=W0223
 # pylint: disable=W0707
 import gym
 import numpy as np
-from gym import spaces
-from mindspore.ops import operations as P
 from packaging import version
 
-from mindspore_rl.environment.environment import Environment
-from mindspore_rl.environment.space import Space
+from mindspore_rl.environment.python_environment import PythonEnvironment
+from mindspore_rl.environment.space_adapter import gym2ms_adapter
 
 is_old_gym = version.parse(gym.__version__) < version.parse("0.26.0")
 
 
-class GymEnvironment(Environment):
+class GymEnvironment(PythonEnvironment):
     """
     The GymEnvironment class is a wrapper that encapsulates `Gym <https://gym.openai.com/>`_ to
     provide the ability to interact with Gym environments in MindSpore Graph Mode.
@@ -59,110 +60,24 @@ class GymEnvironment(Environment):
     """
 
     def __init__(self, params, env_id=0):
-        super().__init__()
-        self.params = params
+        # Obtain parameters
         self._name = params["name"]
-        self._seed = params.get("seed")
-        self._env = gym.make(self._name)
-        self._env_id = env_id
-        if is_old_gym and (self._seed is not None):
-            self._env.seed(self._seed + self._env_id * 1000)
-        self._observation_space = self._space_adapter(self._env.observation_space)
-        self._action_space = self._space_adapter(self._env.action_space)
-        self._reward_space = Space((1,), np.float32)
-        self._done_space = Space((1,), np.bool_, low=0, high=2)
+        self._info_key = params.get("info_key", None)
+        self._render_mode = params.get("render_mode", "rgb_array")
+        self._render_kwargs = params.get("render_kwargs", {})
 
-        # reset op
-        reset_input_type = []
-        reset_input_shape = []
-        reset_output_type = [
-            self._observation_space.ms_dtype,
-        ]
-        reset_output_shape = [
-            self._observation_space.shape,
-        ]
-        self._reset_op = P.PyFunc(
-            self._reset,
-            reset_input_type,
-            reset_input_shape,
-            reset_output_type,
-            reset_output_shape,
-        )
-
-        # step op
-        step_input_type = (self._action_space.ms_dtype,)
-        step_input_shape = (self._action_space.shape,)
-        step_output_type = (
-            self.observation_space.ms_dtype,
-            self._reward_space.ms_dtype,
-            self._done_space.ms_dtype,
-        )
-        step_output_shape = (
-            self._observation_space.shape,
-            self._reward_space.shape,
-            self._done_space.shape,
-        )
-        self._step_op = P.PyFunc(
-            self._step,
-            step_input_type,
-            step_input_shape,
-            step_output_type,
-            step_output_shape,
-        )
-        self.action_dtype = self._action_space.ms_dtype
-        self.cast = P.Cast()
-
-    @property
-    def observation_space(self):
-        """
-        Get the state space of the environment.
-
-        Returns:
-            The state space of environment.
-        """
-
-        return self._observation_space
-
-    @property
-    def action_space(self):
-        """
-        Get the action space of the environment.
-
-        Returns:
-            The action space of environment.
-        """
-
-        return self._action_space
-
-    @property
-    def reward_space(self):
-        """
-        Get the reward space of the environment.
-
-        Returns:
-            The reward space of environment.
-        """
-        return self._reward_space
-
-    @property
-    def done_space(self):
-        """
-        Get the done space of the environment.
-
-        Returns:
-            The done space of environment.
-        """
-        return self._done_space
-
-    @property
-    def config(self):
-        """
-        Get the config of environment.
-
-        Returns:
-            A dictionary which contains environment's info.
-        """
-        return {}
+        # Create environment instance and adapt gym space to mindspore space
+        if is_old_gym:
+            self._env = gym.make(self._name)
+        else:
+            self._env = gym.make(self._name, render_mode=self._render_mode)
+            self._seed = params.get("seed")
+            if self._seed is not None:
+                self._seed = self._seed + env_id * 1000
+        observation_space = gym2ms_adapter(self._env.observation_space)
+        action_space = gym2ms_adapter(self._env.action_space)
+        config = self._env.spec.__dict__
+        super().__init__(action_space, observation_space, config=config)
 
     def close(self):
         r"""
@@ -174,45 +89,20 @@ class GymEnvironment(Environment):
         self._env.close()
         return True
 
-    def render(self):
+    def _render(self) -> Union[np.ndarray]:
         """
         Render the game. Only support on PyNative mode.
         """
         try:
-            self._env.render()
+            if is_old_gym:
+                img = self._env.render(self._render_mode, **self._render_kwargs)
+            else:
+                img = self._env.render(**self._render_kwargs)
         except BaseException:
             raise RuntimeError(
                 "Failed to render, run in PyNative mode and comment the ms_function."
             )
-
-    def reset(self):
-        """
-        Reset the environment to the initial state. It is always used at the beginning of each
-        episode. It will return the value of initial state.
-
-        Returns:
-            A tensor which states for the initial state of environment.
-
-        """
-
-        return self._reset_op()[0]
-
-    def step(self, action):
-        r"""
-        Execute the environment step, which means that interact with environment once.
-
-        Args:
-            action (Tensor): A tensor that contains the action information.
-
-        Returns:
-            - state (Tensor), the environment state after performing the action.
-            - reward (Tensor), the reward after performing the action.
-            - done (Tensor), whether the simulation finishes or not.
-        """
-
-        # Add cast ops for mixed precision case. Redundant cast ops will be eliminated automatically.
-        action = self.cast(action, self.action_dtype)
-        return self._step_op(action)
+        return img
 
     def _reset(self):
         """
@@ -223,15 +113,17 @@ class GymEnvironment(Environment):
         Returns:
             A numpy array which states for the initial state of environment.
         """
+        info = {}
         if is_old_gym:
             s0 = self._env.reset()
         else:
-            if self._seed is not None:
-                self._seed = self._env_id * 1000 + self._seed
-            s0, _ = self._env.reset(seed=self._seed)
-        # In some gym version, the obvervation space is announced to be float32, but get float64 from reset and step.
-        s0 = s0.astype(self.observation_space.np_dtype)
-        return s0
+            s0, info = self._env.reset(seed=self._seed)
+        if (self._info_key is None) or is_old_gym:
+            reset_out = s0
+        else:
+            info_value = map(np.array, itemgetter(*self._info_key)(info))
+            reset_out = (s0, *info_value)
+        return reset_out
 
     def _step(self, action):
         """
@@ -249,30 +141,15 @@ class GymEnvironment(Environment):
             - done (boolean), whether the simulation finishes or not.
         """
         if is_old_gym:
-            s, r, done, _ = self._env.step(action)
+            s, r, done, info = self._env.step(action)
         else:
-            s, r, term, trunc, _ = self._env.step(action)
+            s, r, term, trunc, info = self._env.step(action)
             done = term or trunc
-        # In some gym version, the obvervation space is announced to be float32, but get float64 from reset and step.
-        s = s.astype(self.observation_space.np_dtype)
-        r = np.array([r]).astype(np.float32)
-        done = np.array([done])
-        return s, r, done
-
-    def _space_adapter(self, gym_space):
-        """Transfer gym dtype to the dtype that is suitable for MindSpore"""
-        shape = gym_space.shape
-        gym_type = gym_space.dtype.type
-        # The dtype get from gym.space is np.int64, but step() accept np.int32 actually.
-        if gym_type == np.int64:
-            dtype = np.int32
-        # The float64 is not supported, cast to float32
-        elif gym_type == np.float64:
-            dtype = np.float32
+        r = np.array(r)
+        done = np.array(done)
+        if self._info_key is None:
+            step_out = (s, r, done)
         else:
-            dtype = gym_type
-
-        if isinstance(gym_space, spaces.Discrete):
-            return Space(shape, dtype, low=0, high=gym_space.n)
-
-        return Space(shape, dtype, low=gym_space.low, high=gym_space.high)
+            info_value = map(np.array, itemgetter(*self._info_key)(info))
+            step_out = (s, r, done, *info_value)
+        return step_out

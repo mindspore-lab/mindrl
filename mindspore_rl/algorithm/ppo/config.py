@@ -22,6 +22,8 @@ from mindspore_rl.distribution.distribution_policies.multi_actor_single_learner_
     MultiActorEnvSingleLearnerDP,
 )
 from mindspore_rl.environment import GymEnvironment
+from mindspore_rl.environment.pyfunc_wrapper import PyFuncWrapper
+from mindspore_rl.environment.sync_parallel_wrapper import SyncParallelWrapper
 
 from .ppo import PPOActor, PPOLearner, PPOPolicy
 
@@ -70,13 +72,15 @@ algorithm_config = {
     "policy_and_network": {"type": PPOPolicy, "params": policy_params},
     "collect_environment": {
         "number": 30,
-        "num_parallel": 5,
+        "num_parallel": 30,
         "type": GymEnvironment,
+        "wrappers": [PyFuncWrapper, SyncParallelWrapper],
         "params": collect_env_params,
     },
     "eval_environment": {
         "number": 1,
         "type": GymEnvironment,
+        "wrappers": [PyFuncWrapper, SyncParallelWrapper],
         "params": eval_env_params,
     },
     "replay_buffer": {

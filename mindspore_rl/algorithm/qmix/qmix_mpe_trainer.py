@@ -111,6 +111,7 @@ class QMIXTrainer(Trainer):
             new_local_obs, reward, done = self.msrl.collect_environment.step(
                 action.astype(ms.int32)
             )
+            done = self.expand_dims(done, -1)
             reward = reward[0]
             done = done[0]
 

@@ -21,6 +21,7 @@ from mindspore_rl.algorithm.double_dqn.double_dqn import DoubleDQNLearner
 from mindspore_rl.algorithm.dqn import DQNActor, DQNPolicy
 from mindspore_rl.core.uniform_replay_buffer import UniformReplayBuffer
 from mindspore_rl.environment import GymEnvironment
+from mindspore_rl.environment.pyfunc_wrapper import PyFuncWrapper
 
 learner_params = {"gamma": 0.99, "lr": 0.001}
 trainer_params = {
@@ -59,11 +60,13 @@ algorithm_config = {
     "collect_environment": {
         "number": 1,
         "type": GymEnvironment,
+        "wrappers": [PyFuncWrapper],
         "params": collect_env_params,
     },
     "eval_environment": {
         "number": 1,
         "type": GymEnvironment,
+        "wrappers": [PyFuncWrapper],
         "params": eval_env_params,
     },
     "replay_buffer": {

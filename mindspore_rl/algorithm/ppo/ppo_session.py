@@ -39,14 +39,14 @@ class PPOSession(Session):
             env.observation_space.ms_dtype,
         )
         action_shape, action_dtype = env.action_space.shape, env.action_space.ms_dtype
-        reward_shape, reward_dtype = env.reward_space.shape, env.reward_space.ms_dtype
+        _, reward_dtype = env.reward_space.shape, env.reward_space.ms_dtype
         mu_shape, mu_dtype = action_shape, action_dtype
         sigma_shape, sigma_dtype = action_shape, action_dtype
         replay_buffer_config = config.algorithm_config.get("replay_buffer")
         replay_buffer_config["data_shape"] = [
             (env_num, obs_shape[-1]),
             (env_num, action_shape[-1]),
-            (env_num, reward_shape[-1]),
+            (env_num, 1),
             (env_num, obs_shape[-1]),
             (env_num, mu_shape[-1]),
             (env_num, sigma_shape[-1]),
