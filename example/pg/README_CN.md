@@ -20,7 +20,7 @@ PG使用了OpenAI开发的一个强化学习环境库叫做[Gym](https://github.
 - matplotlib >=3.1.3
 - [gym](https://github.com/openai/gym) >= 0.18.3
 
-安装成功之后，可以直接通过输入如下指令来运行AC。
+安装成功之后，可以直接通过输入如下指令来运行PG。
 
 在CPU综合性能上的考虑，建议统一配置`OMP_NUM_THREADS` 的值为物理核数的1/4，比如`export OMP_NUM_THREADS=32`(需在`run_standalone_train.sh`中修改)。
 

@@ -17,6 +17,7 @@ BatchReadWrite
 """
 from __future__ import absolute_import
 
+from mindspore import context
 from mindspore.nn.cell import Cell
 from mindspore.ops.operations._rl_inner_ops import BatchAssign
 
@@ -61,10 +62,14 @@ class BatchWrite(Cell):
         >>> nets.append(source_net)
         >>> success = Write(nets[0], nets[1])()
     """
+
     def __init__(self):
         """Initialize BatchWrite"""
+        # pylint: disable=R1725
         super(BatchWrite, self).__init__()
         self.write = BatchAssign(lock=True)
+        if context.get_context("device_target") in ["Ascend"]:
+            self.write.add_prim_attr("primitive_target", "CPU")
 
     def construct(self, dst, src):
         """
@@ -122,10 +127,14 @@ class BatchRead(Cell):
         >>> success = Read(nets[0], nets[1])()
 
     """
+
     def __init__(self):
         """Initialize BatchRead"""
+        # pylint: disable=R1725
         super(BatchRead, self).__init__()
         self.read = BatchAssign(lock=False)
+        if context.get_context("device_target") in ["Ascend"]:
+            self.read.add_prim_attr("primitive_target", "CPU")
 
     def construct(self, dst, src):
         """

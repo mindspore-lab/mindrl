@@ -20,8 +20,8 @@ A3C使用了OpenAI开发的一个强化学习环境库叫做[Gym](https://github
 
 在运行A3C前，首先需要安装[MindSpore](https://www.mindspore.cn/install)和MindSpore-Reinforcement。除此之外，还需要安装以下依赖。请根据官网的教程安装。
 
-- MindSpore >= 1.9.0
-- Reinforcement >= 0.6
+- MindSpore > 2.0.0
+- Reinforcement > 0.6
 - numpy >= 1.17.0
 - [gym](https://github.com/openai/gym) >= 0.18.3
 
@@ -67,4 +67,4 @@ Train in actor 0, episode 9, rewards 56, loss 22.34567676
 
 ## 支持平台
 
-A3C算法支持GPU。
+A3C算法支持Ascend 和 GPU。
