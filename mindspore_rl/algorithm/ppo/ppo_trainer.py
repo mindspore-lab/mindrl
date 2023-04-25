@@ -48,7 +48,7 @@ class PPOTrainer(Trainer):
         }
         return trainable_variables
 
-    @ms_function
+    @mindspore.jit
     def train_one_episode(self):
         """the algorithm in one episode"""
         training_loss = self.zero
@@ -90,7 +90,7 @@ class PPOTrainer(Trainer):
         )
         return training_loss, training_reward, j
 
-    @ms_function
+    @mindspore.jit
     def evaluate(self):
         """evaluate function"""
         total_eval_reward = self.zero

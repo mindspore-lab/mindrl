@@ -85,7 +85,7 @@ class QMIXTrainer(Trainer):
         }
         return trainable_variables
 
-    @ms_function
+    @ms.jit
     def train_one_episode(self):
         total_reward = self.zero_float
         steps = 0
@@ -153,7 +153,7 @@ class QMIXTrainer(Trainer):
 
         return loss, total_reward, steps
 
-    @ms_function
+    @ms.jit
     def evaluate(self):
         """Evaluation function"""
         total_reward = self.zero_float
