@@ -14,11 +14,12 @@
 # ============================================================================
 """DDPG Trainer"""
 import mindspore
+from mindspore import Parameter, Tensor
 from mindspore.common.api import ms_function
-from mindspore import Tensor, Parameter
 from mindspore.ops import operations as P
-from mindspore_rl.agent.trainer import Trainer
+
 from mindspore_rl.agent import trainer
+from mindspore_rl.agent.trainer import Trainer
 
 
 class DDPGTrainer(Trainer):
@@ -33,35 +34,33 @@ class DDPGTrainer(Trainer):
         self.equal = P.Equal()
         self.less = P.Less()
         self.reduce_mean = P.ReduceMean()
-        self.duration = params['duration']
-        self.num_eval_episode = params['num_eval_episode']
+        self.duration = params["duration"]
+        self.num_eval_episode = params["num_eval_episode"]
         self.true = Tensor(True, mindspore.bool_)
         self.false = Tensor([False], mindspore.bool_)
         self.zero_value = Tensor(0, mindspore.float32)
         self.init_collect_size = Tensor(1000, mindspore.float32)
-        self.inited = Parameter(Tensor(False, mindspore.bool_), name='init_flag')
+        self.inited = Parameter(Tensor(False, mindspore.bool_), name="init_flag")
 
     def trainable_variables(self):
         """Trainable variables for saving."""
         trainable_variables = {"actor_net": self.msrl.actors.actor_net}
         return trainable_variables
 
-    @ms_function
+    @mindspore.jit
     def init_training(self):
         """Initialize training"""
         obs = self.msrl.collect_environment.reset()
         done = self.false
         i = self.zero_value
         while self.less(i, self.init_collect_size):
-            next_obs, actions, rewards, done = self.msrl.agent_act(
-                trainer.INIT, obs)
-            self.msrl.replay_buffer_insert(
-                [obs, actions, rewards, next_obs, done])
+            next_obs, actions, rewards, done = self.msrl.agent_act(trainer.INIT, obs)
+            self.msrl.replay_buffer_insert([obs, actions, rewards, next_obs, done])
             obs = next_obs
             i += 1
         return i
 
-    @ms_function
+    @mindspore.jit
     def train_one_episode(self):
         """the algorithm in one episode"""
         if not self.inited:
@@ -83,8 +82,7 @@ class DDPGTrainer(Trainer):
             steps += 1
         return loss, total_reward, steps
 
-
-    @ms_function
+    @mindspore.jit
     def evaluate(self):
         """evaluate function"""
         total_eval_reward = self.zero

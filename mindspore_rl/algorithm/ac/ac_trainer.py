@@ -13,23 +13,24 @@
 # limitations under the License.
 # ============================================================================
 """AC Trainer"""
-from mindspore_rl.agent.trainer import Trainer
-from mindspore_rl.agent import trainer
 import mindspore
-from mindspore.common.api import ms_function
 from mindspore import Tensor
-from mindspore.ops import operations as P
+from mindspore.common.api import ms_function
 from mindspore.common.parameter import Parameter
+from mindspore.ops import operations as P
+
+from mindspore_rl.agent import trainer
+from mindspore_rl.agent.trainer import Trainer
 
 
 class ACTrainer(Trainer):
-    '''ACTrainer'''
+    """ACTrainer"""
 
     def __init__(self, msrl, params):
         super(ACTrainer, self).__init__(msrl)
-        self.num_evaluate_episode = params['num_evaluate_episode']
-        self.zero = Parameter(Tensor(0, mindspore.float32), name='zero')
-        self.done_r = Parameter(Tensor([-20.0], mindspore.float32), name='done_r')
+        self.num_evaluate_episode = params["num_evaluate_episode"]
+        self.zero = Parameter(Tensor(0, mindspore.float32), name="zero")
+        self.done_r = Parameter(Tensor([-20.0], mindspore.float32), name="done_r")
         self.zero_value = Tensor(0, mindspore.float32)
         self.squeeze = P.Squeeze()
         self.false = Tensor(False, mindspore.bool_)
@@ -37,13 +38,13 @@ class ACTrainer(Trainer):
         self.select = P.Select()
 
     def trainable_variables(self):
-        '''Trainable variables for saving.'''
+        """Trainable variables for saving."""
         trainable_variables = {"actor_net": self.msrl.learner.actor_net}
         return trainable_variables
 
-    @ms_function
+    @mindspore.jit
     def train_one_episode(self):
-        '''Train one episode'''
+        """Train one episode"""
         state = self.msrl.collect_environment.reset()
         done = self.false
         total_reward = self.zero
@@ -62,9 +63,9 @@ class ACTrainer(Trainer):
                 break
         return loss, total_reward, steps
 
-    @ms_function
+    @mindspore.jit
     def evaluate(self):
-        '''evaluate'''
+        """evaluate"""
         total_reward = self.zero_value
         eval_iter = self.zero_value
         while self.less(eval_iter, self.num_evaluate_episode):
