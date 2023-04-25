@@ -14,11 +14,12 @@
 # ============================================================================
 """TD3 Trainer"""
 import mindspore
+from mindspore import Parameter, Tensor
 from mindspore.common.api import ms_function
-from mindspore import Tensor, Parameter
 from mindspore.ops import operations as P
-from mindspore_rl.agent.trainer import Trainer
+
 from mindspore_rl.agent import trainer
+from mindspore_rl.agent.trainer import Trainer
 
 from .td3_summary import RecordQueue
 
@@ -35,20 +36,20 @@ class TD3Trainer(Trainer):
         self.equal = P.Equal()
         self.less = P.Less()
         self.reduce_mean = P.ReduceMean()
-        self.num_eval_episode = params['num_eval_episode']
+        self.num_eval_episode = params["num_eval_episode"]
         self.true = Tensor(True, mindspore.bool_)
         self.false = Tensor([False], mindspore.bool_)
-        self.init_collect_size = Tensor(params['init_collect_size'], mindspore.float32)
-        self.inited = Parameter(Tensor(False, mindspore.bool_), name='init_flag')
-        if 'eval_episodes' in params:
-            self.eval_episodes = params['eval_episodes']
+        self.init_collect_size = Tensor(params["init_collect_size"], mindspore.float32)
+        self.inited = Parameter(Tensor(False, mindspore.bool_), name="init_flag")
+        if "eval_episodes" in params:
+            self.eval_episodes = params["eval_episodes"]
 
     def trainable_variables(self):
         """Trainable variables for saving."""
         trainable_variables = {"actor_net": self.msrl.actors.actor_net}
         return trainable_variables
 
-    @ms_function
+    @mindspore.jit
     def init_training(self):
         """Initialize training"""
         obs = self.msrl.collect_environment.reset()
@@ -61,7 +62,7 @@ class TD3Trainer(Trainer):
             i += 1
         return i
 
-    @ms_function
+    @mindspore.jit
     def train_one_episode(self):
         """the algorithm in one episode"""
         if not self.inited:
@@ -82,7 +83,7 @@ class TD3Trainer(Trainer):
             steps += 1
         return loss, total_rewards, steps
 
-    @ms_function
+    @mindspore.jit
     def evaluate(self):
         """evaluate function"""
         total_eval_reward = self.zero
@@ -112,13 +113,19 @@ class TD3Trainer(Trainer):
             raise RuntimeError("Please provide a ckpt_path.")
         self._init_or_restore(ckpt_path)
         if self.eval_episodes <= 0:
-            raise ValueError("In order to get average rewards,\
-                evaluate episodes should be larger than 0, but got {}".format(self.eval_episodes))
+            raise ValueError(
+                "In order to get average rewards,\
+                evaluate episodes should be larger than 0, but got {}".format(
+                    self.eval_episodes
+                )
+            )
         rewards = RecordQueue()
         for _ in range(self.eval_episodes):
             reward = self.evaluate()
             rewards.add(reward)
         avg_reward = rewards.mean().asnumpy()
         print("-----------------------------------------")
-        print(f"Average evaluate result is {avg_reward:.3f}, checkpoint file in {ckpt_path}")
+        print(
+            f"Average evaluate result is {avg_reward:.3f}, checkpoint file in {ckpt_path}"
+        )
         print("-----------------------------------------")

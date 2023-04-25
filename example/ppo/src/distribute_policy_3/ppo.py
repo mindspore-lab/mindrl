@@ -13,44 +13,67 @@
 # limitations under the License.
 # ============================================================================
 """PPO data parallel"""
-import time
 import argparse
-import numpy as np
+import time
+
 import mindspore
-from mindspore import context
-from mindspore import Tensor
-import mindspore.ops as ops
-import mindspore.nn.probability.distribution as msd
 import mindspore.nn as nn
-from mindspore.ops import composite as C
-from mindspore.ops import operations as P
-from mindspore.ops import functional as F
-from mindspore.common.parameter import Parameter
-from mindspore.common.initializer import initializer
+import mindspore.nn.probability.distribution as msd
+import mindspore.ops as ops
+import numpy as np
+from mindspore import Tensor, context
 from mindspore.common.api import ms_function
+from mindspore.common.initializer import initializer
+from mindspore.common.parameter import Parameter
 from mindspore.communication import get_group_size
 from mindspore.communication.management import init
+from mindspore.ops import composite as C
+from mindspore.ops import functional as F
+from mindspore.ops import operations as P
 
 from mindspore_rl.agent.actor import Actor
 from mindspore_rl.agent.learner import Learner
 from mindspore_rl.agent.trainer import Trainer
-from mindspore_rl.core import UniformReplayBuffer
+from mindspore_rl.core import Session, UniformReplayBuffer
 from mindspore_rl.environment import GymEnvironment
-from mindspore_rl.core import Session
 
 context.set_context(mode=context.GRAPH_MODE, device_target="GPU", max_call_depth=100000)
 
 init("nccl")
 
-parser = argparse.ArgumentParser(description='Set the number of actor workers.')
-parser.add_argument("-n", "--num_actor", type=int, default=2, required=True,
-                    help="The number of actor workers. Default: 2.")
-parser.add_argument("-e", "--num_collect_environment", type=int, default=30, required=True,
-                    help="The number of collect_environment. Default: 30.")
-parser.add_argument("-ep", "--num_episode", type=int, default=100, required=True,
-                    help="The number of episodes. Default: 100.")
-parser.add_argument("-duration", "--duration", type=int, default=1000, required=True,
-                    help="The duration. Default: 1000.")
+parser = argparse.ArgumentParser(description="Set the number of actor workers.")
+parser.add_argument(
+    "-n",
+    "--num_actor",
+    type=int,
+    default=2,
+    required=True,
+    help="The number of actor workers. Default: 2.",
+)
+parser.add_argument(
+    "-e",
+    "--num_collect_environment",
+    type=int,
+    default=30,
+    required=True,
+    help="The number of collect_environment. Default: 30.",
+)
+parser.add_argument(
+    "-ep",
+    "--num_episode",
+    type=int,
+    default=100,
+    required=True,
+    help="The number of episodes. Default: 100.",
+)
+parser.add_argument(
+    "-duration",
+    "--duration",
+    type=int,
+    default=1000,
+    required=True,
+    help="The duration. Default: 1000.",
+)
 args = parser.parse_args()
 actor_number = int(args.num_actor)
 environment_number = int(args.num_collect_environment)
@@ -58,8 +81,8 @@ EPISODE = int(args.num_episode)
 DURATION = int(args.duration)
 
 
-#pylint: disable=W0613
-class PPOPolicy():
+# pylint: disable=W0613
+class PPOPolicy:
     r"""
     This is PPOPolicy class. You should define your networks (PPOActorNet and PPOCriticNet here)
     which you prepare to use in the algorithm. Moreover, you should also define you loss function
@@ -72,22 +95,24 @@ class PPOPolicy():
         and outputs miu, sigma of a normal distribution
         """
 
-        def __init__(self, input_size, hidden_size1, hidden_size2, output_size,
-                     sigma_init_std):
+        def __init__(
+            self, input_size, hidden_size1, hidden_size2, output_size, sigma_init_std
+        ):
             super(PPOPolicy.PPOActorNet, self).__init__()
-            self.linear1_actor = nn.Dense(input_size,
-                                          hidden_size1,
-                                          weight_init='XavierUniform')
-            self.linear2_actor = nn.Dense(hidden_size1,
-                                          hidden_size2,
-                                          weight_init='XavierUniform')
+            self.linear1_actor = nn.Dense(
+                input_size, hidden_size1, weight_init="XavierUniform"
+            )
+            self.linear2_actor = nn.Dense(
+                hidden_size1, hidden_size2, weight_init="XavierUniform"
+            )
 
             self.linear_miu_actor = nn.Dense(hidden_size2, output_size)
             sigma_init_value = np.log(np.exp(sigma_init_std) - 1)
-            self.bias_sigma_actor = Parameter(initializer(
-                sigma_init_value, [output_size]),
-                                              name="bias_sigma_actor",
-                                              requires_grad=True)
+            self.bias_sigma_actor = Parameter(
+                initializer(sigma_init_value, [output_size]),
+                name="bias_sigma_actor",
+                requires_grad=True,
+            )
             self.tanh_actor = nn.Tanh()
 
             self.zeros_like = P.ZerosLike()
@@ -103,11 +128,11 @@ class PPOPolicy():
             miu_shape = miu.shape
             miu = self.reshape(miu, (-1, 6))
             sigma = self.softplus_actor(
-                self.bias_add(self.zeros_like(miu), self.bias_sigma_actor))
+                self.bias_add(self.zeros_like(miu), self.bias_sigma_actor)
+            )
             miu = self.reshape(miu, miu_shape)
             sigma = self.reshape(sigma, miu_shape)
             return miu, sigma
-
 
     class PPOCriticNet(nn.Cell):
         r"""
@@ -117,12 +142,12 @@ class PPOPolicy():
 
         def __init__(self, input_size, hidden_size1, hidden_size2, output_size):
             super(PPOPolicy.PPOCriticNet, self).__init__()
-            self.linear1_critic = nn.Dense(input_size,
-                                           hidden_size1,
-                                           weight_init='XavierUniform')
-            self.linear2_critic = nn.Dense(hidden_size1,
-                                           hidden_size2,
-                                           weight_init='XavierUniform')
+            self.linear1_critic = nn.Dense(
+                input_size, hidden_size1, weight_init="XavierUniform"
+            )
+            self.linear2_critic = nn.Dense(
+                hidden_size1, hidden_size2, weight_init="XavierUniform"
+            )
             self.linear3_critic = nn.Dense(hidden_size2, output_size)
             self.tanh_critic = nn.Tanh()
 
@@ -132,7 +157,6 @@ class PPOPolicy():
             x = self.tanh_critic(self.linear2_critic(x))
             x = self.linear3_critic(x)
             return x
-
 
     class PPOLossCell(nn.Cell):
         r"""
@@ -163,26 +187,27 @@ class PPOPolicy():
             # Actor Loss
             miu_new, sigma_new = self._actor_net(states)
             log_prob_new = self.reduce_sum(
-                self.norm_dist_new.log_prob(actions, miu_new, sigma_new), -1)
+                self.norm_dist_new.log_prob(actions, miu_new, sigma_new), -1
+            )
             importance_ratio = self.exp(log_prob_new - log_prob_old)
             surr = self.mul(importance_ratio, advantage)
             clip_surr = self.mul(
-                C.clip_by_value(importance_ratio, 1. - self.epsilon,
-                                1. + self.epsilon), advantage)
+                C.clip_by_value(
+                    importance_ratio, 1.0 - self.epsilon, 1.0 + self.epsilon
+                ),
+                advantage,
+            )
             actor_loss = self.reduce_mean(-self.minimum(surr, clip_surr))
 
             # Critic Loss
             value_prediction = self._critic_net(states)
             value_prediction = self.squeeze(value_prediction)
-            squared_advantage_critic = self.square(discounted_r -
-                                                   value_prediction)
-            critic_loss = self.reduce_mean(
-                squared_advantage_critic) * self.critic_coef
+            squared_advantage_critic = self.square(discounted_r - value_prediction)
+            critic_loss = self.reduce_mean(squared_advantage_critic) * self.critic_coef
 
             # Total Loss
             total_loss = actor_loss + critic_loss
             return total_loss
-
 
     class GradNorm(nn.Cell):
         r"""
@@ -211,7 +236,6 @@ class PPOPolicy():
 
             grads = self.hyper_map(F.partial(self.mul, coef), grads)
             return grads
-
 
     class AllReduce(nn.Cell):
         r"""
@@ -260,27 +284,32 @@ class PPOPolicy():
             loss = F.depend(loss, self.optimizer(grads))
             return loss
 
-
     def __init__(self, params):
         """Init for PPOPolicy"""
-        self.actor_net = self.PPOActorNet(params['state_space_dim'],
-                                          params['hidden_size1'],
-                                          params['hidden_size2'],
-                                          params['action_space_dim'],
-                                          params['sigma_init_std'])
-        self.critic_net = self.PPOCriticNet(params['state_space_dim'],
-                                            params['hidden_size1'],
-                                            params['hidden_size2'], 1)
-        trainable_parameter = self.critic_net.trainable_params() + \
-            self.actor_net.trainable_params()
-        optimizer_ppo = nn.Adam(trainable_parameter,
-                                learning_rate=params['lr'])
+        self.actor_net = self.PPOActorNet(
+            params["state_space_dim"],
+            params["hidden_size1"],
+            params["hidden_size2"],
+            params["action_space_dim"],
+            params["sigma_init_std"],
+        )
+        self.critic_net = self.PPOCriticNet(
+            params["state_space_dim"], params["hidden_size1"], params["hidden_size2"], 1
+        )
+        trainable_parameter = (
+            self.critic_net.trainable_params() + self.actor_net.trainable_params()
+        )
+        optimizer_ppo = nn.Adam(trainable_parameter, learning_rate=params["lr"])
         ppo_loss_net = self.PPOLossCell(
-            self.actor_net, self.critic_net,
-            Tensor(params['epsilon'], mindspore.float32),
-            Tensor(params['critic_coef'], mindspore.float32))
-        clip_value = Tensor(Tensor(params['grad_clip'], mindspore.float32))
-        self.ppo_net_train = self.TrainOneStepCell(ppo_loss_net, optimizer_ppo, clip_value)
+            self.actor_net,
+            self.critic_net,
+            Tensor(params["epsilon"], mindspore.float32),
+            Tensor(params["critic_coef"], mindspore.float32),
+        )
+        clip_value = Tensor(Tensor(params["grad_clip"], mindspore.float32))
+        self.ppo_net_train = self.TrainOneStepCell(
+            ppo_loss_net, optimizer_ppo, clip_value
+        )
         self.ppo_net_train.set_train(mode=True)
 
 
@@ -294,10 +323,10 @@ class PPOActor(Actor):
         """Init for PPOActor"""
         super(PPOActor, self).__init__()
         self._params_config = params
-        self._environment = params['collect_environment']
-        self._eval_env = params['eval_environment']
-        self._buffer = params['replay_buffer']
-        self._actor_net = params['actor_net']
+        self._environment = params["collect_environment"]
+        self._eval_env = params["eval_environment"]
+        self._buffer = params["replay_buffer"]
+        self._actor_net = params["actor_net"]
         self.norm_dist = msd.Normal()
         self.expand_dims = P.ExpandDims()
 
@@ -323,10 +352,10 @@ class PPOLearner(Learner):
     def __init__(self, params):
         super(PPOLearner, self).__init__()
         self._params_config = params
-        self.gamma = Tensor(self._params_config['gamma'], mindspore.float32)
-        self.iter_times = params['iter_times']
-        self._ppo_net_train = params['ppo_net_train']
-        self._critic_net = params['critic_net']
+        self.gamma = Tensor(self._params_config["gamma"], mindspore.float32)
+        self.iter_times = params["iter_times"]
+        self._ppo_net_train = params["ppo_net_train"]
+        self._critic_net = params["critic_net"]
         self.sub = P.Sub()
         self.mul = P.Mul()
         self.add = P.Add()
@@ -358,7 +387,9 @@ class PPOLearner(Learner):
                 iter_num += 1
             return discounted_r
 
-        def gae(reward_list, next_state_list, critic_value, v_last, gamma, td_lambda=0.95):
+        def gae(
+            reward_list, next_state_list, critic_value, v_last, gamma, td_lambda=0.95
+        ):
             """Compute advantage"""
             next_critic_value = self._critic_net(next_state_list)
             delta = self.squeeze(reward_list + gamma * next_critic_value - critic_value)
@@ -377,12 +408,19 @@ class PPOLearner(Learner):
         def _normalized_advantage(advantage, epsilon=1e-8):
             """Normalize the advantage"""
             adv_mean, adv_variance = self.moments(advantage)
-            normalized_advantage = (advantage - adv_mean) / \
-                (self.sqrt(adv_variance) + epsilon)
+            normalized_advantage = (advantage - adv_mean) / (
+                self.sqrt(adv_variance) + epsilon
+            )
             return normalized_advantage
 
-        state_list, action_list, reward_list, next_state_list, \
-                    miu_list, sigma_list = samples
+        (
+            state_list,
+            action_list,
+            reward_list,
+            next_state_list,
+            miu_list,
+            sigma_list,
+        ) = samples
         last_state = next_state_list[:, -1]
         rewards = self.squeeze(reward_list)
 
@@ -390,11 +428,15 @@ class PPOLearner(Learner):
         last_value_prediction = self.squeeze(last_value_prediction)
         last_value_prediction = self.zeros_like(last_value_prediction)
 
-        discounted_r = discounted_reward(rewards, last_value_prediction,
-                                         self.gamma)
+        discounted_r = discounted_reward(rewards, last_value_prediction, self.gamma)
         value_prediction = self._critic_net(state_list)
-        advantage = gae(reward_list, next_state_list, value_prediction,
-                        last_value_prediction, self.gamma)
+        advantage = gae(
+            reward_list,
+            next_state_list,
+            value_prediction,
+            last_value_prediction,
+            self.gamma,
+        )
         normalized_advantage = _normalized_advantage(advantage)
         log_prob = self.norm_dist_old.log_prob(action_list, miu_list, sigma_list)
         log_prob_old = self.reduce_sum(log_prob, -1)
@@ -402,9 +444,13 @@ class PPOLearner(Learner):
         loss = self.zero
 
         while i < self.iter_times:
-            loss_iter = self._ppo_net_train(action_list, state_list,
-                                            normalized_advantage, log_prob_old,
-                                            discounted_r)
+            loss_iter = self._ppo_net_train(
+                action_list,
+                state_list,
+                normalized_advantage,
+                log_prob_old,
+                discounted_r,
+            )
             loss += loss_iter
             i += 1
         return loss / self.iter_times
@@ -427,10 +473,10 @@ class PPOTrainer(Trainer):
         self.less = P.Less()
         self.reduce_mean = P.ReduceMean()
         self.transpose = P.Transpose()
-        self.duration = params['duration']
-        self.batch_size = params['batch_size']
-        self.eval_interval = params['eval_interval']
-        self.num_eval_episode = params['num_eval_episode']
+        self.duration = params["duration"]
+        self.batch_size = params["batch_size"]
+        self.eval_interval = params["eval_interval"]
+        self.num_eval_episode = params["num_eval_episode"]
         super(PPOTrainer, self).__init__(msrl)
 
     def train(self, episode, callbacks=None, ckpt_path=None):
@@ -439,11 +485,13 @@ class PPOTrainer(Trainer):
             st = time.time()
             _, training_reward = self.train_one_episode()
             et = time.time()
-            print(f"Episode {i}, steps: {self.duration}, "
-                  f"reward: {training_reward.asnumpy():.3f}")
-            print("training time ", et-st)
+            print(
+                f"Episode {i}, steps: {self.duration}, "
+                f"reward: {training_reward.asnumpy():.3f}"
+            )
+            print("training time ", et - st)
 
-    @ms_function
+    @mindspore.jit
     def train_one_episode(self):
         """the algorithm in one episode"""
         training_loss = self.zero
@@ -453,13 +501,17 @@ class PPOTrainer(Trainer):
 
         while self.less(j, self.duration):
             reward, new_state, action, miu, sigma = self.msrl.agent_act(state)
-            self.msrl.replay_buffer_insert([state, action, reward, new_state, miu, sigma])
+            self.msrl.replay_buffer_insert(
+                [state, action, reward, new_state, miu, sigma]
+            )
             state = new_state
             reward = self.reduce_mean(reward)
             training_reward += reward
             j += 1
 
-        replay_buffer_elements = self.msrl.get_replay_buffer_elements(transpose=True, shape=(1, 0, 2))
+        replay_buffer_elements = self.msrl.get_replay_buffer_elements(
+            transpose=True, shape=(1, 0, 2)
+        )
         state_list = replay_buffer_elements[0]
         action_list = replay_buffer_elements[1]
         reward_list = replay_buffer_elements[2]
@@ -468,11 +520,19 @@ class PPOTrainer(Trainer):
         sigma_list = replay_buffer_elements[5]
 
         training_loss += self.msrl.agent_learn(
-            (state_list, action_list, reward_list, next_state_list, miu_list, sigma_list))
+            (
+                state_list,
+                action_list,
+                reward_list,
+                next_state_list,
+                miu_list,
+                sigma_list,
+            )
+        )
         self.msrl.replay_buffer_reset()
         return training_loss, training_reward
 
-    @ms_function
+    @mindspore.jit
     def evaluation(self):
         """evaluation function"""
         total_eval_reward = self.zero
@@ -492,79 +552,86 @@ class PPOTrainer(Trainer):
         return avg_eval_reward
 
 
-env_params = {'name': 'HalfCheetah-v2'}
-eval_env_params = {'name': 'HalfCheetah-v2'}
+env_params = {"name": "HalfCheetah-v2"}
+eval_env_params = {"name": "HalfCheetah-v2"}
 
 ACT_NUM = actor_number
 COLLECT_ENV_NUM = int(environment_number / actor_number)
 print(COLLECT_ENV_NUM)
 
 policy_params = {
-    'epsilon': 0.2,
-    'lr': 1e-3,
-    'grad_clip': 3.0,
-    'hidden_size1': 200,
-    'hidden_size2': 100,
-    'sigma_init_std': 0.35,
-    'critic_coef': 0.5,
+    "epsilon": 0.2,
+    "lr": 1e-3,
+    "grad_clip": 3.0,
+    "hidden_size1": 200,
+    "hidden_size2": 100,
+    "sigma_init_std": 0.35,
+    "critic_coef": 0.5,
 }
 
 learner_params = {
-    'gamma': 0.99,
-    'state_space_dim': 0,
-    'action_space_dim': 0,
-    'iter_times': 25
+    "gamma": 0.99,
+    "state_space_dim": 0,
+    "action_space_dim": 0,
+    "iter_times": 25,
 }
 
 trainer_params = {
-    'duration': DURATION,
-    'batch_size': 1,
-    'eval_interval': 20,
-    'num_eval_episode': 3
+    "duration": DURATION,
+    "batch_size": 1,
+    "eval_interval": 20,
+    "num_eval_episode": 3,
 }
 
 ppo_algorithm_config = {
-    'actor': {
-        'number': 1,
-        'type': PPOActor,
-        'params': None,
-        'policies': [],
-        'networks': ['actor_net'],
-        'environment': True,
-        'eval_environment': True,
+    "actor": {
+        "number": 1,
+        "type": PPOActor,
+        "params": None,
+        "policies": [],
+        "networks": ["actor_net"],
+        "environment": True,
+        "eval_environment": True,
     },
-    'learner': {
-        'number': 1,
-        'type': PPOLearner,
-        'params': learner_params,
-        'networks': ['critic_net', 'ppo_net_train']
+    "learner": {
+        "number": 1,
+        "type": PPOLearner,
+        "params": learner_params,
+        "networks": ["critic_net", "ppo_net_train"],
     },
-    'replay_buffer': {
-        'type': UniformReplayBuffer,
-        'number': 1,
-        'capacity': DURATION,
-        'data_shape': [(environment_number, 17), (environment_number, 6), (environment_number, 1),
-                       (environment_number, 17), (environment_number, 6), (environment_number, 6)],
-        'data_type': [
-            mindspore.float32, mindspore.float32, mindspore.float32,
-            mindspore.float32, mindspore.float32, mindspore.float32,
+    "replay_buffer": {
+        "type": UniformReplayBuffer,
+        "number": 1,
+        "capacity": DURATION,
+        "data_shape": [
+            (environment_number, 17),
+            (environment_number, 6),
+            (environment_number, 1),
+            (environment_number, 17),
+            (environment_number, 6),
+            (environment_number, 6),
         ],
-        'sample_size': 1,
+        "data_type": [
+            mindspore.float32,
+            mindspore.float32,
+            mindspore.float32,
+            mindspore.float32,
+            mindspore.float32,
+            mindspore.float32,
+        ],
+        "sample_size": 1,
     },
-    'policy_and_network': {
-        'type': PPOPolicy,
-        'params': policy_params
+    "policy_and_network": {"type": PPOPolicy, "params": policy_params},
+    "collect_environment": {
+        "number": environment_number,
+        "type": GymEnvironment,
+        "params": env_params,
     },
-    'collect_environment': {
-        'number': environment_number,
-        'type': GymEnvironment,
-        'params': env_params
+    "eval_environment": {
+        "number": 1,
+        "type": GymEnvironment,
+        "params": eval_env_params,
     },
-    'eval_environment': {
-        'number': 1,
-        'type': GymEnvironment,
-        'params': eval_env_params
-    }
 }
 
 ppo_session = Session(ppo_algorithm_config, params=trainer_params)

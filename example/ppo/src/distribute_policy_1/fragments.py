@@ -12,25 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-'''Fragments'''
+"""Fragments"""
 import time
+
 import mindspore
-import mindspore.numpy as np
 import mindspore.nn as nn
-from mindspore.common.api import ms_function
+import mindspore.nn.probability.distribution as msd
+import mindspore.numpy as np
 from mindspore import Tensor
-from mindspore.ops import operations as P
+from mindspore.common.api import ms_function
 from mindspore.common.parameter import Parameter, ParameterTuple
 from mindspore.communication.management import NCCL_WORLD_COMM_GROUP
-from mindspore.ops.operations._inner_ops import Send, Receive
-import mindspore.nn.probability.distribution as msd
+from mindspore.ops import operations as P
+from mindspore.ops.operations._inner_ops import Receive, Send
 
 
-#pylint: disable=W0212
-#pylint: disable=W0613
-#pylint: disable=W0612
+# pylint: disable=W0212
+# pylint: disable=W0613
+# pylint: disable=W0612
 class Fragment2Kernel(nn.Cell):
-    '''Fragment2 kernel'''
+    """Fragment2 kernel"""
 
     def __init__(self, msrl, rank):
         super(Fragment2Kernel, self).__init__()
@@ -40,11 +41,13 @@ class Fragment2Kernel(nn.Cell):
         self.x = ParameterTuple(self.msrl.policy_and_network.actor_net.get_parameters())
         self.zero = Tensor(0, mindspore.float32)
 
-    @ms_function
+    @mindspore.jit
     def learn_no_comm(self):
-        '''learn'''
+        """learn"""
         training_loss = self.zero
-        replay_buffer_elements = self.msrl.get_replay_buffer_elements(transpose=True, shape=(1, 2, 0, 3))
+        replay_buffer_elements = self.msrl.get_replay_buffer_elements(
+            transpose=True, shape=(1, 2, 0, 3)
+        )
         state_list = replay_buffer_elements[0]
         action_list = replay_buffer_elements[1]
         reward_list = replay_buffer_elements[2]
@@ -52,15 +55,23 @@ class Fragment2Kernel(nn.Cell):
         miu_list = replay_buffer_elements[4]
         sigma_list = replay_buffer_elements[5]
 
-        training_loss += self.learner.learn((state_list, action_list, reward_list,
-                                             next_state_list, miu_list, sigma_list))
+        training_loss += self.learner.learn(
+            (
+                state_list,
+                action_list,
+                reward_list,
+                next_state_list,
+                miu_list,
+                sigma_list,
+            )
+        )
         self.msrl.replay_buffer_reset()
 
         return training_loss
 
 
 class FragmentActionkernel(nn.Cell):
-    '''Fragment action kernel'''
+    """Fragment action kernel"""
 
     def __init__(self, msrl, rank):
         super(FragmentActionkernel, self).__init__()
@@ -69,15 +80,37 @@ class FragmentActionkernel(nn.Cell):
         self.num_actor = msrl.num_actors
         self.num_collect_env = msrl.num_collect_env
 
-        self.state = Parameter(Tensor(np.zeros((self.num_collect_env, 17)), mindspore.float32), name="F2state")
-        self.new_state = Parameter(Tensor(np.zeros((self.num_collect_env, 17)), mindspore.float32), name="F2new_state")
-        self.action = Parameter(Tensor(np.zeros((self.num_collect_env, 6)), mindspore.float32), name="F2action")
-        self.reward = Parameter(Tensor(np.zeros((self.num_collect_env, 1)), mindspore.float32), name="F2reward")
+        self.state = Parameter(
+            Tensor(np.zeros((self.num_collect_env, 17)), mindspore.float32),
+            name="F2state",
+        )
+        self.new_state = Parameter(
+            Tensor(np.zeros((self.num_collect_env, 17)), mindspore.float32),
+            name="F2new_state",
+        )
+        self.action = Parameter(
+            Tensor(np.zeros((self.num_collect_env, 6)), mindspore.float32),
+            name="F2action",
+        )
+        self.reward = Parameter(
+            Tensor(np.zeros((self.num_collect_env, 1)), mindspore.float32),
+            name="F2reward",
+        )
 
-        self.state_fused = Parameter(Tensor(np.zeros(((self.num_actor+1)*self.num_collect_env, 17)),
-                                            mindspore.float32), name="F2state_fused")
-        self.new_state_fused = Parameter(Tensor(np.zeros(((self.num_actor+1)*self.num_collect_env, 17)),
-                                                mindspore.float32), name="F2new_state_fused")
+        self.state_fused = Parameter(
+            Tensor(
+                np.zeros(((self.num_actor + 1) * self.num_collect_env, 17)),
+                mindspore.float32,
+            ),
+            name="F2state_fused",
+        )
+        self.new_state_fused = Parameter(
+            Tensor(
+                np.zeros(((self.num_actor + 1) * self.num_collect_env, 17)),
+                mindspore.float32,
+            ),
+            name="F2new_state_fused",
+        )
 
         self.true = Tensor(1, mindspore.float32)
         self.flag = Tensor(0, mindspore.float32)
@@ -90,22 +123,24 @@ class FragmentActionkernel(nn.Cell):
 
         self.all_gather = P.AllGather(group=NCCL_WORLD_COMM_GROUP)
 
-        self.norm_dist_list = [None]*self.num_actor
+        self.norm_dist_list = [None] * self.num_actor
         for i in range(self.num_actor):
             self.norm_dist_list[i] = msd.Normal()
 
-        self.send_list = [None]*self.num_actor
+        self.send_list = [None] * self.num_actor
         for i in range(self.num_actor):
-            self.send_list[i] = Send(sr_tag=(i+1), dest_rank=(i+1), group=NCCL_WORLD_COMM_GROUP)
+            self.send_list[i] = Send(
+                sr_tag=(i + 1), dest_rank=(i + 1), group=NCCL_WORLD_COMM_GROUP
+            )
 
-    @ms_function
+    @mindspore.jit
     def gather_state(self):
         """all_gather"""
         state_fused = self.all_gather(self.state)
         self.assign(self.state_fused, state_fused)
         return self.true
 
-    @ms_function
+    @mindspore.jit
     def execution(self):
         """execution"""
         state_list = []
@@ -117,7 +152,11 @@ class FragmentActionkernel(nn.Cell):
         i = 0
         actions = self.action
         while i < self.num_actor:
-            state = self.slice(self.state_fused, ((i+1)*self.num_collect_env, 0), (self.num_collect_env, 17))
+            state = self.slice(
+                self.state_fused,
+                ((i + 1) * self.num_collect_env, 0),
+                (self.num_collect_env, 17),
+            )
             state_list.append(state)
 
             miu, sigma = self.actor_net(state)
@@ -140,13 +179,21 @@ class FragmentActionkernel(nn.Cell):
 
         i = 0
         while i < self.num_actor:
-            new_state = self.slice(new_state_fused, ((i+1)*self.num_collect_env, 0), (self.num_collect_env, 17))
+            new_state = self.slice(
+                new_state_fused,
+                ((i + 1) * self.num_collect_env, 0),
+                (self.num_collect_env, 17),
+            )
             new_state_list.append(new_state)
             i += 1
 
         i = 0
         while i < self.num_actor:
-            reward = self.slice(reward_fused, ((i+1)*self.num_collect_env, 0), (self.num_collect_env, 1))
+            reward = self.slice(
+                reward_fused,
+                ((i + 1) * self.num_collect_env, 0),
+                (self.num_collect_env, 1),
+            )
             reward_list.append(reward)
             i += 1
 
@@ -198,7 +245,7 @@ class FragmentActionkernel(nn.Cell):
 
 
 class Fragment1Kernel(nn.Cell):
-    '''Fragment 1 kernel'''
+    """Fragment 1 kernel"""
 
     def __init__(self, msrl, rank):
         super(Fragment1Kernel, self).__init__()
@@ -209,25 +256,35 @@ class Fragment1Kernel(nn.Cell):
         self.all_gather = P.AllGather(group=NCCL_WORLD_COMM_GROUP)
         self.slice = P.Slice()
         self.assign = P.Assign()
-        self.actions = Parameter(Tensor(np.ones(((self.num_actor+1), self.num_collect_env, 6)),
-                                        mindspore.float32), name="F1actions")
+        self.actions = Parameter(
+            Tensor(
+                np.ones(((self.num_actor + 1), self.num_collect_env, 6)),
+                mindspore.float32,
+            ),
+            name="F1actions",
+        )
         self.send_reward = Send(sr_tag=0, dest_rank=0, group=NCCL_WORLD_COMM_GROUP)
-        self.recv_action = Receive(sr_tag=self.rank, src_rank=0, shape=[self.num_collect_env, 6],
-                                   dtype=mindspore.float32, group=NCCL_WORLD_COMM_GROUP)
+        self.recv_action = Receive(
+            sr_tag=self.rank,
+            src_rank=0,
+            shape=[self.num_collect_env, 6],
+            dtype=mindspore.float32,
+            group=NCCL_WORLD_COMM_GROUP,
+        )
         self.depend = P.Depend()
         self.true = Tensor(1, mindspore.float32)
         self.flag = Tensor(0, mindspore.float32)
 
-    @ms_function
+    @mindspore.jit
     def gather_state(self):
-        '''gather'''
+        """gather"""
         state = self.msrl.collect_environment.reset()
         state_fused = self.all_gather(state)
         return self.true
 
-    @ms_function
+    @mindspore.jit
     def execution(self):
-        '''execute'''
+        """execute"""
         action = self.recv_action()
 
         new_state, reward, _ = self.msrl.collect_environment.step(action)
@@ -238,8 +295,8 @@ class Fragment1Kernel(nn.Cell):
         return reward
 
 
-class Fragment1():
-    '''Fragment 1'''
+class Fragment1:
+    """Fragment 1"""
 
     def __init__(self, msrl, rank, duration, episode):
         self.stepper = Fragment1Kernel(msrl, rank)
@@ -248,7 +305,7 @@ class Fragment1():
         self.reduce_mean = P.ReduceMean()
 
     def run(self):
-        '''run'''
+        """run"""
         for i in range(self.episode):
             _ = self.stepper.gather_state()
             reward = Tensor(0, mindspore.float32)
@@ -260,8 +317,9 @@ class Fragment1():
         return True
 
 
-class Fragment2():
-    '''Fragment 2'''
+class Fragment2:
+    """Fragment 2"""
+
     def __init__(self, msrl, rank, duration, episode):
         self.msrl = msrl
         self.action = FragmentActionkernel(msrl, rank)
@@ -270,7 +328,7 @@ class Fragment2():
         self.episode = episode
 
     def run(self):
-        '''run'''
+        """run"""
         for i in range(self.episode):
             start = time.perf_counter()
             flag = self.action.gather_state()
@@ -287,7 +345,7 @@ class Fragment2():
 
 
 def get_all_fragments(num_actors):
-    '''get all fragments'''
+    """get all fragments"""
     flist = [Fragment2]
     for _ in range(num_actors):
         flist.append(Fragment1)

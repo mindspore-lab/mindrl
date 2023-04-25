@@ -85,7 +85,7 @@ class QMIXTrainer(Trainer):
         }
         return trainable_variables
 
-    @ms_function
+    @ms.jit
     def train_one_episode(self):
         """the train one episode implementation"""
         done = self.false
@@ -215,7 +215,7 @@ class QMIXTrainer(Trainer):
 
         return loss, total_reward, steps, step_info
 
-    @ms_function
+    @ms.jit
     def evaluate(self):
         """Evaluation function"""
         done = self.false
