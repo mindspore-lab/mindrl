@@ -14,11 +14,12 @@
 # ============================================================================
 """DQN Trainer"""
 import mindspore as ms
+from mindspore import Parameter, Tensor
 from mindspore.common.api import ms_function
-from mindspore import Tensor, Parameter
 from mindspore.ops import operations as P
-from mindspore_rl.agent.trainer import Trainer
+
 from mindspore_rl.agent import trainer
+from mindspore_rl.agent.trainer import Trainer
 
 
 class DQNTrainer(Trainer):
@@ -31,11 +32,11 @@ class DQNTrainer(Trainer):
         self.less = P.Less()
         self.zero_value = Tensor(0, ms.float32)
         self.fill_value = Tensor(1000, ms.float32)
-        self.inited = Parameter(Tensor((False,), ms.bool_), name='init_flag')
+        self.inited = Parameter(Tensor((False,), ms.bool_), name="init_flag")
         self.mod = P.Mod()
         self.false = Tensor((False,), ms.bool_)
         self.true = Tensor((True,), ms.bool_)
-        self.num_evaluate_episode = params['num_evaluate_episode']
+        self.num_evaluate_episode = params["num_evaluate_episode"]
         self.update_period = Tensor(5, ms.float32)
 
     def trainable_variables(self):
@@ -43,7 +44,7 @@ class DQNTrainer(Trainer):
         trainable_variables = {"policy_net": self.msrl.learner.policy_network}
         return trainable_variables
 
-    @ms_function
+    @ms.jit
     def init_training(self):
         """Initialize training"""
         state = self.msrl.collect_environment.reset()
@@ -51,9 +52,9 @@ class DQNTrainer(Trainer):
         i = self.zero_value
         while self.less(i, self.fill_value):
             done, _, new_state, action, my_reward = self.msrl.agent_act(
-                trainer.INIT, state)
-            self.msrl.replay_buffer_insert(
-                [state, action, my_reward, new_state])
+                trainer.INIT, state
+            )
+            self.msrl.replay_buffer_insert([state, action, my_reward, new_state])
             state = new_state
             if done:
                 state = self.msrl.collect_environment.reset()
@@ -61,7 +62,7 @@ class DQNTrainer(Trainer):
             i += 1
         return done
 
-    @ms_function
+    @ms.jit
     def train_one_episode(self):
         """Train one episode"""
         if not self.inited:
@@ -74,9 +75,9 @@ class DQNTrainer(Trainer):
         loss = self.zero
         while not done:
             done, r, new_state, action, my_reward = self.msrl.agent_act(
-                trainer.COLLECT, state)
-            self.msrl.replay_buffer_insert(
-                [state, action, my_reward, new_state])
+                trainer.COLLECT, state
+            )
+            self.msrl.replay_buffer_insert([state, action, my_reward, new_state])
             state = new_state
             r = self.squeeze(r)
             loss = self.msrl.agent_learn(self.msrl.replay_buffer_sample())
@@ -86,7 +87,7 @@ class DQNTrainer(Trainer):
                 self.msrl.learner.update()
         return loss, total_reward, steps
 
-    @ms_function
+    @ms.jit
     def evaluate(self):
         """Policy evaluate"""
         total_reward = self.zero_value

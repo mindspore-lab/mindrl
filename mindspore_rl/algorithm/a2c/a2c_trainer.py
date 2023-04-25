@@ -15,22 +15,24 @@
 """A2C Trainer"""
 import collections
 import statistics
-import tqdm
 
-from mindspore_rl.agent.trainer import Trainer
-from mindspore_rl.agent import trainer
+import mindspore
+import tqdm
 from mindspore.ops import operations as ops
-from mindspore import ms_function
+
+from mindspore_rl.agent import trainer
+from mindspore_rl.agent.trainer import Trainer
 
 
 class A2CTrainer(Trainer):
-    '''A2CTrainer'''
+    """A2CTrainer"""
+
     def __init__(self, msrl):
         super(A2CTrainer, self).__init__(msrl)
         self.reduce_sum = ops.ReduceSum()
 
     def train(self, episodes, callbacks=None, ckpt_path=None):
-        '''Train A2C'''
+        """Train A2C"""
         running_reward = 0
         episode_reward: collections.deque = collections.deque(maxlen=100)
         with tqdm.trange(episodes) as t:
@@ -38,26 +40,36 @@ class A2CTrainer(Trainer):
                 loss, reward = self.train_one_episode()
                 episode_reward.append(reward.asnumpy().tolist())
                 running_reward = statistics.mean(episode_reward)
-                t.set_description(f'Episode {i}')
-                t.set_postfix(episode_reward=reward.asnumpy(), loss=loss.asnumpy(), running_reward=running_reward)
+                t.set_description(f"Episode {i}")
+                t.set_postfix(
+                    episode_reward=reward.asnumpy(),
+                    loss=loss.asnumpy(),
+                    running_reward=running_reward,
+                )
                 if running_reward > 195 and i >= 100:
-                    print(f'\nSolved at episode {i}: average reward: {running_reward:.2f}.')
+                    print(
+                        f"\nSolved at episode {i}: average reward: {running_reward:.2f}."
+                    )
                     break
                 if i == episodes - 1:
-                    print(f'\nFailed to solved this problem after running {episodes} episodes.')
+                    print(
+                        f"\nFailed to solved this problem after running {episodes} episodes."
+                    )
 
-    @ms_function
+    @mindspore.jit
     def train_one_episode(self):
-        '''Train one episode'''
+        """Train one episode"""
         state = self.msrl.collect_environment.reset()
-        rewards, states, actions, masks, done_num = self.msrl.agent_act(trainer.COLLECT, state)
+        rewards, states, actions, masks, done_num = self.msrl.agent_act(
+            trainer.COLLECT, state
+        )
         a2c_loss = self.msrl.agent_learn([rewards, states, actions, masks])
         return a2c_loss, done_num
 
     def evaluate(self):
-        '''Default evaluate'''
+        """Default evaluate"""
         return
 
     def trainable_variables(self):
-        '''Default trainable variables'''
+        """Default trainable variables"""
         return

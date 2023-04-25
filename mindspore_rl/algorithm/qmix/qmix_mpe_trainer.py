@@ -80,7 +80,7 @@ class QMIXTrainer(Trainer):
                                "mixer_net": self.msrl.learner.mixer_net}
         return trainable_variables
 
-    @ms_function
+    @ms.jit
     def train_one_episode(self):
 
         total_reward = self.zero_float
@@ -137,7 +137,7 @@ class QMIXTrainer(Trainer):
 
         return loss, total_reward, steps
 
-    @ms_function
+    @ms.jit
     def evaluate(self):
         """Evaluation function"""
         total_reward = self.zero_float

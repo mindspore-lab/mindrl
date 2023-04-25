@@ -16,20 +16,20 @@
 
 # pylint: disable=W0235
 import os
+
 import mindspore as ms
-from mindspore import Tensor, Parameter
-import mindspore.ops as ops
-from mindspore.ops import CustomRegOp, DataType
 import mindspore.nn as nn
-from mindspore.ops import operations as P
 import mindspore.nn.probability.distribution as msd
+import mindspore.ops as ops
+from mindspore import Parameter, Tensor
 from mindspore.common import ms_function
+from mindspore.ops import CustomRegOp, DataType
+from mindspore.ops import operations as P
 
-
-GPU_TREE_TYPE = ['GPUCommon']
-GPU_NODE_TYPE = ['GPUVanilla']
-CPU_TREE_TYPE = ['CPUCommon']
-CPU_NODE_TYPE = ['CPUVanilla', 'CPUMuzero']
+GPU_TREE_TYPE = ["GPUCommon"]
+GPU_NODE_TYPE = ["GPUVanilla"]
+CPU_TREE_TYPE = ["CPUCommon"]
+CPU_NODE_TYPE = ["CPUVanilla", "CPUMuzero"]
 
 
 class MCTS(nn.Cell):
@@ -89,16 +89,31 @@ class MCTS(nn.Cell):
         >>> print(action)
     """
 
-    def __init__(self, env, tree_type, node_type, root_player, customized_func, device,
-                 args, has_init_reward=False, max_action=-1.0, max_iteration=1000):
+    def __init__(
+        self,
+        env,
+        tree_type,
+        node_type,
+        root_player,
+        customized_func,
+        device,
+        args,
+        has_init_reward=False,
+        max_action=-1.0,
+        max_iteration=1000,
+    ):
         super().__init__()
         if not isinstance(device, str) or device not in ["GPU", "CPU"]:
-            raise ValueError("Device {} is illegal, it must in ['GPU','CPU'].".format(device))
+            raise ValueError(
+                "Device {} is illegal, it must in ['GPU','CPU'].".format(device)
+            )
 
         self._check_params(AlgorithmFunc, customized_func, "customized_func")
         self._check_params(int, max_iteration, "max_iteration")
         if max_iteration <= 0:
-            raise ValueError(f"max_iteration must be larger than 0, but got {max_iteration}")
+            raise ValueError(
+                f"max_iteration must be larger than 0, but got {max_iteration}"
+            )
 
         current_path = os.path.dirname(os.path.normpath(os.path.realpath(__file__)))
         so_path = current_path + "/libmcts_{}.so".format(device.lower())
@@ -107,223 +122,477 @@ class MCTS(nn.Cell):
         for shape in state_shape:
             state_size *= shape
 
-        if device == 'GPU':
-            self._check_element(GPU_TREE_TYPE, tree_type, 'MCTS', 'tree_type')
-            self._check_element(GPU_NODE_TYPE, node_type, 'MCTS', 'node_type')
-        elif device == 'CPU':
-            self._check_element(CPU_TREE_TYPE, tree_type, 'MCTS', 'tree_type')
-            self._check_element(CPU_NODE_TYPE, node_type, 'MCTS', 'node_type')
+        if device == "GPU":
+            self._check_element(GPU_TREE_TYPE, tree_type, "MCTS", "tree_type")
+            self._check_element(GPU_NODE_TYPE, node_type, "MCTS", "node_type")
+        elif device == "CPU":
+            self._check_element(CPU_TREE_TYPE, tree_type, "MCTS", "tree_type")
+            self._check_element(CPU_NODE_TYPE, node_type, "MCTS", "node_type")
         else:
             raise ValueError("device does not support")
-        if (root_player >= env.total_num_player() or root_player < 0):
-            raise ValueError("root_player {} is illegal, it needs to in range [0, {})".format(
-                root_player, env.total_num_player()))
+        if root_player >= env.total_num_player() or root_player < 0:
+            raise ValueError(
+                "root_player {} is illegal, it needs to in range [0, {})".format(
+                    root_player, env.total_num_player()
+                )
+            )
 
-        if (node_type == "CPUMuzero"):
-            mcts_creation_info = CustomRegOp("creation_kernel") \
-                .input(0, "discount") \
-                .input(1, "pb_c_base") \
-                .input(2, "pb_c_init") \
-                .input(3, "root_dirichlet_alpha") \
-                .input(4, "root_exploration_fraction") \
-                .output(0, "tree_handle") \
-                .dtype_format(DataType.None_None, DataType.None_None, DataType.None_None,
-                              DataType.None_None, DataType.None_None, DataType.None_None) \
-                .attr("tree_type", "required", "all", value=self._check_params(str, tree_type, "tree_type")) \
-                .attr("node_type", "required", "all", value=self._check_params(str, node_type, "node_type")) \
-                .attr("max_utility", "required", "all", value=self._check_params(float, env.max_utility(), "max_utility")) \
-                .attr("state_size", "required", "all", value=self._check_params(float, state_size, "state_size")) \
-                .attr("player", "required", "all", value=self._check_params(float, root_player, "root_player")) \
-                .attr("total_num_player", "required", "all", value=self._check_params(float,
-                                                                                      env.total_num_player(),
-                                                                                      "total_num_player")) \
-                .target(device) \
+        if node_type == "CPUMuzero":
+            mcts_creation_info = (
+                CustomRegOp("creation_kernel")
+                .input(0, "discount")
+                .input(1, "pb_c_base")
+                .input(2, "pb_c_init")
+                .input(3, "root_dirichlet_alpha")
+                .input(4, "root_exploration_fraction")
+                .output(0, "tree_handle")
+                .dtype_format(
+                    DataType.None_None,
+                    DataType.None_None,
+                    DataType.None_None,
+                    DataType.None_None,
+                    DataType.None_None,
+                    DataType.None_None,
+                )
+                .attr(
+                    "tree_type",
+                    "required",
+                    "all",
+                    value=self._check_params(str, tree_type, "tree_type"),
+                )
+                .attr(
+                    "node_type",
+                    "required",
+                    "all",
+                    value=self._check_params(str, node_type, "node_type"),
+                )
+                .attr(
+                    "max_utility",
+                    "required",
+                    "all",
+                    value=self._check_params(float, env.max_utility(), "max_utility"),
+                )
+                .attr(
+                    "state_size",
+                    "required",
+                    "all",
+                    value=self._check_params(float, state_size, "state_size"),
+                )
+                .attr(
+                    "player",
+                    "required",
+                    "all",
+                    value=self._check_params(float, root_player, "root_player"),
+                )
+                .attr(
+                    "total_num_player",
+                    "required",
+                    "all",
+                    value=self._check_params(
+                        float, env.total_num_player(), "total_num_player"
+                    ),
+                )
+                .target(device)
                 .get_op_info()
+            )
         else:
-            mcts_creation_info = CustomRegOp("creation_kernel") \
-                .input(0, "uct_value") \
-                .output(0, "tree_handle") \
-                .dtype_format(DataType.None_None, DataType.None_None) \
-                .attr("tree_type", "required", "all", value=self._check_params(str, tree_type, "tree_type")) \
-                .attr("node_type", "required", "all", value=self._check_params(str, node_type, "node_type")) \
-                .attr("max_utility", "required", "all", value=self._check_params(float, env.max_utility(), "max_utility")) \
-                .attr("state_size", "required", "all", value=self._check_params(float, state_size, "state_size")) \
-                .attr("player", "required", "all", value=self._check_params(float, root_player, "root_player")) \
-                .attr("total_num_player", "required", "all", value=self._check_params(float,
-                                                                                      env.total_num_player(),
-                                                                                      "total_num_player")) \
-                .target(device) \
+            mcts_creation_info = (
+                CustomRegOp("creation_kernel")
+                .input(0, "uct_value")
+                .output(0, "tree_handle")
+                .dtype_format(DataType.None_None, DataType.None_None)
+                .attr(
+                    "tree_type",
+                    "required",
+                    "all",
+                    value=self._check_params(str, tree_type, "tree_type"),
+                )
+                .attr(
+                    "node_type",
+                    "required",
+                    "all",
+                    value=self._check_params(str, node_type, "node_type"),
+                )
+                .attr(
+                    "max_utility",
+                    "required",
+                    "all",
+                    value=self._check_params(float, env.max_utility(), "max_utility"),
+                )
+                .attr(
+                    "state_size",
+                    "required",
+                    "all",
+                    value=self._check_params(float, state_size, "state_size"),
+                )
+                .attr(
+                    "player",
+                    "required",
+                    "all",
+                    value=self._check_params(float, root_player, "root_player"),
+                )
+                .attr(
+                    "total_num_player",
+                    "required",
+                    "all",
+                    value=self._check_params(
+                        float, env.total_num_player(), "total_num_player"
+                    ),
+                )
+                .target(device)
                 .get_op_info()
-        mcts_creation = ops.Custom("{}:MctsCreation".format(so_path), (1,),
-                                   ms.int64, "aot", reg_info=mcts_creation_info)
+            )
+        mcts_creation = ops.Custom(
+            "{}:MctsCreation".format(so_path),
+            (1,),
+            ms.int64,
+            "aot",
+            reg_info=mcts_creation_info,
+        )
         mcts_creation.add_prim_attr("primitive_target", device)
         self.tree_handle = mcts_creation(*args)
         tree_handle_numpy = float(self.tree_handle.astype(ms.float32).asnumpy()[0])
         self.tree_handle_list = [int(tree_handle_numpy)]
 
-        mcts_selection_info = CustomRegOp("selection_kernel") \
-            .output(0, "visited_node") \
-            .output(1, "last_action") \
-            .dtype_format(DataType.None_None, DataType.None_None) \
-            .attr("max_action", "required", "all", value=self._check_params(float, max_action, "max_action")) \
-            .attr("tree_handle", "required", "all", value=self._check_params(float, tree_handle_numpy, "tree_handle")) \
-            .target(device) \
+        mcts_selection_info = (
+            CustomRegOp("selection_kernel")
+            .output(0, "visited_node")
+            .output(1, "last_action")
+            .dtype_format(DataType.None_None, DataType.None_None)
+            .attr(
+                "max_action",
+                "required",
+                "all",
+                value=self._check_params(float, max_action, "max_action"),
+            )
+            .attr(
+                "tree_handle",
+                "required",
+                "all",
+                value=self._check_params(float, tree_handle_numpy, "tree_handle"),
+            )
+            .target(device)
             .get_op_info()
+        )
         if (max_action != -1) and (max_action != len(env.legal_action())):
-            raise ValueError("max_action must be -1 or the largest legal action of environment, but got ", max_action)
+            raise ValueError(
+                "max_action must be -1 or the largest legal action of environment, but got ",
+                max_action,
+            )
         if max_action != -1:
-            self.mcts_selection = ops.Custom("{}:MctsSelection".format(so_path),
-                                             ((1,), (max_action,)), (ms.int64, ms.int32),
-                                             "aot", reg_info=mcts_selection_info)
+            self.mcts_selection = ops.Custom(
+                "{}:MctsSelection".format(so_path),
+                ((1,), (max_action,)),
+                (ms.int64, ms.int32),
+                "aot",
+                reg_info=mcts_selection_info,
+            )
         else:
-            self.mcts_selection = ops.Custom("{}:MctsSelection".format(so_path),
-                                             ((1,), (1,)), (ms.int64, ms.int32),
-                                             "aot", reg_info=mcts_selection_info)
+            self.mcts_selection = ops.Custom(
+                "{}:MctsSelection".format(so_path),
+                ((1,), (1,)),
+                (ms.int64, ms.int32),
+                "aot",
+                reg_info=mcts_selection_info,
+            )
         self.mcts_selection.add_prim_attr("primitive_target", device)
 
-        mcts_expansion_info = CustomRegOp("expansion_kernel") \
-            .input(0, "visited_node") \
-            .input(1, "legal_action") \
-            .input(2, "prior") \
-            .input(3, "reward") \
-            .output(0, "success") \
-            .dtype_format(DataType.None_None, DataType.None_None, DataType.None_None,
-                          DataType.None_None, DataType.None_None) \
-            .attr("node_type", "required", "all", value=self._check_params(str, node_type, "node_type")) \
-            .attr("has_init_reward", "required", "all",
-                  value=self._check_params(bool, has_init_reward, "has_init_reward")) \
-            .attr("tree_handle", "required", "all", value=self._check_params(float, tree_handle_numpy, "tree_handle")) \
-            .target(device) \
+        mcts_expansion_info = (
+            CustomRegOp("expansion_kernel")
+            .input(0, "visited_node")
+            .input(1, "legal_action")
+            .input(2, "prior")
+            .input(3, "reward")
+            .output(0, "success")
+            .dtype_format(
+                DataType.None_None,
+                DataType.None_None,
+                DataType.None_None,
+                DataType.None_None,
+                DataType.None_None,
+            )
+            .attr(
+                "node_type",
+                "required",
+                "all",
+                value=self._check_params(str, node_type, "node_type"),
+            )
+            .attr(
+                "has_init_reward",
+                "required",
+                "all",
+                value=self._check_params(bool, has_init_reward, "has_init_reward"),
+            )
+            .attr(
+                "tree_handle",
+                "required",
+                "all",
+                value=self._check_params(float, tree_handle_numpy, "tree_handle"),
+            )
+            .target(device)
             .get_op_info()
-        self.mcts_expansion = ops.Custom("{}:MctsExpansion".format(so_path), (1,),
-                                         (ms.bool_), "aot", reg_info=mcts_expansion_info)
+        )
+        self.mcts_expansion = ops.Custom(
+            "{}:MctsExpansion".format(so_path),
+            (1,),
+            (ms.bool_),
+            "aot",
+            reg_info=mcts_expansion_info,
+        )
         self.mcts_expansion.add_prim_attr("primitive_target", device)
 
-        mcts_backprop_info = CustomRegOp("backprop_kernel") \
-            .input(0, "visited_node") \
-            .input(1, "returns") \
-            .output(0, "solved") \
-            .dtype_format(DataType.None_None, DataType.None_None, DataType.None_None) \
-            .attr("tree_handle", "required", "all", value=self._check_params(float, tree_handle_numpy, "tree_handle")) \
-            .target(device) \
+        mcts_backprop_info = (
+            CustomRegOp("backprop_kernel")
+            .input(0, "visited_node")
+            .input(1, "returns")
+            .output(0, "solved")
+            .dtype_format(DataType.None_None, DataType.None_None, DataType.None_None)
+            .attr(
+                "tree_handle",
+                "required",
+                "all",
+                value=self._check_params(float, tree_handle_numpy, "tree_handle"),
+            )
+            .target(device)
             .get_op_info()
+        )
         self.mcts_backpropagation = ops.Custom(
-            "{}:MctsBackpropagation".format(so_path), (1,), (ms.bool_),
-            "aot", reg_info=mcts_backprop_info)
+            "{}:MctsBackpropagation".format(so_path),
+            (1,),
+            (ms.bool_),
+            "aot",
+            reg_info=mcts_backprop_info,
+        )
         self.mcts_backpropagation.add_prim_attr("primitive_target", device)
 
-        mcts_bestaction_info = CustomRegOp("bestaction_kernel") \
-            .output(0, "action") \
-            .dtype_format(DataType.None_None) \
-            .attr("tree_handle", "required", "all", value=self._check_params(float, tree_handle_numpy, "tree_handle")) \
-            .target(device) \
+        mcts_bestaction_info = (
+            CustomRegOp("bestaction_kernel")
+            .output(0, "action")
+            .dtype_format(DataType.None_None)
+            .attr(
+                "tree_handle",
+                "required",
+                "all",
+                value=self._check_params(float, tree_handle_numpy, "tree_handle"),
+            )
+            .target(device)
             .get_op_info()
-        self.best_action = ops.Custom("{}:BestAction".format(so_path),
-                                      (1,), (ms.int32), "aot", reg_info=mcts_bestaction_info)
+        )
+        self.best_action = ops.Custom(
+            "{}:BestAction".format(so_path),
+            (1,),
+            (ms.int32),
+            "aot",
+            reg_info=mcts_bestaction_info,
+        )
         self.best_action.add_prim_attr("primitive_target", device)
 
-        mcts_outcome_info = CustomRegOp("outcome_kernel") \
-            .input(0, "visited_node") \
-            .input(1, "reward") \
-            .output(0, "success") \
-            .dtype_format(DataType.None_None, DataType.None_None, DataType.None_None) \
-            .attr("tree_handle", "required", "all", value=self._check_params(float, tree_handle_numpy, "tree_handle")) \
-            .target(device) \
+        mcts_outcome_info = (
+            CustomRegOp("outcome_kernel")
+            .input(0, "visited_node")
+            .input(1, "reward")
+            .output(0, "success")
+            .dtype_format(DataType.None_None, DataType.None_None, DataType.None_None)
+            .attr(
+                "tree_handle",
+                "required",
+                "all",
+                value=self._check_params(float, tree_handle_numpy, "tree_handle"),
+            )
+            .target(device)
             .get_op_info()
+        )
         self.update_leafnode_outcome = ops.Custom(
-            "{}:UpdateLeafNodeOutcome".format(so_path), (1,), (ms.bool_),
-            "aot", reg_info=mcts_outcome_info)
+            "{}:UpdateLeafNodeOutcome".format(so_path),
+            (1,),
+            (ms.bool_),
+            "aot",
+            reg_info=mcts_outcome_info,
+        )
         self.update_leafnode_outcome.add_prim_attr("primitive_target", device)
 
-        mcts_terminal_info = CustomRegOp("terminal_kernel") \
-            .input(0, "visited_node") \
-            .input(1, "terminal") \
-            .output(0, "success") \
-            .dtype_format(DataType.None_None, DataType.None_None, DataType.None_None) \
-            .attr("tree_handle", "required", "all", value=self._check_params(float, tree_handle_numpy, "tree_handle")) \
-            .target(device) \
+        mcts_terminal_info = (
+            CustomRegOp("terminal_kernel")
+            .input(0, "visited_node")
+            .input(1, "terminal")
+            .output(0, "success")
+            .dtype_format(DataType.None_None, DataType.None_None, DataType.None_None)
+            .attr(
+                "tree_handle",
+                "required",
+                "all",
+                value=self._check_params(float, tree_handle_numpy, "tree_handle"),
+            )
+            .target(device)
             .get_op_info()
+        )
         self.update_leafnode_terminal = ops.Custom(
-            "{}:UpdateLeafNodeTerminal".format(so_path), (1,), (ms.bool_),
-            "aot", reg_info=mcts_terminal_info)
+            "{}:UpdateLeafNodeTerminal".format(so_path),
+            (1,),
+            (ms.bool_),
+            "aot",
+            reg_info=mcts_terminal_info,
+        )
         self.update_leafnode_terminal.add_prim_attr("primitive_target", device)
 
-        mcts_leafstate_info = CustomRegOp("leafstate_kernel") \
-            .input(0, "visited_node") \
-            .input(1, "state") \
-            .output(0, "success") \
-            .dtype_format(DataType.None_None, DataType.None_None, DataType.None_None) \
-            .attr("tree_handle", "required", "all", value=self._check_params(float, tree_handle_numpy, "tree_handle")) \
-            .target(device) \
+        mcts_leafstate_info = (
+            CustomRegOp("leafstate_kernel")
+            .input(0, "visited_node")
+            .input(1, "state")
+            .output(0, "success")
+            .dtype_format(DataType.None_None, DataType.None_None, DataType.None_None)
+            .attr(
+                "tree_handle",
+                "required",
+                "all",
+                value=self._check_params(float, tree_handle_numpy, "tree_handle"),
+            )
+            .target(device)
             .get_op_info()
-        self.update_leafnode_state = ops.Custom("{}:UpdateLeafNodeState".format(
-            so_path), (1,), (ms.bool_), "aot", reg_info=mcts_leafstate_info)
+        )
+        self.update_leafnode_state = ops.Custom(
+            "{}:UpdateLeafNodeState".format(so_path),
+            (1,),
+            (ms.bool_),
+            "aot",
+            reg_info=mcts_leafstate_info,
+        )
         self.update_leafnode_state.add_prim_attr("primitive_target", device)
 
-        mcts_rootstate_info = CustomRegOp("rootstate_kernel") \
-            .input(0, "state") \
-            .output(0, "success") \
-            .dtype_format(DataType.None_None, DataType.None_None) \
-            .attr("tree_handle", "required", "all", value=self._check_params(float, tree_handle_numpy, "tree_handle")) \
-            .target(device) \
+        mcts_rootstate_info = (
+            CustomRegOp("rootstate_kernel")
+            .input(0, "state")
+            .output(0, "success")
+            .dtype_format(DataType.None_None, DataType.None_None)
+            .attr(
+                "tree_handle",
+                "required",
+                "all",
+                value=self._check_params(float, tree_handle_numpy, "tree_handle"),
+            )
+            .target(device)
             .get_op_info()
+        )
         self.update_root_state = ops.Custom(
-            "{}:UpdateRootState".format(so_path), (1,), (ms.bool_),
-            "aot", reg_info=mcts_rootstate_info)
+            "{}:UpdateRootState".format(so_path),
+            (1,),
+            (ms.bool_),
+            "aot",
+            reg_info=mcts_rootstate_info,
+        )
         self.update_root_state.add_prim_attr("primitive_target", device)
 
-        mcts_getlast_info = CustomRegOp("getlast_kernel") \
-            .input(0, "visited_node") \
-            .output(0, "state") \
-            .dtype_format(DataType.None_None, DataType.None_None) \
-            .attr("tree_handle", "required", "all", value=self._check_params(float, tree_handle_numpy, "tree_handle")) \
-            .target(device) \
+        mcts_getlast_info = (
+            CustomRegOp("getlast_kernel")
+            .input(0, "visited_node")
+            .output(0, "state")
+            .dtype_format(DataType.None_None, DataType.None_None)
+            .attr(
+                "tree_handle",
+                "required",
+                "all",
+                value=self._check_params(float, tree_handle_numpy, "tree_handle"),
+            )
+            .target(device)
             .get_op_info()
-        self.get_last_state = ops.Custom("{}:GetLastState".format(so_path), state_shape,
-                                         (ms.float32), "aot", reg_info=mcts_getlast_info)
+        )
+        self.get_last_state = ops.Custom(
+            "{}:GetLastState".format(so_path),
+            state_shape,
+            (ms.float32),
+            "aot",
+            reg_info=mcts_getlast_info,
+        )
         self.get_last_state.add_prim_attr("primitive_target", device)
 
-        mcts_globalvar_info = CustomRegOp("globalvar_kernel") \
-            .attr("tree_handle", "required", "all", value=self._check_params(float, tree_handle_numpy, "tree_handle")) \
-            .target(device) \
+        mcts_globalvar_info = (
+            CustomRegOp("globalvar_kernel")
+            .attr(
+                "tree_handle",
+                "required",
+                "all",
+                value=self._check_params(float, tree_handle_numpy, "tree_handle"),
+            )
+            .target(device)
             .get_op_info()
-        self.update_global_variable = ops.Custom("{}:UpdateGlobalVariable".format(so_path), (1,),
-                                                 (ms.bool_), "aot", reg_info=mcts_globalvar_info)
+        )
+        self.update_global_variable = ops.Custom(
+            "{}:UpdateGlobalVariable".format(so_path),
+            (1,),
+            (ms.bool_),
+            "aot",
+            reg_info=mcts_globalvar_info,
+        )
         self.update_global_variable.add_prim_attr("primitive_target", device)
 
-        mcts_destroy_info = CustomRegOp("destroy_kernel") \
-            .input(0, "handle") \
-            .output(0, "success") \
-            .dtype_format(DataType.None_None, DataType.None_None) \
-            .attr("tree_handle", "required", "all", value=self._check_params(float, tree_handle_numpy, "tree_handle")) \
-            .target(device) \
+        mcts_destroy_info = (
+            CustomRegOp("destroy_kernel")
+            .input(0, "handle")
+            .output(0, "success")
+            .dtype_format(DataType.None_None, DataType.None_None)
+            .attr(
+                "tree_handle",
+                "required",
+                "all",
+                value=self._check_params(float, tree_handle_numpy, "tree_handle"),
+            )
+            .target(device)
             .get_op_info()
-        self.destroy_tree = ops.Custom("{}:DestroyTree".format(so_path),
-                                       (1,), (ms.bool_), "aot", reg_info=mcts_destroy_info)
+        )
+        self.destroy_tree = ops.Custom(
+            "{}:DestroyTree".format(so_path),
+            (1,),
+            (ms.bool_),
+            "aot",
+            reg_info=mcts_destroy_info,
+        )
         self.destroy_tree.add_prim_attr("primitive_target", device)
 
-        mcts_restore_info = CustomRegOp("restore_kernel") \
-            .input(0, "dummy_handle") \
-            .output(0, "success") \
-            .dtype_format(DataType.None_None, DataType.None_None) \
-            .attr("tree_handle", "required", "all", value=self._check_params(float, tree_handle_numpy, "tree_handle")) \
-            .target(device) \
+        mcts_restore_info = (
+            CustomRegOp("restore_kernel")
+            .input(0, "dummy_handle")
+            .output(0, "success")
+            .dtype_format(DataType.None_None, DataType.None_None)
+            .attr(
+                "tree_handle",
+                "required",
+                "all",
+                value=self._check_params(float, tree_handle_numpy, "tree_handle"),
+            )
+            .target(device)
             .get_op_info()
-        self.restore_tree = ops.Custom("{}:RestoreTree".format(so_path),
-                                       (1,), (ms.bool_), "aot", reg_info=mcts_restore_info)
+        )
+        self.restore_tree = ops.Custom(
+            "{}:RestoreTree".format(so_path),
+            (1,),
+            (ms.bool_),
+            "aot",
+            reg_info=mcts_restore_info,
+        )
         self.restore_tree.add_prim_attr("primitive_target", device)
 
-        mcts_get_value_info = CustomRegOp("get_value_kernel") \
-            .input(0, "dummy_handle") \
-            .output(0, "value") \
-            .output(1, 'norm_explore_count') \
-            .dtype_format(DataType.None_None, DataType.None_None, DataType.None_None) \
-            .attr("tree_handle", "required", "all", value=self._check_params(float, tree_handle_numpy, "tree_handle")) \
-            .target(device) \
+        mcts_get_value_info = (
+            CustomRegOp("get_value_kernel")
+            .input(0, "dummy_handle")
+            .output(0, "value")
+            .output(1, "norm_explore_count")
+            .dtype_format(DataType.None_None, DataType.None_None, DataType.None_None)
+            .attr(
+                "tree_handle",
+                "required",
+                "all",
+                value=self._check_params(float, tree_handle_numpy, "tree_handle"),
+            )
+            .target(device)
             .get_op_info()
-        self.get_root_info = ops.Custom("{}:GetRootInfo".format(so_path),
-                                        ((1,), (len(env.legal_action()),)), (ms.float32, ms.float32), "aot",
-                                        reg_info=mcts_get_value_info)
+        )
+        self.get_root_info = ops.Custom(
+            "{}:GetRootInfo".format(so_path),
+            ((1,), (len(env.legal_action()),)),
+            (ms.float32, ms.float32),
+            "aot",
+            reg_info=mcts_get_value_info,
+        )
         self.get_root_info.add_prim_attr("primitive_target", device)
         self.depend = P.Depend()
 
@@ -350,7 +619,7 @@ class MCTS(nn.Cell):
         self.max_action = max_action
         self.customized_func = customized_func
 
-    @ms_function
+    @ms.jit
     def mcts_search(self, *args):
         """
         mcts_search is the main function of MCTS. Invoke this function will return the best
@@ -391,8 +660,7 @@ class MCTS(nn.Cell):
 
             if not self.env.is_terminal():
                 expanded = self.true
-                self.mcts_expansion(visited_node,
-                                    legal_action, prior, reward)
+                self.mcts_expansion(visited_node, legal_action, prior, reward)
             else:
                 self.update_leafnode_outcome(visited_node, reward)
                 self.update_leafnode_terminal(visited_node, self.true)
@@ -416,7 +684,9 @@ class MCTS(nn.Cell):
         Returns:
             success (mindspore.bool\_), Whether restore is successful.
         """
-        self._check_element(self.tree_handle_list, handle, 'restore_tree_data', 'handle')
+        self._check_element(
+            self.tree_handle_list, handle, "restore_tree_data", "handle"
+        )
         return self.restore_tree(handle)
 
     def destroy(self, handle):
@@ -430,12 +700,12 @@ class MCTS(nn.Cell):
         Returns:
             success (mindspore.bool\_), Whether destroy is successful.
         """
-        self._check_element(self.tree_handle_list, handle, 'destroy', 'handle')
+        self._check_element(self.tree_handle_list, handle, "destroy", "handle")
         ret = self.destroy_tree(handle)
         self.tree_handle_list.pop()
         return ret
 
-    @ms_function
+    @ms.jit
     def _get_root_information(self, dummpy_handle):
         """Does not support yet"""
         return self.get_root_info(dummpy_handle)
@@ -443,14 +713,17 @@ class MCTS(nn.Cell):
     def _check_params(self, check_type, input_value, name):
         """Check params type for input"""
         if not isinstance(input_value, check_type):
-            raise TypeError(f"Input value {name} must be {str(check_type)}, but got {type(input_value)}")
+            raise TypeError(
+                f"Input value {name} must be {str(check_type)}, but got {type(input_value)}"
+            )
         return input_value
 
     def _check_element(self, expected_element, input_element, func_name, arg_name):
         """Check whether input_elemnt is in expected_element"""
         if input_element not in expected_element:
             raise ValueError(
-                f"The input {arg_name} of {func_name} must be in {expected_element}, but got '{input_element}'")
+                f"The input {arg_name} of {func_name} must be in {expected_element}, but got '{input_element}'"
+            )
 
 
 class AlgorithmFunc(nn.Cell):
@@ -526,8 +799,9 @@ class VanillaFunc(AlgorithmFunc):
             prior (mindspore.float32), The probability (or prior) of all the input legal actions.
         """
         invalid_action_num = (legal_action == -1).sum()
-        prior = self.ones_like(legal_action).astype(ms.float32) /  \
-            (len(legal_action) - invalid_action_num)
+        prior = self.ones_like(legal_action).astype(ms.float32) / (
+            len(legal_action) - invalid_action_num
+        )
         return prior
 
     def simulation(self, new_state):
@@ -543,10 +817,11 @@ class VanillaFunc(AlgorithmFunc):
         _, reward, done = self.env.load(new_state)
         while not done:
             legal_action = self.env.legal_action()
-            mask = (legal_action == -1)
+            mask = legal_action == -1
             invalid_action_num = (legal_action == -1).sum()
-            prob = self.ones_like(legal_action).astype(ms.float32) / \
-                (len(legal_action) - invalid_action_num)
+            prob = self.ones_like(legal_action).astype(ms.float32) / (
+                len(legal_action) - invalid_action_num
+            )
             prob[mask] = 0
             action = self.categorical.sample((), prob)
             new_state, reward, done = self.env.step(legal_action[action])
@@ -574,8 +849,13 @@ class _SupportToScalar(nn.Cell):
 
         # Inverting the value scaling (defined in https://arxiv.org/abs/1805.11593)
         decompressed_value = self.sign(v) * (
-            ((self.sqrt(1 + 4 * self.eps * (self.absolute(v) + 1 + self.eps)) - 1) / (2 * self.eps))
-            ** 2 - 1)
+            (
+                (self.sqrt(1 + 4 * self.eps * (self.absolute(v) + 1 + self.eps)) - 1)
+                / (2 * self.eps)
+            )
+            ** 2
+            - 1
+        )
 
         return decompressed_value
 
@@ -590,7 +870,9 @@ class MuzeroFunc(AlgorithmFunc):
         super().__init__()
         self.predict_net = net
         self.decompressed_value = _SupportToScalar(-300, 300)
-        self.value = Parameter(Tensor([0], ms.float32), requires_grad=False, name="value")
+        self.value = Parameter(
+            Tensor([0], ms.float32), requires_grad=False, name="value"
+        )
 
         self.false = Tensor(False, ms.bool_)
 

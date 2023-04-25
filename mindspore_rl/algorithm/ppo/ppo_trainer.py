@@ -44,7 +44,7 @@ class PPOTrainer(Trainer):
                                "ppo_optimizer": self.msrl.learner._ppo_net_train.optimizer}
         return trainable_variables
 
-    @ms_function
+    @mindspore.jit
     def train_one_episode(self):
         """the algorithm in one episode"""
         training_loss = self.zero
@@ -77,7 +77,7 @@ class PPOTrainer(Trainer):
         self.msrl.replay_buffer_reset()
         return training_loss, training_reward, j
 
-    @ms_function
+    @mindspore.jit
     def evaluate(self):
         """evaluate function"""
         total_eval_reward = self.zero

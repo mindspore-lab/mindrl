@@ -14,28 +14,29 @@
 # ============================================================================
 """SAC Trainer"""
 import mindspore
+from mindspore import Parameter, Tensor
 from mindspore.common.api import ms_function
-from mindspore import Tensor, Parameter
 from mindspore.ops import operations as P
-from mindspore_rl.agent.trainer import Trainer
+
 from mindspore_rl.agent import trainer
+from mindspore_rl.agent.trainer import Trainer
 
 
-#pylint: disable=W0212
+# pylint: disable=W0212
 class SACTrainer(Trainer):
     """This is the trainer class of SAC algorithm. It arranges the SAC algorithm"""
 
     def __init__(self, msrl, params=None):
         super(SACTrainer, self).__init__(msrl)
-        self.inited = Parameter(Tensor([False], mindspore.bool_), name='init_flag')
+        self.inited = Parameter(Tensor([False], mindspore.bool_), name="init_flag")
         self.zero = Tensor([0], mindspore.float32)
         self.fill_value = Tensor([10000], mindspore.float32)
         self.false = Tensor([False], mindspore.bool_)
         self.true = Tensor([True], mindspore.bool_)
         self.less = P.Less()
         self.reduce_mean = P.ReduceMean()
-        self.duration = params['duration']
-        self.num_eval_episode = params['num_eval_episode']
+        self.duration = params["duration"]
+        self.num_eval_episode = params["num_eval_episode"]
 
     def trainable_variables(self):
         """Trainable variables for saving."""
@@ -57,7 +58,7 @@ class SACTrainer(Trainer):
             i += 1
         return done
 
-    @ms_function
+    @mindspore.jit
     def train_one_episode(self):
         """the algorithm in one episode"""
         if not self.inited:
@@ -70,7 +71,9 @@ class SACTrainer(Trainer):
         total_reward = self.zero
         state = self.msrl.collect_environment.reset()
         while not done:
-            new_state, action, reward, done = self.msrl.agent_act(trainer.COLLECT, state)
+            new_state, action, reward, done = self.msrl.agent_act(
+                trainer.COLLECT, state
+            )
             self.msrl.replay_buffer_insert([state, action, reward, new_state, done])
             state = new_state
             total_reward += reward
@@ -79,7 +82,7 @@ class SACTrainer(Trainer):
             step += 1
         return loss / step, total_reward, step
 
-    @ms_function
+    @mindspore.jit
     def evaluate(self):
         """evaluate function"""
         total_eval_reward = self.zero

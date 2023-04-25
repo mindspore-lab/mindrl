@@ -12,24 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-'''fragments'''
+"""fragments"""
 import time
+
 import mindspore
-import mindspore.numpy as np
 import mindspore.nn as nn
+import mindspore.nn.probability.distribution as msd
+import mindspore.numpy as np
 import mindspore.ops.operations as P
-from mindspore.common.api import ms_function
 from mindspore import Tensor
+from mindspore.common.api import ms_function
 from mindspore.common.parameter import Parameter, ParameterTuple
 from mindspore.communication.management import NCCL_WORLD_COMM_GROUP
-import mindspore.nn.probability.distribution as msd
 
-#pylint: disable=W0212
-#pylint: disable=W0612
+# pylint: disable=W0212
+# pylint: disable=W0612
 
 
 class Fragment1Kernel(nn.Cell):
-    '''Fragment 1 kernel'''
+    """Fragment 1 kernel"""
+
     def __init__(self, msrl, rank, duration):
         super(Fragment1Kernel, self).__init__()
         self.msrl = msrl
@@ -43,26 +45,66 @@ class Fragment1Kernel(nn.Cell):
         self.actor_net_param = ParameterTuple(self.actor._actor_net.get_parameters())
         self.actor_net = self.actor._actor_net
 
-        self.state_list = Parameter(Tensor(np.zeros((1, self.num_collect_env, self.duration, 17)),
-                                           mindspore.float32), name="F1state_list")
-        self.action_list = Parameter(Tensor(np.zeros((1, self.num_collect_env, self.duration, 6)),
-                                            mindspore.float32), name="F1action_list")
-        self.reward_list = Parameter(Tensor(np.zeros((1, self.num_collect_env, self.duration, 1)),
-                                            mindspore.float32), name="F1reward_list")
-        self.next_state_list = Parameter(Tensor(np.zeros((1, self.num_collect_env, self.duration, 17)),
-                                                mindspore.float32), name="F1next_state_list")
-        self.miu_list = Parameter(Tensor(np.zeros((1, self.num_collect_env, self.duration, 6)),
-                                         mindspore.float32), name="F1_miu_list")
-        self.sigma_list = Parameter(Tensor(np.zeros((1, self.num_collect_env, self.duration, 6)),
-                                           mindspore.float32), name="F1sigma_list")
+        self.state_list = Parameter(
+            Tensor(
+                np.zeros((1, self.num_collect_env, self.duration, 17)),
+                mindspore.float32,
+            ),
+            name="F1state_list",
+        )
+        self.action_list = Parameter(
+            Tensor(
+                np.zeros((1, self.num_collect_env, self.duration, 6)), mindspore.float32
+            ),
+            name="F1action_list",
+        )
+        self.reward_list = Parameter(
+            Tensor(
+                np.zeros((1, self.num_collect_env, self.duration, 1)), mindspore.float32
+            ),
+            name="F1reward_list",
+        )
+        self.next_state_list = Parameter(
+            Tensor(
+                np.zeros((1, self.num_collect_env, self.duration, 17)),
+                mindspore.float32,
+            ),
+            name="F1next_state_list",
+        )
+        self.miu_list = Parameter(
+            Tensor(
+                np.zeros((1, self.num_collect_env, self.duration, 6)), mindspore.float32
+            ),
+            name="F1_miu_list",
+        )
+        self.sigma_list = Parameter(
+            Tensor(
+                np.zeros((1, self.num_collect_env, self.duration, 6)), mindspore.float32
+            ),
+            name="F1sigma_list",
+        )
 
-        self.network_weigt_0 = Parameter(Tensor(np.zeros((6)), mindspore.float32), name="F1w0")
-        self.network_weigt_1 = Parameter(Tensor(np.zeros((200, 17)), mindspore.float32), name="F1w1")
-        self.network_weigt_2 = Parameter(Tensor(np.zeros((200)), mindspore.float32), name="F1w2")
-        self.network_weigt_3 = Parameter(Tensor(np.zeros((100, 200)), mindspore.float32), name="F1w3")
-        self.network_weigt_4 = Parameter(Tensor(np.zeros((100)), mindspore.float32), name="F1w4")
-        self.network_weigt_5 = Parameter(Tensor(np.zeros((6, 100)), mindspore.float32), name="F1w5")
-        self.network_weigt_6 = Parameter(Tensor(np.zeros((6)), mindspore.float32), name="F1w6")
+        self.network_weigt_0 = Parameter(
+            Tensor(np.zeros((6)), mindspore.float32), name="F1w0"
+        )
+        self.network_weigt_1 = Parameter(
+            Tensor(np.zeros((200, 17)), mindspore.float32), name="F1w1"
+        )
+        self.network_weigt_2 = Parameter(
+            Tensor(np.zeros((200)), mindspore.float32), name="F1w2"
+        )
+        self.network_weigt_3 = Parameter(
+            Tensor(np.zeros((100, 200)), mindspore.float32), name="F1w3"
+        )
+        self.network_weigt_4 = Parameter(
+            Tensor(np.zeros((100)), mindspore.float32), name="F1w4"
+        )
+        self.network_weigt_5 = Parameter(
+            Tensor(np.zeros((6, 100)), mindspore.float32), name="F1w5"
+        )
+        self.network_weigt_6 = Parameter(
+            Tensor(np.zeros((6)), mindspore.float32), name="F1w6"
+        )
 
         self.slice = P.Slice()
         self.less = P.Less()
@@ -73,9 +115,9 @@ class Fragment1Kernel(nn.Cell):
         self.depend = P.Depend()
         self.expand_dims = P.ExpandDims()
 
-    @ms_function
+    @mindspore.jit
     def execute(self):
-        '''execute'''
+        """execute"""
         training_reward = self.zero
         state = self.msrl.collect_environment.reset()
         self.msrl.replay_buffer_reset()
@@ -83,13 +125,17 @@ class Fragment1Kernel(nn.Cell):
         i = self.zero
         while self.less(i, self.duration):
             reward, new_state, action, miu, sigma = self.msrl.agent_act(state)
-            self.msrl.replay_buffer_insert([state, action, reward, new_state, miu, sigma])
+            self.msrl.replay_buffer_insert(
+                [state, action, reward, new_state, miu, sigma]
+            )
             state = new_state
             reward = self.reduce_mean(reward)
             training_reward += reward
             i += 1
 
-        replay_buffer_elements = self.msrl.get_replay_buffer_elements(transpose=True, shape=(1, 0, 2))
+        replay_buffer_elements = self.msrl.get_replay_buffer_elements(
+            transpose=True, shape=(1, 0, 2)
+        )
 
         tmp_state_list = replay_buffer_elements[0]
         tmp_action_list = replay_buffer_elements[1]
@@ -128,7 +174,6 @@ class Fragment1Kernel(nn.Cell):
         sigma_list = self.depend(self.sigma_list, miu_fused)
 
         sigma_fused = self.all_gather(sigma_list)
-
 
         nw0 = self.depend(self.network_weigt_0, sigma_fused)
         w0 = self.all_gather(nw0)
@@ -170,14 +215,15 @@ class Fragment1Kernel(nn.Cell):
         return training_reward
 
 
-class Fragment1():
-    '''Fragment 1'''
+class Fragment1:
+    """Fragment 1"""
+
     def __init__(self, msrl, rank, duration, episode):
         self.actor = Fragment1Kernel(msrl, rank, duration)
         self.episode = episode
 
     def run(self):
-        '''run'''
+        """run"""
         for i in range(self.episode):
             reward = self.actor.execute()
             print("episode: {}, reward: {}".format(i, reward))
@@ -185,7 +231,8 @@ class Fragment1():
 
 
 class Fragment2Kernel(nn.Cell):
-    '''Fragment 2 kernel'''
+    """Fragment 2 kernel"""
+
     def __init__(self, msrl, rank, duration):
         super(Fragment2Kernel, self).__init__()
         self.msrl = msrl
@@ -198,33 +245,73 @@ class Fragment2Kernel(nn.Cell):
         self.num_collect_env = msrl.num_collect_env
 
         self.zero = Tensor(0, mindspore.float32)
-        self.state_list = Parameter(Tensor(np.zeros((1, self.num_collect_env, self.duration, 17)),
-                                           mindspore.float32), name="F2state_list")
-        self.action_list = Parameter(Tensor(np.zeros((1, self.num_collect_env, self.duration, 6)),
-                                            mindspore.float32), name="F2action_list")
-        self.reward_list = Parameter(Tensor(np.zeros((1, self.num_collect_env, self.duration, 1)),
-                                            mindspore.float32), name="F2reward_list")
-        self.next_state_list = Parameter(Tensor(np.zeros((1, self.num_collect_env, self.duration, 17)),
-                                                mindspore.float32), name="F2next_state_list")
-        self.miu_list = Parameter(Tensor(np.zeros((1, self.num_collect_env, self.duration, 6)),
-                                         mindspore.float32), name="F2miu_list")
-        self.sigma_list = Parameter(Tensor(np.zeros((1, self.num_collect_env, self.duration, 6)),
-                                           mindspore.float32), name="F2sigma_list")
-        self.network_weigt_0 = Parameter(Tensor(np.zeros((6)), mindspore.float32), name="F2w0")
-        self.network_weigt_1 = Parameter(Tensor(np.zeros((200, 17)), mindspore.float32), name="F2w1")
-        self.network_weigt_2 = Parameter(Tensor(np.zeros((200)), mindspore.float32), name="F2w2")
-        self.network_weigt_3 = Parameter(Tensor(np.zeros((100, 200)), mindspore.float32), name="F2w3")
-        self.network_weigt_4 = Parameter(Tensor(np.zeros((100)), mindspore.float32), name="F2w4")
-        self.network_weigt_5 = Parameter(Tensor(np.zeros((6, 100)), mindspore.float32), name="F2w5")
-        self.network_weigt_6 = Parameter(Tensor(np.zeros((6)), mindspore.float32), name="F2w6")
+        self.state_list = Parameter(
+            Tensor(
+                np.zeros((1, self.num_collect_env, self.duration, 17)),
+                mindspore.float32,
+            ),
+            name="F2state_list",
+        )
+        self.action_list = Parameter(
+            Tensor(
+                np.zeros((1, self.num_collect_env, self.duration, 6)), mindspore.float32
+            ),
+            name="F2action_list",
+        )
+        self.reward_list = Parameter(
+            Tensor(
+                np.zeros((1, self.num_collect_env, self.duration, 1)), mindspore.float32
+            ),
+            name="F2reward_list",
+        )
+        self.next_state_list = Parameter(
+            Tensor(
+                np.zeros((1, self.num_collect_env, self.duration, 17)),
+                mindspore.float32,
+            ),
+            name="F2next_state_list",
+        )
+        self.miu_list = Parameter(
+            Tensor(
+                np.zeros((1, self.num_collect_env, self.duration, 6)), mindspore.float32
+            ),
+            name="F2miu_list",
+        )
+        self.sigma_list = Parameter(
+            Tensor(
+                np.zeros((1, self.num_collect_env, self.duration, 6)), mindspore.float32
+            ),
+            name="F2sigma_list",
+        )
+        self.network_weigt_0 = Parameter(
+            Tensor(np.zeros((6)), mindspore.float32), name="F2w0"
+        )
+        self.network_weigt_1 = Parameter(
+            Tensor(np.zeros((200, 17)), mindspore.float32), name="F2w1"
+        )
+        self.network_weigt_2 = Parameter(
+            Tensor(np.zeros((200)), mindspore.float32), name="F2w2"
+        )
+        self.network_weigt_3 = Parameter(
+            Tensor(np.zeros((100, 200)), mindspore.float32), name="F2w3"
+        )
+        self.network_weigt_4 = Parameter(
+            Tensor(np.zeros((100)), mindspore.float32), name="F2w4"
+        )
+        self.network_weigt_5 = Parameter(
+            Tensor(np.zeros((6, 100)), mindspore.float32), name="F2w5"
+        )
+        self.network_weigt_6 = Parameter(
+            Tensor(np.zeros((6)), mindspore.float32), name="F2w6"
+        )
         self.assign = P.Assign()
         self.slice = P.Slice()
         self.all_gather = P.AllGather(group=NCCL_WORLD_COMM_GROUP)
         self.depend = P.Depend()
 
-    @ms_function
+    @mindspore.jit
     def execute(self):
-        '''execute'''
+        """execute"""
         training_loss = self.zero
 
         state_fused = self.all_gather(self.state_list)
@@ -239,16 +326,47 @@ class Fragment2Kernel(nn.Cell):
         sigma_list = self.depend(self.sigma_list, miu_fused)
         sigma_fused = self.all_gather(sigma_list)
 
-        state_list = self.slice(state_fused, (1, 0, 0, 0), (self.num_actor, self.num_collect_env, self.duration, 17))
-        action_list = self.slice(action_fused, (1, 0, 0, 0), (self.num_actor, self.num_collect_env, self.duration, 6))
-        reward_list = self.slice(reward_fused, (1, 0, 0, 0), (self.num_actor, self.num_collect_env, self.duration, 1))
-        next_state_list = self.slice(next_state_list_fused, (1, 0, 0, 0),
-                                     (self.num_actor, self.num_collect_env, self.duration, 17))
-        miu_list = self.slice(miu_fused, (1, 0, 0, 0), (self.num_actor, self.num_collect_env, self.duration, 6))
-        sigma_list = self.slice(sigma_fused, (1, 0, 0, 0), (self.num_actor, self.num_collect_env, self.duration, 6))
+        state_list = self.slice(
+            state_fused,
+            (1, 0, 0, 0),
+            (self.num_actor, self.num_collect_env, self.duration, 17),
+        )
+        action_list = self.slice(
+            action_fused,
+            (1, 0, 0, 0),
+            (self.num_actor, self.num_collect_env, self.duration, 6),
+        )
+        reward_list = self.slice(
+            reward_fused,
+            (1, 0, 0, 0),
+            (self.num_actor, self.num_collect_env, self.duration, 1),
+        )
+        next_state_list = self.slice(
+            next_state_list_fused,
+            (1, 0, 0, 0),
+            (self.num_actor, self.num_collect_env, self.duration, 17),
+        )
+        miu_list = self.slice(
+            miu_fused,
+            (1, 0, 0, 0),
+            (self.num_actor, self.num_collect_env, self.duration, 6),
+        )
+        sigma_list = self.slice(
+            sigma_fused,
+            (1, 0, 0, 0),
+            (self.num_actor, self.num_collect_env, self.duration, 6),
+        )
 
-        training_loss += self.learner.learn((state_list, action_list, reward_list,
-                                             next_state_list, miu_list, sigma_list))
+        training_loss += self.learner.learn(
+            (
+                state_list,
+                action_list,
+                reward_list,
+                next_state_list,
+                miu_list,
+                sigma_list,
+            )
+        )
 
         actor_net_param = self.depend(self.actor_net_param, training_loss)
         self.assign(self.network_weigt_0, actor_net_param[0])
@@ -259,8 +377,9 @@ class Fragment2Kernel(nn.Cell):
         self.assign(self.network_weigt_5, actor_net_param[5])
         self.assign(self.network_weigt_6, actor_net_param[6])
 
-        nw0 = self.depend(self.network_weigt_0,
-                          self.assign(self.network_weigt_0, actor_net_param[0]))
+        nw0 = self.depend(
+            self.network_weigt_0, self.assign(self.network_weigt_0, actor_net_param[0])
+        )
         w0 = self.all_gather(nw0)
 
         nw1 = self.depend(self.network_weigt_1, w0)
@@ -284,14 +403,15 @@ class Fragment2Kernel(nn.Cell):
         return training_loss
 
 
-class Fragment2():
-    '''Fragment 2'''
+class Fragment2:
+    """Fragment 2"""
+
     def __init__(self, msrl, rank, duration, episode):
         self.learner = Fragment2Kernel(msrl, rank, duration)
         self.episode = episode
 
     def run(self):
-        '''run'''
+        """run"""
         for i in range(self.episode):
             start = time.perf_counter()
             loss = self.learner.execute()
@@ -304,7 +424,7 @@ class Fragment2():
 
 
 def get_all_fragments(num_actors):
-    '''get all fragments'''
+    """get all fragments"""
     flist = [Fragment2]
     for _ in range(num_actors):
         flist.append(Fragment1)
