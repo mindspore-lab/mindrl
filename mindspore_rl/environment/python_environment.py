@@ -200,14 +200,10 @@ class PythonEnvironment(Environment):
             next_state = step_out[0].astype(self.observation_space.np_dtype)
             reward = step_out[1].astype(self.reward_space.np_dtype)
             done = step_out[2].astype(self.done_space.np_dtype)
-            done_flag = (
-                self._done_flag
-                if not (
-                    (len(self._done_flag.shape) <= 1) or (self._done_flag.shape[0] <= 1)
-                )
-                else self._done_flag.all()
-            )
-            if not done_flag:
+            squashed_flag = self._done_flag.reshape(
+                -1,
+            ).all()
+            if not squashed_flag:
                 self._done_flag = done
                 step_out = (
                     (next_state, reward, done, *step_out[3:])

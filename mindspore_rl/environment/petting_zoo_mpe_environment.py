@@ -15,15 +15,16 @@
 """
 The PettingZooMPEEnvironment base class.
 """
-
-from gym import spaces
+# pylint:disable=W0707
+# pylint:disable=C0415
 import numpy as np
-from mindspore.ops import operations as P
-from mindspore_rl.environment.environment import Environment
+
+from mindspore_rl.environment.python_environment import PythonEnvironment
 from mindspore_rl.environment.space import Space
+from mindspore_rl.environment.space_adapter import gym2ms_adapter
 
 
-class PettingZooMPEEnvironment(Environment):
+class PettingZooMPEEnvironment(PythonEnvironment):
     """
     The PettingZooMPEEnvironment class is a wrapper that encapsulates
     `PettingZoo <https://pettingzoo.farama.org/environments/mpe/>`_ to
@@ -55,108 +56,43 @@ class PettingZooMPEEnvironment(Environment):
     """
 
     def __init__(self, params, env_id=0):
-        super(PettingZooMPEEnvironment, self).__init__()
         try:
-            import pettingzoo.mpe as mpe
+            from pettingzoo import mpe
         except ImportError as error:
             raise ImportError(
                 "pettingzoo[mpe] is not installed.\n"
                 "please pip install pettingzoo[mpe]==1.17.0"
             ) from error
         self.params = params
-        self._name = params.get('name')
-        self._num = params.get('num')
-        self._continuous_actions = params.get('continuous_actions')
-        self._seed = params.get('seed') + env_id * 1000
-        supported_env_list = ['simple_spread']
-        assert self._name in supported_env_list, 'Env {} not supported, choose from {}'.format(
-            self._name, supported_env_list)
-        if self._name == 'simple_spread':
-            self._env = mpe.simple_spread_v2.parallel_env(N=self._num, local_ratio=0, max_cycles=25,
-                                                          continuous_actions=self._continuous_actions)
+        self._name = params.get("name")
+        self._num = params.get("num")
+        self._continuous_actions = params.get("continuous_actions")
+        self._seed = params.get("seed") + env_id * 1000
+        supported_env_list = ["simple_spread"]
+        assert (
+            self._name in supported_env_list
+        ), f"Env {self._name} not supported, choose from {supported_env_list}"
+        if self._name == "simple_spread":
+            self._env = mpe.simple_spread_v2.parallel_env(
+                N=self._num,
+                local_ratio=0,
+                max_cycles=25,
+                continuous_actions=self._continuous_actions,
+            )
         else:
             pass
-        ## reset the environment
+        # reset the environment
         self._env.reset()
-
         self.agent_name = list(self._env.observation_spaces.keys())
-        self._observation_space = self._space_adapter(
-            self._env.observation_spaces['agent_0'], batch_shape=(self._num,))
-        self._action_space = self._space_adapter(self._env.action_spaces['agent_0'], batch_shape=(self._num,))
-        self._reward_space = Space((1,), np.float32, batch_shape=(self._num,))
-        self._done_space = Space((1,), np.bool_, low=0, high=2, batch_shape=(self._num,))
+        observation_space = gym2ms_adapter(list(self._env.observation_spaces.values()))
+        env_action_space = self._env.action_spaces["agent_0"]
+        action_space = Space(
+            (env_action_space.n,), env_action_space.dtype.type, batch_shape=(self._num,)
+        )
+        reward_space = Space((1,), np.float32, batch_shape=(self._num,))
+        done_space = Space((1,), np.bool_, low=0, high=2, batch_shape=(self._num,))
 
-        # reset op
-        reset_input_type = []
-        reset_input_shape = []
-        reset_output_type = [self._observation_space.ms_dtype,]
-        reset_output_shape = [self._observation_space.shape,]
-        self._reset_op = P.PyFunc(self._reset, reset_input_type,
-                                  reset_input_shape, reset_output_type, reset_output_shape)
-
-        # step op
-        step_input_type = (self._action_space.ms_dtype,)
-        step_input_shape = (self._action_space.shape,)
-        step_output_type = (self.observation_space.ms_dtype,
-                            self._reward_space.ms_dtype, self._done_space.ms_dtype)
-        step_output_shape = (self._observation_space.shape,
-                             self._reward_space.shape, self._done_space.shape)
-        self._step_op = P.PyFunc(
-            self._step, step_input_type, step_input_shape, step_output_type, step_output_shape)
-        self.action_dtype = self._action_space.ms_dtype
-        self.cast = P.Cast()
-
-    @property
-    def observation_space(self):
-        """
-        Get the state space of the environment.
-
-        Returns:
-            The state space of environment.
-        """
-
-        return self._observation_space
-
-    @property
-    def action_space(self):
-        """
-        Get the action space of the environment.
-
-        Returns:
-            The action space of environment.
-        """
-
-        return self._action_space
-
-    @property
-    def reward_space(self):
-        """
-        Get the reward space of the environment.
-
-        Returns:
-            The reward space of environment.
-        """
-        return self._reward_space
-
-    @property
-    def done_space(self):
-        """
-        Get the done space of the environment.
-
-        Returns:
-            The done space of environment.
-        """
-        return self._done_space
-
-    @property
-    def config(self):
-        """
-        Get the config of environment.
-
-        Returns:
-            A dictionary which contains environment's info.
-        """
-        return {}
+        super().__init__(action_space, observation_space, reward_space, done_space)
 
     def close(self):
         r"""
@@ -168,43 +104,16 @@ class PettingZooMPEEnvironment(Environment):
         self._env.close()
         return True
 
-    def render(self):
+    def _render(self):
         """
         Render the game. Only support on PyNative mode.
         """
         try:
             self._env.render()
-        except:
-            raise RuntimeError("Failed to render, run in PyNative mode and comment the ms_function.")
-
-    def reset(self):
-        """
-        Reset the environment to the initial state. It is always used at the beginning of each
-        episode. It will return the value of initial state.
-
-        Returns:
-            A tensor which states for the initial state of environment.
-
-        """
-
-        return self._reset_op()[0]
-
-    def step(self, action):
-        r"""
-        Execute the environment step, which means that interact with environment once.
-
-        Args:
-            action (Tensor): A tensor that contains the action information.
-
-        Returns:
-            - state (Tensor), the environment state after performing the action.
-            - reward (Tensor), the reward after performing the action.
-            - done (Tensor), whether the simulation finishes or not.
-        """
-
-        # Add cast ops for mixed precision case. Redundant cast ops will be eliminated automatically.
-        action = self.cast(action, self.action_dtype)
-        return self._step_op(action)
+        except BaseException:
+            raise RuntimeError(
+                "Failed to render, run in PyNative mode and comment the ms_function."
+            )
 
     def _reset(self):
         """
@@ -235,12 +144,13 @@ class PettingZooMPEEnvironment(Environment):
             - reward (numpy.array), the reward after performing the actions.
             - done (boolean), whether the simulation finishes or not.
         """
-        action_dict = dict()
+        action_dict = {}
         for i, act in enumerate(action):
             agent = self.agent_name[i]
             if self._continuous_actions:
-                assert np.all(((act <= 1.0 + 1e-4), (act >= -1.0 - 1e-4))), \
-                    'action should in range [-1, 1], but got {}'.format(act)
+                assert np.all(
+                    ((act <= 1.0 + 1e-4), (act >= -1.0 - 1e-4))
+                ), f"action should in range [-1, 1], but got {act}"
                 low, high = self._action_space.boundary
                 a = np.clip(act, low, high)
                 action_dict[agent] = a
@@ -252,18 +162,8 @@ class PettingZooMPEEnvironment(Environment):
         out_done = np.array(np.vstack(list(done.values()))).astype(np.bool_)
         return out_obs, out_reward, out_done
 
-    def _space_adapter(self, mpe_space, batch_shape=None):
-        """Transfer pettingzoo mpe dtype to the dtype that is suitable for MindSpore"""
-        shape = mpe_space.shape
-        mpe_type = mpe_space.dtype.type
-        if mpe_type == np.int64:
-            dtype = np.float32
-        elif mpe_type == np.float64:
-            dtype = np.float32
-        else:
-            dtype = mpe_type
-
-        if isinstance(mpe_space, spaces.Discrete):
-            return Space((mpe_space.n,), dtype, batch_shape=batch_shape)
-
-        return Space(shape, dtype, batch_shape=batch_shape)
+    def _set_seed(self, seed_value: int) -> bool:
+        """Inner set seed"""
+        raise ValueError(
+            "PettingZooMPEEnvironment does not support set seed. Please pass seed through params"
+        )
