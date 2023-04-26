@@ -15,11 +15,16 @@
 """
 MADDPG config.
 """
-#pylint: disable=E0402
+# pylint: disable=E0402
 import mindspore as ms
+
 from mindspore_rl.core.uniform_replay_buffer import UniformReplayBuffer
-from mindspore_rl.environment.petting_zoo_mpe_environment import PettingZooMPEEnvironment
-from .maddpg import MADDPGAgent, MADDPGActor, MADDPGLearner, MADDPGPolicy
+from mindspore_rl.environment.petting_zoo_mpe_environment import (
+    PettingZooMPEEnvironment,
+)
+from mindspore_rl.environment.pyfunc_wrapper import PyFuncWrapper
+
+from .maddpg import MADDPGActor, MADDPGAgent, MADDPGLearner, MADDPGPolicy
 
 NUM_AGENT = 3
 BATCH_SIZE = 1024
@@ -27,72 +32,79 @@ CONTINUOUS_ACTIONS = False
 SEED = 10
 
 collect_env_params = {
-    'name': 'simple_spread',
-    'num': NUM_AGENT,
-    'continuous_actions': CONTINUOUS_ACTIONS,
-    'seed': SEED
+    "name": "simple_spread",
+    "num": NUM_AGENT,
+    "continuous_actions": CONTINUOUS_ACTIONS,
+    "seed": SEED,
 }
 eval_env_params = collect_env_params
 
 policy_params = {
-    'state_space_dim': 18,
-    'action_space_dim': 5,
-    'hidden_size': 64,
-    'num_agent': NUM_AGENT,
-    'continuous_actions': CONTINUOUS_ACTIONS,
-    'compute_type': ms.float32
+    "state_space_dim": 18,
+    "action_space_dim": 5,
+    "hidden_size": 64,
+    "num_agent": NUM_AGENT,
+    "continuous_actions": CONTINUOUS_ACTIONS,
+    "compute_type": ms.float32,
 }
 
 learner_params = {
-    'learning_rate': 0.01,
-    'gamma': 0.95,
-    'update_factor': 0.01,
-    'update_interval': 1,
-    'continuous_actions': CONTINUOUS_ACTIONS,
+    "learning_rate": 0.01,
+    "gamma": 0.95,
+    "update_factor": 0.01,
+    "update_interval": 1,
+    "continuous_actions": CONTINUOUS_ACTIONS,
 }
 
 trainer_params = {
-    'duration': 25,
-    'num_eval_episode': 3,
-    'init_size': BATCH_SIZE * 25,
-    'num_agent': NUM_AGENT,
-    'continuous_actions': CONTINUOUS_ACTIONS,
-    'metrics': False,
-    'ckpt_path': './ckpt',
+    "duration": 25,
+    "num_eval_episode": 3,
+    "init_size": BATCH_SIZE * 25,
+    "num_agent": NUM_AGENT,
+    "continuous_actions": CONTINUOUS_ACTIONS,
+    "metrics": False,
+    "ckpt_path": "./ckpt",
 }
 
 algorithm_config = {
-    'agent': {
-        'number': NUM_AGENT,
-        'type': MADDPGAgent,
+    "agent": {
+        "number": NUM_AGENT,
+        "type": MADDPGAgent,
     },
-    'actor': {
-        'number': 1,
-        'type': MADDPGActor,
-        'policies': ['collect_policy'],
-        'networks': ['actor_net', 'target_actor_net'],
+    "actor": {
+        "number": 1,
+        "type": MADDPGActor,
+        "policies": ["collect_policy"],
+        "networks": ["actor_net", "target_actor_net"],
     },
-    'learner': {
-        'number': 1,
-        'type': MADDPGLearner,
-        'params': learner_params,
-        'networks': ['actor_net', 'critic_net', 'target_actor_net', 'target_critic_net']
+    "learner": {
+        "number": 1,
+        "type": MADDPGLearner,
+        "params": learner_params,
+        "networks": [
+            "actor_net",
+            "critic_net",
+            "target_actor_net",
+            "target_critic_net",
+        ],
     },
-    'policy_and_network': {
-        'type': MADDPGPolicy,
-        'params': policy_params
+    "policy_and_network": {"type": MADDPGPolicy, "params": policy_params},
+    "replay_buffer": {
+        "number": 1,
+        "type": UniformReplayBuffer,
+        "capacity": 1000000,
+        "sample_size": BATCH_SIZE,
     },
-
-    'replay_buffer': {'number': 1,
-                      'type': UniformReplayBuffer,
-                      'capacity': 1000000,
-                      'sample_size': BATCH_SIZE},
-    'collect_environment': {
-        'type': PettingZooMPEEnvironment,
-        'params': collect_env_params
+    "collect_environment": {
+        "number": 1,
+        "type": PettingZooMPEEnvironment,
+        "wrappers": [PyFuncWrapper],
+        "params": collect_env_params,
     },
-    'eval_environment': {
-        'type': PettingZooMPEEnvironment,
-        'params': eval_env_params
+    "eval_environment": {
+        "number": 1,
+        "type": PettingZooMPEEnvironment,
+        "wrappers": [PyFuncWrapper],
+        "params": eval_env_params,
     },
 }
