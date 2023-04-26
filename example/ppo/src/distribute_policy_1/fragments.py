@@ -20,7 +20,7 @@ import mindspore.nn as nn
 import mindspore.nn.probability.distribution as msd
 import mindspore.numpy as np
 from mindspore import Tensor
-from mindspore.common.api import ms_function
+
 from mindspore.common.parameter import Parameter, ParameterTuple
 from mindspore.communication.management import NCCL_WORLD_COMM_GROUP
 from mindspore.ops import operations as P

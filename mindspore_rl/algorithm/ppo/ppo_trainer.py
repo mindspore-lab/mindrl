@@ -14,8 +14,8 @@
 # ============================================================================
 """PPO Trainer"""
 import mindspore
-from mindspore.common.api import ms_function
 from mindspore import Tensor
+
 from mindspore.ops import operations as P
 from mindspore_rl.agent.trainer import Trainer
 from mindspore_rl.agent import trainer

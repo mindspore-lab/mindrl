@@ -16,8 +16,8 @@
 
 import numpy as np
 import mindspore as ms
-from mindspore.common.api import ms_function
-from mindspore import Tensor, Parameter
+from mindspore import Parameter, Tensor
+
 from mindspore.ops import operations as P
 from mindspore_rl.agent import Trainer
 from mindspore_rl.agent import trainer

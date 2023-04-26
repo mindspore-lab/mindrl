@@ -22,7 +22,6 @@ import mindspore.nn as nn
 import mindspore.nn.probability.distribution as msd
 import mindspore.ops as ops
 from mindspore import Parameter, Tensor
-from mindspore.common import ms_function
 from mindspore.ops import CustomRegOp, DataType
 from mindspore.ops import operations as P
 
