@@ -15,7 +15,6 @@
 """
 Dreamer session.
 """
-import mindspore as ms
 
 from mindspore_rl.algorithm.dreamer import config
 from mindspore_rl.core import Session
@@ -47,10 +46,10 @@ class DreamerSession(Session):
             (int(episode_limits / action_repeat) + 1,) + reward_shape,
         ]
         replay_buffer_config["data_type"] = [
-            ms.float16,
-            ms.float16,
-            ms.float16,
-            ms.float16,
+            config.all_params["dtype"],
+            config.all_params["dtype"],
+            config.all_params["dtype"],
+            config.all_params["dtype"],
         ]
         loss_cb = LossCallback()
         eval_cb = EvaluateCallback(50)

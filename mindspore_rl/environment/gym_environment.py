@@ -100,7 +100,7 @@ class GymEnvironment(PythonEnvironment):
                 img = self._env.render(**self._render_kwargs)
         except BaseException:
             raise RuntimeError(
-                "Failed to render, run in PyNative mode and comment the ms_function."
+                "Failed to render, run in PyNative mode and comment the ms.jit."
             )
         return img
 

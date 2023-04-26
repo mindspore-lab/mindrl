@@ -112,7 +112,7 @@ class PettingZooMPEEnvironment(PythonEnvironment):
             self._env.render()
         except BaseException:
             raise RuntimeError(
-                "Failed to render, run in PyNative mode and comment the ms_function."
+                "Failed to render, run in PyNative mode and comment the ms.jit."
             )
 
     def _reset(self):

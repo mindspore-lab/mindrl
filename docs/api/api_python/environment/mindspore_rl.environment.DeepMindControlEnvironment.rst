@@ -1,5 +1,5 @@
 .. py:class:: mindspore_rl.environment.DeepMindControlEnvironment(params, env_id=0)
-    
+
     DeepMindControlEnvironment将DeepMind Control Suite(DMC)通过MindSpore算子再次封装。它用于基于物理的模拟和强化学习环境，使用MUJOCO。
 
     参数：

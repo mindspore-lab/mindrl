@@ -19,7 +19,6 @@ import mindspore.nn.probability.distribution as msd
 import mindspore.ops as ops
 import numpy as np
 from mindspore import Tensor
-from mindspore.common.api import ms_function
 from mindspore.common.initializer import initializer
 from mindspore.common.parameter import Parameter
 from mindspore.ops import composite as C

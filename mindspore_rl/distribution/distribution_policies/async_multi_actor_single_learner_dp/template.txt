@@ -24,7 +24,6 @@ from mindspore_rl.agent.trainer import Trainer
 from mindspore_rl.agent import trainer
 from mindspore.ops.operations._rl_inner_ops import MuxSend, MuxReceive
 from mindspore.communication.management import init, NCCL_WORLD_COMM_GROUP, get_rank, get_group_size
-from mindspore import ms_function
 
 class $fragment_name$(nn.Cell):
     def __init__(self, msrl, rank, episode, duration):

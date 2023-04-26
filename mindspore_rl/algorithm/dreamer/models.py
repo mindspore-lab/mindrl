@@ -79,7 +79,6 @@ class ConvEncoder(nn.Cell):
 
     def construct(self, images):
         """Forward of conv encoder"""
-        # images = ops.cast(images, ms.float16)
         x = self.reshape(images, (-1,) + tuple(images.shape[-3:]))
         x = x.transpose(0, 3, 1, 2)
         x = self.conv1(x)
@@ -91,7 +90,6 @@ class ConvEncoder(nn.Cell):
         x = self.conv4(x)
         x = self.relu4(x)
         x = x.transpose(0, 2, 3, 1)
-        # x = ops.cast(x, ms.float32)
         return self.reshape(x, (images.shape[:-3] + (32 * self.depth,)))
 
 
@@ -201,12 +199,13 @@ class ActionDecoder(nn.Cell):
 
     def __init__(self, params):
         super().__init__()
+        self.dtype = params["dtype"]
         layers_param = params["action_decoder_layers"]
         size = params["size"]
-        self.min_std = Tensor(params["min_std"], ms.float16)
-        self.mean_scale = Tensor(params["mean_scale"], ms.float16)
-        self.init_std = Tensor(params["init_std"], ms.float16)
-        self.zero_float = Tensor(0, ms.float16)
+        self.min_std = Tensor(params["min_std"], self.dtype)
+        self.mean_scale = Tensor(params["mean_scale"], self.dtype)
+        self.init_std = Tensor(params["init_std"], self.dtype)
+        self.zero_float = Tensor(0, self.dtype)
 
         self.fc = FullyConnectedLayers(
             fc_layer_params=layers_param,
@@ -221,8 +220,8 @@ class ActionDecoder(nn.Cell):
         self.split = P.Split(-1, 2)
         self.softplus = P.Softplus()
         self.tanh = P.Tanh()
-        self.normal = msd.Normal(dtype=ms.float16)
-        self.transformed_dist = TanhMultivariateNormalDiag(dtype=ms.float16)
+        self.normal = msd.Normal(dtype=self.dtype)
+        self.transformed_dist = TanhMultivariateNormalDiag(dtype=self.dtype)
 
         self.log = P.Log()
         self.exp = P.Exp()
@@ -245,6 +244,7 @@ class RSSM(nn.Cell):
 
     def __init__(self, params):
         super().__init__()
+        self.dtype = params["dtype"]
         hidden_size = params["hidden_size"]
         stoch_size = params["stoch_size"]
         deter_size = params["deter_size"]
@@ -255,21 +255,21 @@ class RSSM(nn.Cell):
             out_channels=hidden_size,
             activation=nn.ELU(),
             weight_init="xavier_uniform",
-        ).to_float(ms.float16)
+        ).to_float(self.dtype)
         self.gru_img = GruNet(
             input_size=hidden_size, hidden_size=deter_size, weight_init="xavier_uniform"
-        ).to_float(ms.float16)
+        ).to_float(self.dtype)
         self.fc2_img = nn.Dense(
             in_channels=deter_size,
             out_channels=hidden_size,
             activation=nn.ELU(),
             weight_init="xavier_uniform",
-        ).to_float(ms.float16)
+        ).to_float(self.dtype)
         self.fc3_img = nn.Dense(
             in_channels=hidden_size,
             out_channels=2 * stoch_size,
             weight_init="xavier_uniform",
-        ).to_float(ms.float16)
+        ).to_float(self.dtype)
         self.softplus_img = P.Softplus()
 
         # ObsStepNet
@@ -278,12 +278,12 @@ class RSSM(nn.Cell):
             out_channels=hidden_size,
             activation=nn.ELU(),
             weight_init="xavier_uniform",
-        ).to_float(ms.float16)
+        ).to_float(self.dtype)
         self.fc2_obs = nn.Dense(
             in_channels=hidden_size,
             out_channels=2 * stoch_size,
             weight_init="xavier_uniform",
-        ).to_float(ms.float16)
+        ).to_float(self.dtype)
         self.softplus_obs = P.Softplus()
 
         self.split = P.Split(-1, 2)
@@ -293,7 +293,7 @@ class RSSM(nn.Cell):
         self.expand_dims = P.ExpandDims()
         self.squeeze = P.Squeeze(axis=0)
         self.transpose = P.Transpose()
-        self.multivariate_norm_diag = MultivariateNormalDiag(dtype=ms.float16)
+        self.multivariate_norm_diag = MultivariateNormalDiag(dtype=self.dtype)
 
         self.zero_int = Tensor(0, ms.int32)
 
@@ -302,8 +302,6 @@ class RSSM(nn.Cell):
         prior_mean, prior_std, prior_stoch, deter = self.img_step(
             prev_stoch, prev_deter, prev_action
         )
-        # deter = ops.cast(deter, ms.float16)
-        # embed = ops.cast(embed, ms.float16)
         x = self.concat([deter, embed])
         x = self.fc1_obs(x)
         x = self.fc2_obs(x)
@@ -313,10 +311,6 @@ class RSSM(nn.Cell):
             (), post_mean, post_std, independent=1
         )
 
-        # post_mean = ops.cast(post_mean, ms.float32)
-        # post_std = ops.cast(post_std, ms.float32)
-        # post_stoch = ops.cast(post_stoch, ms.float32)
-        # deter = ops.depend(ops.cast(deter, ms.float32), post_mean)
         return (
             post_mean,
             post_std,
@@ -329,9 +323,6 @@ class RSSM(nn.Cell):
 
     def img_step(self, prev_stoch, prev_deter, prev_action):
         """img step, which returns the prior info"""
-        # prev_stoch = ops.cast(prev_stoch, ms.float16)
-        # prev_deter = ops.cast(prev_deter, ms.float16)
-        # prev_action = ops.cast(prev_action, ms.float32)
         x = self.concat([prev_stoch, prev_action])
         x = self.fc1_img(x)
         x = self.expand_dims(x, 0)
@@ -344,10 +335,6 @@ class RSSM(nn.Cell):
         mean, std = self.split(x)
         std = self.softplus_img(std) + 0.1
         stoch = self.multivariate_norm_diag.sample((), mean, std, independent=1)
-        # mean = ops.cast(mean, ms.float32)
-        # std = ops.cast(std, ms.float32)
-        # stoch = ops.cast(stoch, ms.float32)
-        # deter = ops.cast(deter, ms.float32)
         return mean, std, stoch, deter
 
     def observe(self, embed, action, start_stoch, start_deter):

@@ -19,8 +19,10 @@ Dreamer training example.
 # pylint: disable=C0413
 import argparse
 
+import mindspore as ms
 from mindspore import context
 
+from mindspore_rl.algorithm.dreamer import config
 from mindspore_rl.algorithm.dreamer.dreamer_session import DreamerSession
 from mindspore_rl.algorithm.dreamer.dreamer_trainer import DreamerTrainer
 
@@ -37,7 +39,7 @@ parser.add_argument(
     "--precision_mode",
     type=str,
     default="fp32",
-    choices=["fp32"],
+    choices=["fp32", "fp16"],
     help="Precision mode",
 )
 parser.add_argument(
@@ -58,6 +60,9 @@ options, _ = parser.parse_known_args()
 def train(episode=options.episode):
     """Dreamer train entry."""
 
+    compute_type = ms.float32 if options.precision_mode == "fp32" else ms.float16
+    config.all_params["dtype"] = compute_type
+    config.trainer_params["dtype"] = compute_type
     context.set_context(mode=context.GRAPH_MODE, max_call_depth=100000)
     dreamer_session = DreamerSession(options.env_yaml, options.algo_yaml)
     dreamer_session.run(class_type=DreamerTrainer, episode=episode)
