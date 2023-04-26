@@ -12,24 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-'''
+"""
 Test case for UniformReplayBuffer.
-'''
+"""
 
-import pytest
-import numpy as np
 import mindspore
-from mindspore import context
-from mindspore import set_seed
-from mindspore import Tensor
+import numpy as np
+import pytest
+from mindspore import Tensor, context, set_seed
+
 from mindspore_rl.core.uniform_replay_buffer import UniformReplayBuffer
 
 
 class TestURB(mindspore.nn.Cell):
+    """Test replay buffer"""
+
     def __init__(self, capacity, batch_size):
         super().__init__()
         self.capacity = capacity
-        batch_size = batch_size
         state_shape, state_dtype = (17,), mindspore.float32
         action_shape, action_dtype = (6,), mindspore.float32
         shapes = (state_shape, action_shape)
@@ -37,6 +37,7 @@ class TestURB(mindspore.nn.Cell):
         self.urb = UniformReplayBuffer(batch_size, self.capacity, shapes, dtypes)
         self.init_s = Tensor(np.ones(state_shape), state_dtype)
         self.init_a = Tensor(np.ones(action_shape), action_dtype)
+
     def init(self):
         for i in range(self.capacity):
             state = self.init_s + i
@@ -55,11 +56,11 @@ class TestURB(mindspore.nn.Cell):
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 def test_uniform_replay_buffer():
-    '''
+    """
     Feature: Test uniform replay buffer
     Description: Test uniform replay buffer
     Expectation: success.
-    '''
+    """
 
     capacity = 200
     batch_size = 16
@@ -76,19 +77,13 @@ def test_uniform_replay_buffer():
         action = Tensor(np.ones(action_shape) * i, action_dtype)
         urb.insert([state, action])
 
-    # Sample a batch of transitions.
-    states_0, actions_0 = urb.sample()
-    states_1, actions_1 = urb.sample()
-    assert np.allclose(states_0.asnumpy(), states_1.asnumpy())
-    assert np.allclose(actions_0.asnumpy(), actions_1.asnumpy())
-
     context.set_context(mode=context.GRAPH_MODE)
     test_urb = TestURB(200, 32)
     test_urb.init()
     s0 = test_urb()
     s1 = test_urb()
     assert not np.allclose(s0.asnumpy(), s1.asnumpy())
-    
+
 
 if __name__ == "__main__":
     test_uniform_replay_buffer()

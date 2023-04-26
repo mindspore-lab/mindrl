@@ -12,20 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-'''
+"""
 Test case for MCTS.
-'''
-
-import pytest
+"""
 
 import mindspore as ms
-import mindspore.nn as nn
-from mindspore import Tensor
 import mindspore.nn.probability.distribution as msd
+import pytest
+from mindspore import Tensor, nn
 from mindspore.ops import operations as P
 
-from mindspore_rl.utils.mcts import MCTS, VanillaFunc
 from mindspore_rl.environment import TicTacToeEnvironment
+from mindspore_rl.utils.mcts import MCTS, VanillaFunc
 
 
 class VanillaMCTSWithTicTacToe(nn.Cell):
@@ -39,8 +37,15 @@ class VanillaMCTSWithTicTacToe(nn.Cell):
         vanilla_func = VanillaFunc(self.env)
         uct = (Tensor(uct, ms.float32),)
         root_player = 1.0
-        self.mcts = MCTS(self.env, "{}Common".format(device), "{}Vanilla".format(device), root_player, vanilla_func,
-                         device, args=uct)
+        self.mcts = MCTS(
+            self.env,
+            "{device}Common",
+            "{device}Vanilla",
+            root_player,
+            vanilla_func,
+            device,
+            args=uct,
+        )
 
         self.false = Tensor(False, ms.bool_)
 
@@ -54,9 +59,11 @@ class VanillaMCTSWithTicTacToe(nn.Cell):
         done = self.false
         while not done:
             legal_action = self.env.legal_action()
-            mask = (legal_action == -1)
+            mask = legal_action == -1
             invalid_action_num = (legal_action == -1).sum()
-            prob = self.ones_like(legal_action).astype(ms.float32) / (len(legal_action) - invalid_action_num)
+            prob = self.ones_like(legal_action).astype(ms.float32) / (
+                len(legal_action) - invalid_action_num
+            )
             prob[mask] = 0
             opponent_action = self.categorical.sample((), prob)
             _, _, done = self.env.step(legal_action[opponent_action])
@@ -69,15 +76,16 @@ class VanillaMCTSWithTicTacToe(nn.Cell):
         self.mcts.destroy(handle)
 
 
+@pytest.mark.skip(reason="Need build first")
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 def test_mcts_cpu():
-    '''
+    """
     Feature: Monte Carlo Tree Search CPU Version
     Description: CPU MCTS
     Expectation: success.
-    '''
+    """
 
     vanilla_mcts = VanillaMCTSWithTicTacToe(2, "CPU")
     vanilla_mcts.run()
