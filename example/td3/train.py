@@ -41,7 +41,7 @@ def train(episode=options.episode):
     '''TD3 train entry.'''
     if options.device_target != 'Auto':
         context.set_context(device_target=options.device_target)
-    if context.get_context('device_target') in ['CPU']:
+    if context.get_context('device_target') in ['GPU']:
         context.set_context(enable_graph_kernel=True)
     context.set_context(mode=context.GRAPH_MODE, save_graphs=False)
     compute_type = mstype.float32 if options.precision_mode == 'fp32' else mstype.float16
