@@ -170,7 +170,7 @@ class UniformReplayBuffer(nn.Cell):
         Check if the replaybuffer is full or not.
 
         Returns:
-            Full(bool), True if the replaybuffer is full, False otherwise.
+            Full(bool), ``True`` if the replaybuffer is full, ``False`` otherwise.
         """
 
         count = self.reshape(self.count, (1,))

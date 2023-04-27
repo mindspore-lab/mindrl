@@ -9,9 +9,9 @@
     参数：
         - **dtype** (mindspore.dtype) - TensorArray的数据类型。
         - **element_shape** (tuple(int)) - TensorArray中每个Tensor的shape。
-        - **dynamic_size** (bool，可选) - 如果是True，则该数组可以动态增长，否则为固定大小。默认：True。
-        - **size** (int，可选) - 如果 `dynamic_size=False` , 则 `size` 表示该数组的最大容量。
-        - **name** (str，可选) - TensorArray的名字，任意str。默认："TA"。
+        - **dynamic_size** (bool，可选) - 如果是 ``True``，则该数组可以动态增长，否则为固定大小。默认： ``True`` 。
+        - **size** (int，可选) - 如果 `dynamic_size` 为 ``False`` , 则 `size` 表示该数组的最大容量。默认值： ``0`` 。
+        - **name** (str，可选) - TensorArray的名字，任意str。默认： ``"TA"`` 。
 
     .. py:method:: clear()
 

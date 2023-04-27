@@ -53,8 +53,8 @@ class Trainer(nn.Cell):
 
         Args:
             episodes(int): the number of training episodes.
-            callbacks(Optional[list[Callback]]): List of callback objects. Default: None
-            ckpt_path(Optional[str]): The checkpoint file path to init or restore net. Default: None.
+            callbacks(Optional[list[Callback]]): List of callback objects. Default: ``None``.
+            ckpt_path(Optional[str]): The checkpoint file path to init or restore net. Default: ``None``.
         """
 
         cb_params = CallbackParam()
@@ -169,7 +169,7 @@ class Trainer(nn.Cell):
         The interface of the eval function for offline. A checkpoint must be provided.
 
         Args:
-            ckpt_path (string): The checkpoint file to restore net.
+            ckpt_path (string): The checkpoint file to restore net. Default: ``None``.
         """
         if ckpt_path is None:
             raise RuntimeError("Please provide a ckpt_path.")

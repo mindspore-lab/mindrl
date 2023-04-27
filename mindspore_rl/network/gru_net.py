@@ -37,15 +37,16 @@ class GruNet(nn.Cell):
     Args:
         input_size (int): Number of features of input.
         hidden_size (int):  Number of features of hidden layer.
-        weight_init (str or Initializer): Initialize method. Default: 'normal'.
-        num_layers (int): Number of layers of stacked GRU. Default: 1.
-        has_bias (bool): Whether the cell has bias. Default: True.
-        batch_first (bool): Specifies whether the first dimension of input `x` is batch_size. Default: False.
-        dropout (float): If not 0.0, append `Dropout` layer on the outputs of each
-            GRU layer except the last layer. Default 0.0. The range of dropout is [0.0, 1.0).
+        weight_init (str or Initializer): Initialize method, e.g. ``'normal'`` , ``'uniform'``.
+            Default: ``'normal'`` .
+        num_layers (int): Number of layers of stacked GRU. Default: ``1`` .
+        has_bias (bool): Whether the cell has bias. Default: ``True`` .
+        batch_first (bool): Specifies whether the first dimension of input `x` is batch_size. Default: ``False`` .
+        dropout (float): If not ``0.0`` , append `Dropout` layer on the outputs of each
+            GRU layer except the last layer. Default ``0.0`` . The range of dropout is [0.0, 1.0).
         bidirectional (bool): Specifies whether it is a bidirectional GRU,
-            num_directions=2 if bidirectional=True otherwise 1. Default: False.
-        enable_fusion (bool): Whether need to use GRU fusion ops. Default: True.
+            num_directions is 2 if `bidirectional` is ``True`` otherwise 1. Default: ``False`` .
+        enable_fusion (bool): Whether need to use GRU fusion ops. Default: ``True`` .
 
     Inputs:
         - **x_in** (Tensor) - Tensor of data type mindspore.float32 and

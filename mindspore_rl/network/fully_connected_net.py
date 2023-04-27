@@ -29,7 +29,8 @@ class FullyConnectedNet(nn.Cell):
         input_size(int): numbers of input size.
         hidden_size(int): numbers of hidden layers.
         output_size(int): numbers of output size.
-        compute_type(mindspore.dtype): data type used for fully connected layer. Default: mindspore.dtype.float32
+        compute_type(mindspore.dtype): data type used for fully connected layer.
+            Default: ``mindspore.dtype.float32`` .
 
     Examples:
         >>> from mindspore import Tensor
@@ -72,23 +73,26 @@ class FullyConnectedNet(nn.Cell):
 
 class FullyConnectedLayers(nn.Cell):
     r"""
-    This is a fully connected layers module. User can input abitrary number of fc_layer_params, then
+    This is a fully connected layers module. User can input abitrary number of `fc_layer_params`, then
     this module can create corresponding number of fully connect layers.
 
     Args:
         fc_layer_params (list[int]): A list of int states for the input and output size of fully
             connected layer. For example, if the input list is [10, 20, 3], then the module will
             create two fully connected layers whose input and output size are (10, 20) and (20, 3)
-            respectively. The length of fc_layer_params should be greater than or equal to 3.
+            respectively. The length of `fc_layer_params` should be greater than or equal to 3.
         dropout_layer_params (list[float]): A list of float states for the dropout rate. If the input
             list if [0.5, 0.3], then two dropout layers will be created after each fully connected
-            layer. The length of dropout_layer_params should be one less than fc_layer_params.
-            dropout_layer_params is a optional value. Default: None.
-        activation_fn (Union[str, Cell, Primitive]): An instance of activation function. Default: nn.ReLu().
-        weight_init (Union[Tensor, str, Initializer, numbers.Number]): The trainable weight_init parameter.
-            The dtype is same as `x`. The values of str refer to the function `initializer`. Default: 'normal'.
-        bias_init (Union[Tensor, str, Initializer, numbers.Number]): The trainable bias_init parameter. The
-            dtype is same as `x`. The values of str refer to the function `initializer`. Default: 'zeros'.
+            layer. The length of `dropout_layer_params` should be one less than `fc_layer_params`.
+            `dropout_layer_params` is a optional value. Default: ``None`` .
+        activation_fn (Union[str, Cell, Primitive]): An instance of activation function.
+            Default: ``nn.ReLu()`` .
+        weight_init (Union[Tensor, str, Initializer, numbers.Number]): The trainable `weight_init` parameter.
+            The dtype is same as `x`. The values of str refer to the function `initializer`,
+            e.g.  ``normal`` , ``uniform`` . Default: ``'normal'`` .
+        bias_init (Union[Tensor, str, Initializer, numbers.Number]): The trainable `bias_init` parameter. The
+            dtype is same as `x`. The values of str refer to the function `initializer`,
+            e.g.  ``normal`` , ``uniform`` . Default: ``'zeros'`` .
 
     Inputs:
         - **x** (Tensor) - Tensor of shape :math:`(*, fc\_layers\_params[0])`.

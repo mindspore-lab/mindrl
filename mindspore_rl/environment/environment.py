@@ -94,7 +94,7 @@ class Environment(nn.Cell):
         Whether the environment is batched.
 
         Returns:
-            batched (bool), Whether the environment is batched. Default is False.
+            batched (bool), Whether the environment is batched. Default is ``False`` .
         """
         return False
 
@@ -115,8 +115,8 @@ class Environment(nn.Cell):
 
         Returns:
             num_agent (int), Number of agent in the current environment. If the environment is
-                single agent, it will return 1. Otherwise, subclass needs to override this property
-                to return correct number of agent. Default: 1.
+                single agent, it will return ``1`` . Otherwise, subclass needs to override this property
+                to return correct number of agent. Default: ``1`` .
         """
         return 1
 
@@ -178,7 +178,7 @@ class Environment(nn.Cell):
             env_id (Union[Tensor, np.ndarray]): Which environment these actions will interact with.
 
         Returns:
-            Success (bool), True if the action is successfully executed, otherwise False.
+            Success (bool), True if the `action` is successfully executed, otherwise False.
         """
         raise NotImplementedError("Method send should be overridden by subclass.")
 

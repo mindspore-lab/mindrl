@@ -167,7 +167,7 @@ class LossCallback(Callback):
     Print loss in each episode end.
 
     Args:
-        print_rate (int, optional): The frequency to print loss. Default: 1.
+        print_rate (int, optional): The frequency to print loss. Default: ``1`` .
 
     Examples:
         >>> from mindspore_rl.utils.callback import LossCallback
@@ -230,10 +230,10 @@ class TimeCallback(Callback):
     Time Callback to monitor time costs for each episode.
 
     Args:
-        print_rate (int, optional): The frequency to print time. Default: 1.
+        print_rate (int, optional): The frequency to print time. Default: ``1`` .
         fixed_steps_in_episode (int, optional): If the number of steps in each episode is fixed, this number
-            is used to calculate the step time. If None, the real steps number should be provided in params.
-            Default: None.
+            is used to calculate the step time. If ``None`` , the real steps number should be provided in params.
+            Default: ``None`` .
 
     Examples:
         >>> from mindspore_rl.utils.callback import TimeCallback
@@ -294,9 +294,9 @@ class CheckpointCallback(Callback):
     Save the checkpoint file for all the model weights. And keep the latest `max_ckpt_nums` checkpoint files.
 
     Args:
-        save_per_episode (int, optional): The frequency to save checkpoint. Default: 0(not saved).
-        directory (str, optional): The directory for saving checkpoints. Default: './'.
-        max_ckpt_nums (int, optional): Numbers of how many checkpoint files to be kept. Default: 5.
+        save_per_episode (int, optional): The frequency to save checkpoint. Default: ``0`` (not saved).
+        directory (str, optional): The directory for saving checkpoints. Default: ``None`` , saving to ``'./'`` .
+        max_ckpt_nums (int, optional): Numbers of how many checkpoint files to be kept. Default: ``5`` .
 
     Examples:
         >>> from mindspore_rl.utils.callback import CheckpointCallback
@@ -366,7 +366,7 @@ class EvaluateCallback(Callback):
     Evaluate callback.
 
     Args:
-        eval_rate (int, optional): The frequency to eval. Default: 0(will not evaluate).
+        eval_rate (int, optional): The frequency to eval. Default: ``0`` (will not evaluate).
 
     Examples:
         >>> from mindspore_rl.utils.callback import EvaluateCallback

@@ -34,22 +34,22 @@
         - 关键字: `params`， 值： actor/learner/policy_and_network/environment的参数 (dict)。
         - 关键字: `policies`， 值： actor/learner使用的策略列表 (list)。
         - 关键字: `networks`， 值： actor/learner使用的网络列表 (list)。
-        - 关键字: `pass_environment`， 值： 如果为True， 用户需要传递环境实例给actor， 为False则不需要 (bool)。
+        - 关键字: `pass_environment`， 值： 如果为 ``True``， 用户需要传递环境实例给actor， 为 ``False`` 则不需要 (bool)。
 
     .. py:method:: get_replay_buffer
 
         返回重放缓存的实例。
 
         返回：
-            - **buffers** (object) - 重放缓存的实例。如果缓存为None， 返回也为None。
+            - **buffers** (object) - 重放缓存的实例。如果缓存为 ``None``， 返回也为 ``None``。
 
     .. py:method:: get_replay_buffer_elements(transpose=False, shape=None)
 
         返回重放缓存中的所有元素。
 
         参数：
-            - **transpose** (bool) - 输出元素是否需要转置，如果为True，则shape也需指定。默认值：False。
-            - **shape** (tuple[int]) - 转置的shape。默认值：None。
+            - **transpose** (bool) - 输出元素是否需要转置，如果为 ``True``，则shape也需指定。默认值：``False``。
+            - **shape** (tuple[int]) - 转置的shape。默认值：``None``。
 
         返回：
             - **elements** (List[Tensor]) - 一组包含所有重放缓存中数据的张量。

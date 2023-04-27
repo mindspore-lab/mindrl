@@ -18,7 +18,7 @@
         离线评估的方法。必须提供一个checkpoint。
 
         参数：
-            - **ckpt_path** (string) - 需要加载到网络的checkpoint文件。默认值：None。
+            - **ckpt_path** (string) - 需要加载到网络的checkpoint文件。默认值：``None``。
 
     .. py:method:: train(episodes, callbacks=None, ckpt_path=None)
 
@@ -26,8 +26,8 @@
 
         参数：
             - **episodes** (int) - 训练回合数。
-            - **callbacks** (Optional[list[Callback]]) - 回调函数的列表。默认值：None。
-            - **ckpt_path** (Optional[str]) - 要初始化或重加载的网络文件路径。默认值：None。
+            - **callbacks** (Optional[list[Callback]]) - 回调函数的列表。默认值：``None``。
+            - **ckpt_path** (Optional[str]) - 要初始化或重加载的网络文件路径。默认值：``None``。
 
     .. py:method:: train_one_episode
 

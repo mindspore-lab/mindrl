@@ -31,13 +31,13 @@ class PriorityReplayBuffer(nn.Cell):
 
     Args:
         alpha (float): parameter to control degree of prioritization.
-            0 means the uniform sampling, 1 means priority sampling.
+            ``0`` means the uniform sampling, ``1`` means priority sampling.
         capacity (int): the capacity of the buffer.
         sample_size (int): size for sampling from the buffer.
         shapes (list[int]): the shape of each tensor in a buffer element.
         types (list[mindspore.dtype]): the data type of each tensor in a buffer element.
-        seed0 (int): Seed0 value for random generating. Default: 0.
-        seed1 (int): Seed1 value for random generating. Default: 0.
+        seed0 (int): Seed0 value for random generating. Default: ``0``.
+        seed1 (int): Seed1 value for random generating. Default: ``0``.
 
     Examples:
         >>> import mindspore as ms
@@ -80,7 +80,7 @@ class PriorityReplayBuffer(nn.Cell):
 
         Args:
             beta (float): parameter to control degree of sampling correction.
-                0 means the no correction, 1 means full correction.
+                ``0`` means the no correction, ``1`` means full correction.
 
         Returns:
             indices (Tensor), the transition indices in the replay buffer.

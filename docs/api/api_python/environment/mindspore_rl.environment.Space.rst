@@ -5,10 +5,10 @@
     参数：
         - **feature_shape** (Union[list(int), tuple(int), int]) - 批处理前的动作/状态的Shape。
         - **dtype** (np.dtype) - 动作/状态空间的数据类型。
-        - **low** (Union[int, float]，可选) - 动作/状态空间的下边界。默认：None。
-        - **high** (Union[int, float]，可选) - 动作/状态空间的上边界。默认：None。
-        - **batch_shape** (Union[list(int), tuple(int), int]，可选) - 矢量化的批量Shape。通常用于多环境和多智能体的场景。默认：None。
-        - **mask** (Sequence[int], 可选) - 离散动作的mask。默认None。
+        - **low** (Union[int, float]，可选) - 动作/状态空间的下边界。默认： ``None`` 。
+        - **high** (Union[int, float]，可选) - 动作/状态空间的上边界。默认： ``None`` 。
+        - **batch_shape** (Union[list(int), tuple(int), int]，可选) - 矢量化的批量Shape。通常用于多环境和多智能体的场景。默认： ``None`` 。
+        - **mask** (Sequence[int], 可选) - 离散动作的mask。默认 ``None`` 。
 
     .. py:method:: boundary
         :property:

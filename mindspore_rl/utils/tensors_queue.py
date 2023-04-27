@@ -34,8 +34,8 @@ class TensorsQueue(Cell):
     Args:
         dtype (mindspore.dtype): the data type in the TensorsQueue. Each tensor should have the same dtype.
         shapes (tuple[int64]): the shape of each element in TensorsQueue.
-        size (int, optional): the size of the TensorsQueue. Default: 0.
-        name (str, optional): the name of this TensorsQueue. Default: "TQ".
+        size (int, optional): the size of the TensorsQueue. Default: ``0`` .
+        name (str, optional): the name of this TensorsQueue. Default: ``"TQ"`` .
 
     Raises:
         TypeError: If `dtype` is not MindSpore number type.
