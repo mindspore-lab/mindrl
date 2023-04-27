@@ -55,25 +55,25 @@ class DreamerTrainer(Trainer):
         i = self.zero_int
         # ============================================
         state = self.msrl.collect_environment.reset()
-        state = ops.cast(state, ms.float16)
+        state = ops.cast(state, self.dtype)
         # ============================================
         episode_obs = self.zeros(
-            (self.episode_limits + 1,) + self.obs_shape, ms.float16
+            (self.episode_limits + 1,) + self.obs_shape, self.dtype
         )
         episode_action = self.zeros(
-            (self.episode_limits + 1, self.action_space_dim), ms.float16
+            (self.episode_limits + 1, self.action_space_dim), self.dtype
         )
-        episode_reward = self.zeros((self.episode_limits + 1, 1), ms.float16)
-        episode_discount = self.ones((self.episode_limits + 1, 1), ms.float16)
+        episode_reward = self.zeros((self.episode_limits + 1, 1), self.dtype)
+        episode_discount = self.ones((self.episode_limits + 1, 1), self.dtype)
 
         episode_obs[i] = state
         i += 1
 
-        prev_mean = self.zeros((1, self.stoch_size), ms.float16)
-        prev_std = self.zeros((1, self.stoch_size), ms.float16)
-        prev_stoch = self.zeros((1, self.stoch_size), ms.float16)
-        prev_deter = self.zeros((1, self.deter_size), ms.float16)
-        prev_action = self.zeros((1, self.action_space_dim), ms.float16)
+        prev_mean = self.zeros((1, self.stoch_size), self.dtype)
+        prev_std = self.zeros((1, self.stoch_size), self.dtype)
+        prev_stoch = self.zeros((1, self.stoch_size), self.dtype)
+        prev_deter = self.zeros((1, self.deter_size), self.dtype)
+        prev_action = self.zeros((1, self.action_space_dim), self.dtype)
 
         while i < self.episode_limits_tensor + 1:
             state = self.expand_dims(state, 0)
@@ -90,9 +90,9 @@ class DreamerTrainer(Trainer):
             # =========================================================================
             action = ops.cast(half_action, ms.float32)
             new_state, reward, _, discount = self.msrl.collect_environment.step(action)
-            new_state = ops.cast(new_state, ms.float16)
-            reward = ops.cast(reward, ms.float16)
-            discount = ops.cast(discount, ms.float16)
+            new_state = ops.cast(new_state, self.dtype)
+            reward = ops.cast(reward, self.dtype)
+            discount = ops.cast(discount, self.dtype)
             # =========================================================================
             episode_obs[i] = new_state
             episode_action[i] = half_action
@@ -116,26 +116,26 @@ class DreamerTrainer(Trainer):
         i = self.zero_int
         # ============================================
         state = self.msrl.collect_environment.reset()
-        state = ops.cast(state, ms.float16)
+        state = ops.cast(state, self.dtype)
         # ============================================
         episode_obs = self.zeros(
-            (self.episode_limits + 1,) + self.obs_shape, ms.float16
+            (self.episode_limits + 1,) + self.obs_shape, self.dtype
         )
         episode_action = self.zeros(
-            (self.episode_limits + 1, self.action_space_dim), ms.float16
+            (self.episode_limits + 1, self.action_space_dim), self.dtype
         )
-        episode_reward = self.zeros((self.episode_limits + 1, 1), ms.float16)
-        episode_discount = self.ones((self.episode_limits + 1, 1), ms.float16)
+        episode_reward = self.zeros((self.episode_limits + 1, 1), self.dtype)
+        episode_discount = self.ones((self.episode_limits + 1, 1), self.dtype)
 
         episode_obs[i] = state
         i += 1
 
         # Init prev_mean, prev_std, prev_stoch, prev_deter and prev_action
-        prev_mean = self.zeros((1, self.stoch_size), ms.float16)
-        prev_std = self.zeros((1, self.stoch_size), ms.float16)
-        prev_stoch = self.zeros((1, self.stoch_size), ms.float16)
-        prev_deter = self.zeros((1, self.deter_size), ms.float16)
-        prev_action = self.zeros((1, self.action_space_dim), ms.float16)
+        prev_mean = self.zeros((1, self.stoch_size), self.dtype)
+        prev_std = self.zeros((1, self.stoch_size), self.dtype)
+        prev_stoch = self.zeros((1, self.stoch_size), self.dtype)
+        prev_deter = self.zeros((1, self.deter_size), self.dtype)
+        prev_action = self.zeros((1, self.action_space_dim), self.dtype)
         while i < self.episode_limits_tensor + 1:
             state = self.expand_dims(state, 0)
             (
@@ -151,9 +151,9 @@ class DreamerTrainer(Trainer):
             # =========================================================================
             action = ops.cast(half_action, ms.float32)
             new_state, reward, _, discount = self.msrl.collect_environment.step(action)
-            new_state = ops.cast(new_state, ms.float16)
-            reward = ops.cast(reward, ms.float16)
-            discount = ops.cast(discount, ms.float16)
+            new_state = ops.cast(new_state, self.dtype)
+            reward = ops.cast(reward, self.dtype)
+            discount = ops.cast(discount, self.dtype)
             # =========================================================================
             episode_obs[i] = new_state
             episode_action[i] = half_action
@@ -168,7 +168,7 @@ class DreamerTrainer(Trainer):
         self.steps += i - 1
 
         j = self.zero_int
-        loss = Tensor(0, ms.float16)
+        loss = Tensor(0, self.dtype)
         while j < self.train_steps:
             data = self.msrl.buffers.sample()
             loss = self.msrl.agent_learn(data)

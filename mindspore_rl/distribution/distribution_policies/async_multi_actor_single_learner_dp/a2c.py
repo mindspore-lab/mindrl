@@ -21,7 +21,7 @@ import mindspore.nn as nn
 import mindspore.nn.probability.distribution as msd
 import mindspore.ops as ops
 import numpy as np
-from mindspore import Tensor, context, ms_function
+from mindspore import Tensor, context
 from mindspore.common.parameter import ParameterTuple
 from mindspore.ops import composite as C
 from mindspore.ops import operations as P

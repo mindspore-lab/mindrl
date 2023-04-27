@@ -1,6 +1,6 @@
 
 .. py:class:: mindspore_rl.utils.MCTS(env, tree_type, node_type, root_player, customized_func, device, args, has_init_reward=False, max_action=-1.0, max_iteration=1000)
-    
+
     蒙特卡洛树搜索（MCTS）是一种通用搜索决策算法，在棋类游戏（如围棋，国际象棋）中效果尤为显著。MCTS在2006年被首次提出。一个通用的MCTS会有以下四个阶段：
 
     1. 选择（Selection） - 根据选择策略（如UCT, RAVE, AMAF等）选择下一个节点。

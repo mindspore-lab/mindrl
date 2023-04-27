@@ -50,7 +50,7 @@ class DreamerPolicy:
         def __init__(self, params):
             super().__init__()
             self.params = params
-            self.uniform = msd.Uniform(low=-1.0, high=1.0, dtype=ms.float16)
+            self.uniform = msd.Uniform(low=-1.0, high=1.0, dtype=params["dtype"])
 
         def construct(self, prev_mean, prev_std, prev_stoch, prev_deter):
             return (
@@ -82,15 +82,16 @@ class DreamerPolicy:
             return feat, post_mean, post_std, post_stoch, prior_deter
 
     def __init__(self, params):
-        self.conv_encoder = ConvEncoder(params).to_float(ms.float16)
-        self.conv_decoder = ConvDecoder(params).to_float(ms.float16)
+        dtype = params["dtype"]
+        self.conv_encoder = ConvEncoder(params).to_float(dtype)
+        self.conv_decoder = ConvDecoder(params).to_float(dtype)
         self.reward_decoder = DenseDecoder(
             params["reward_decoder_shape"], params["reward_decoder_layers"]
-        ).to_float(ms.float16)
+        ).to_float(dtype)
         self.value_decoder = DenseDecoder(
             params["value_decoder_shape"], params["value_decoder_layers"]
-        ).to_float(ms.float16)
-        self.action_decoder = ActionDecoder(params).to_float(ms.float16)
+        ).to_float(dtype)
+        self.action_decoder = ActionDecoder(params).to_float(dtype)
         self.rssm = RSSM(params)
         self.collect_policy = self.CollectPolicy(self.conv_encoder, self.rssm)
         self.init_policy = self.InitPolicy(params)
@@ -101,12 +102,13 @@ class DreamerActor(Actor):
 
     def __init__(self, params):
         super().__init__()
+        dtype = params["dtype"]
         self.init_policy = params["init_policy"]
         self.collect_policy = params["collect_policy"]
         self.action_decoder = params["action_decoder"]
-        self.amount = Tensor(params["expl_amount"], ms.float16)
+        self.amount = Tensor(params["expl_amount"], dtype)
 
-        self.normal = msd.Normal(dtype=ms.float16)
+        self.normal = msd.Normal(dtype=dtype)
         self.zeros_like = P.ZerosLike()
 
         self.true = Tensor(True, ms.bool_)
@@ -151,32 +153,32 @@ class DreamerLearner(Learner):
 
         def __init__(self, params):
             super().__init__()
+            self.dtype = params["dtype"]
             self.rssm = params["rssm"]
             self.conv_encoder = params["conv_encoder"]
             self.conv_decoder = params["conv_decoder"]
             self.reward_decoder = params["reward_decoder"]
-            self.free_nats = Tensor(params["free_nats"], ms.float16)
-            self.kl_scale = Tensor(params["kl_scale"], ms.float16)
+            self.free_nats = Tensor(params["free_nats"], self.dtype)
+            self.kl_scale = Tensor(params["kl_scale"], self.dtype)
             self.stoch_size = params["stoch_size"]
             self.deter_size = params["deter_size"]
 
-            self.one_float = Tensor(1, ms.float16)
-            self.dtype = params["dtype"]
+            self.one_float = Tensor(1, self.dtype)
 
             self.concat = P.Concat(axis=-1)
             self.zeros = P.Zeros()
-            self.normal = msd.Normal(dtype=ms.float16)
+            self.normal = msd.Normal(dtype=self.dtype)
             self.reduce_mean = P.ReduceMean()
             self.reduce_sum = P.ReduceSum()
             self.maximum = P.Maximum()
-            self.multivariate_norm_diag = MultivariateNormalDiag(dtype=ms.float16)
+            self.multivariate_norm_diag = MultivariateNormalDiag(dtype=self.dtype)
 
         def construct(self, obs, action, reward):
             """calculate Dreamer dynamic loss"""
             embed = self.conv_encoder(obs)
             # embed, action, start_stoch, start_deter
-            start_stoch = self.zeros((obs.shape[0], self.stoch_size), ms.float16)
-            start_deter = self.zeros((obs.shape[0], self.deter_size), ms.float16)
+            start_stoch = self.zeros((obs.shape[0], self.stoch_size), self.dtype)
+            start_deter = self.zeros((obs.shape[0], self.deter_size), self.dtype)
             (
                 post_mean_tensor,
                 post_std_tensor,
@@ -220,12 +222,13 @@ class DreamerLearner(Learner):
 
         def __init__(self, params):
             super().__init__()
+            self.dtype = params["dtype"]
             self.action_decoder = params["action_decoder"]
             self.reward_decoder = params["reward_decoder"]
             self.value_decoder = params["value_decoder"]
             self.rssm = params["rssm"]
-            self.discount = Tensor(params["discount"], ms.float16)
-            self.gamma = Tensor(params["gamma"], ms.float16)
+            self.discount = Tensor(params["discount"], self.dtype)
+            self.gamma = Tensor(params["gamma"], self.dtype)
             self.horizon = params["horizon"]
             self.episode_limits = int(
                 params["episode_limits"] / params["action_repeat"]
@@ -239,7 +242,7 @@ class DreamerLearner(Learner):
             self.zero_int = Tensor(0, ms.int32)
 
             self.discounted_return = DiscountedReturn(
-                params["gamma"] * params["discount"], need_bprop=True, dtype=ms.float16
+                params["gamma"] * params["discount"], need_bprop=True, dtype=self.dtype
             )
             self.reshape = P.Reshape()
             self.ones_like = P.OnesLike()
@@ -300,10 +303,11 @@ class DreamerLearner(Learner):
 
         def __init__(self, params):
             super().__init__()
+            self.dtype = params["dtype"]
             self.value_decoder = params["value_decoder"]
             self.reduce_mean = P.ReduceMean()
-            self.normal = msd.Normal(dtype=ms.float16)
-            self.one_float = Tensor(1, ms.float16)
+            self.normal = msd.Normal(dtype=self.dtype)
+            self.one_float = Tensor(1, self.dtype)
 
         def construct(self, imagine_feat, returns, discount):
             """calculate Dreamer value loss"""

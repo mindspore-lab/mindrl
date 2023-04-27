@@ -77,10 +77,6 @@ all_params = {
 collect_env_params = all_params
 eval_env_params = all_params
 
-policy_params = all_params
-
-learner_params = all_params
-
 trainer_part = {
     "duration": 1000,
     "batch_size": 1,
