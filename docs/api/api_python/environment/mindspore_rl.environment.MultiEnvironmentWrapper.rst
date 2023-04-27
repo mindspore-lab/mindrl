@@ -4,7 +4,7 @@
 
     参数：
         - **env_instance** (list[Environment]) - 包含环境实例（继承Environment类）的List。
-        - **num_proc** (int，可选) - 在和环境交互时使用的进程数量。默认值： 1。
+        - **num_proc** (int，可选) - 在和环境交互时使用的进程数量。默认值： ``1`` 。
 
     .. py:method:: action_space
         :property:

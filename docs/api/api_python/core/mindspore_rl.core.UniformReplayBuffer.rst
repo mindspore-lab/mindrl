@@ -14,7 +14,7 @@
         检查缓存区是否已满。
 
         返回：
-            - **Full** (bool) - 缓存区已满返回True，否则返回False。
+            - **Full** (bool) - 缓存区已满返回 ``True``，否则返回 ``False``。
 
     .. py:method:: get_item(index)
 

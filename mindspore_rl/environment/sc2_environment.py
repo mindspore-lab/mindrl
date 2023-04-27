@@ -45,7 +45,7 @@ class StarCraft2Environment(PythonEnvironment):
             |                              |  please have a look at its official github.            |
             +------------------------------+--------------------------------------------------------+
         env_id (int, optional): A integer which is used to set the seed of this environment,
-            default value means the 0th environment. Default: 0.
+            default value means the 0th environment. Default: ``0`` .
 
     Supported Platforms:
         ``Ascend`` ``GPU`` ``CPU``

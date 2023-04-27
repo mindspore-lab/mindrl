@@ -9,13 +9,13 @@
     参数：
         - **dtype** (mindspore.dtype) - TensorsQueue的数据类型。每个Tensor需要相同的类型。
         - **shapes** (tuple[int64]) - TensorsQueue中每个Tensor的shape。
-        - **size** (int，可选) - TensorsQueue的大小。默认：0。
-        - **name** (str，可选) - TensorsQueue的名字。默认："TQ"。
+        - **size** (int，可选) - TensorsQueue的大小。默认： ``0``。
+        - **name** (str，可选) - TensorsQueue的名字。默认： ``"TQ"``。
 
     异常：
-        - **TypeError** - `dtype` 不是 MindSpore 数字类型.
-        - **ValueError** - `size` 小于0.
-        - **ValueError** - `shapes` 的长度小于1.
+        - **TypeError** - `dtype` 不是 MindSpore 数字类型。
+        - **ValueError** - `size` 小于0。
+        - **ValueError** - `shapes` 的长度小于1。
 
     .. py:method:: clear()
 

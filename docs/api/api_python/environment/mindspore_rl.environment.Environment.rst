@@ -16,7 +16,7 @@
         环境是否batched
 
         返回：
-            - **batched** (bool) - 是否环境是batched。默认为False。
+            - **batched** (bool) - 环境是否是batched。默认为 ``False``。
 
     .. py:method:: close
 
@@ -47,7 +47,7 @@
         环境中的智能体个数
 
         返回：
-            - **num_agent** (Space) - 环境中的智能体个数。如果环境为单智能体，会返回1。其他情况，子类需要重写这个这个属性去返回对应的智能体个数。默认为1。
+            - **num_agent** (Space) - 环境中的智能体个数。如果环境为单智能体，会返回 ``1`` 。其他情况，子类需要重写这个这个属性去返回对应的智能体个数。默认为 ``1`` 。
 
     .. py:method:: num_environment
         :property:

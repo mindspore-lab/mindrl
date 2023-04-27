@@ -56,13 +56,15 @@ class MCTS(nn.Cell):
         root_player (float): The root player, which should be less than the total number of player.
         customized_func (AlgorithmFunc): Some algorithm specific class. For more detail, please have a look at
             documentation of AlgorithmFunc.
-        device (str): The device type in ["CPU", "GPU"], Ascend is not support yet.
+        device (str): The device type ``"CPU"`` , ``"GPU"`` . ``"Ascend"`` is not support yet.
         args (Tensor): any values which will be the input of MctsCreation. Please following the table below
             to provide the input value. These value will not be reset after invoke `restore_tree_data`.
-        has_init_reward (bool, optional): Whether pass the reward to each node during the node initialization. Default: False.
-        max_action (float, optional): The max number of action in environment. If the max_action is -1.0, the step in Environment
-            will accept the last action. Otherwise, it will accept max_action number of action. Default: -1.0.
-        max_iteration (int, optional): The max training iteration of MCTS. Default: 1000.
+        has_init_reward (bool, optional): Whether pass the reward to each node during the node initialization.
+            Default: ``False``. 
+        max_action (float, optional): The max number of action in environment. If the `max_action` is ``-1.0`` ,
+            the step in Environment will accept the last action. Otherwise, it will accept max_action number
+            of action. Default: ``-1.0`` .
+        max_iteration (int, optional): The max training iteration of MCTS. Default: ``1000`` .
 
             +------------------------------+-----------------+-----------------------------+--------------------------+
             |  MCTS Tree Type              |  MCTS Node Type |  Configuration Parameter    |  Notices                 |

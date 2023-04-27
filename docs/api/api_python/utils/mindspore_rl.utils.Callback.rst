@@ -45,7 +45,7 @@
     在每个episode结束时打印loss值。
 
     参数：
-        - **print_rate** (int, 可选) - 打印loss的频率。默认值：1。
+        - **print_rate** (int, 可选) - 打印loss的频率。默认值： ``1`` 。
 
     .. py:method:: episode_end(params)
 
@@ -60,8 +60,8 @@
     在每个episode结束时打印耗时。
 
     参数：
-        - **print_rate** (int, 可选) - 打印耗时的频率, 默认值：1。
-        - **fixed_steps_in_episode** (int, 可选) - 如果每个episode的steps是固定的，则提供一个固定steps值。如果时None, params中需要提供实际steps。默认值：None。
+        - **print_rate** (int, 可选) - 打印耗时的频率，默认值： ``1`` 。
+        - **fixed_steps_in_episode** (int, 可选) - 如果每个episode的steps是固定的，则提供一个固定steps值。如果是 ``None`` ，params中需要提供实际steps。默认值： ``None`` 。
 
     .. py:method:: episode_begin(params)
 
@@ -82,9 +82,9 @@
     保存模型的checkpoint文件，保留最新的 `max_ckpt_nums` 个。
 
     参数：
-        - **save_per_episode** (int, 可选) - 保存ckpt文件的频率。默认值：0（不保存）。
-        - **directory** (str, 可选) - 保存ckpt文件的路径。默认：'./'。
-        - **max_ckpt_nums** (int, 可选) - 最大保留ckpt的个数。默认值：5。
+        - **save_per_episode** (int, 可选) - 保存ckpt文件的频率。默认值： ``0`` （不保存）。
+        - **directory** (str, 可选) - 保存ckpt文件的路径。默认： ``None`` ，保存至 ``'./'`` 路径。
+        - **max_ckpt_nums** (int, 可选) - 最大保留ckpt的个数。默认值： ``5`` 。
 
     .. py:method:: episode_end(params)
 
@@ -98,7 +98,7 @@
     推理回调。
 
     参数：
-        - **eval_rate** (int, 可选) - 推理的频率。默认值：0（不推理）。
+        - **eval_rate** (int, 可选) - 推理的频率。默认值： ``0`` （不推理）。
 
     .. py:method:: begin(params)
 

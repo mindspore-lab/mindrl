@@ -8,13 +8,13 @@
     参数：
         - **input_size** (int) - 输入的特征数。
         - **hidden_size** (int) - 隐藏层的特征数量。
-        - **weight_init** (str or Initializer) - 初始化方法，如normal、uniform。默认值： 'normal'。
-        - **num_layers** (int) - GRU层的数量。默认值： 1。
-        - **has_bias** (bool) - cell中是否有偏置。默认值： True。
-        - **batch_first** (bool) - 指定输入 `x` 的第一个维度是否为批处理大小。默认值： False。
-        - **dropout** (float) - 如果不是0.0, 则在除最后一层外的每个GRU层的输出上附加 `Dropout` 层。默认值： 0.0。取值范围 [0.0, 1.0)。
-        - **bidirectional** (bool) - 指定它是否为双向GRU，如果bidirectional=True则为双向，否则为单向。默认值： False。
-        - **enable_fusion** (bool) - 是否需要使用GRU的融合算子。默认值：True。
+        - **weight_init** (str or Initializer) - 初始化方法，如 ``'normal'``、 ``'uniform'``。默认值： ``'normal'``。
+        - **num_layers** (int) - GRU层的数量。默认值： ``1``。
+        - **has_bias** (bool) - cell中是否有偏置。默认值： ``True``。
+        - **batch_first** (bool) - 指定输入 `x` 的第一个维度是否为批处理大小。默认值： ``False``。
+        - **dropout** (float) - 如果不是 ``0.0``, 则在除最后一层外的每个GRU层的输出上附加 `Dropout` 层。默认值： ``0.0`` 。取值范围 [0.0, 1.0)。
+        - **bidirectional** (bool) - 指定它是否为双向GRU，如果 `bidirectional` 为 ``True`` 则为双向，否则为单向。默认值： ``False``。
+        - **enable_fusion** (bool) - 是否需要使用GRU的融合算子。默认值： ``True`` 。
 
     输入：
         - **x_in** (Tensor) - 数据类型为mindspore.float32和shape为 :math:`(seq\_len, batch\_size, input\_size)` 或 :math:`(batch\_size, seq\_len, input\_size)` 的Tensor。

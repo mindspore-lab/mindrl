@@ -61,7 +61,7 @@ class DeepMindControlEnvironment(Environment):
             |  img_size                    |  The rendered img size     |
             +------------------------------+----------------------------+
         env_id (int, optional): A integer which is used to set the seed of this environment,
-            default value means the 0th environment. Default: 0.
+            default value means the 0th environment. Default: ``0`` .
 
     Examples:
         >>> env_params = {'env_name': 'walker_walk', 'img_size': (64, 64),

@@ -68,8 +68,8 @@ class MSRL(nn.Cell):
                 actor/learner (list).
               - key: 'networks',    value: the list of networks used by the
                 actor/learner (list).
-              - key: 'pass_environment', value: True user needs to pass the environment
-                instance into actor, False otherwise (Bool).
+              - key: 'pass_environment', value: ``True`` user needs to pass the environment
+                instance into actor, ``False`` otherwise (Bool).
     """
 
     def __init__(self, alg_config, deploy_config=None):
@@ -125,7 +125,7 @@ class MSRL(nn.Cell):
 
         Args:
             sub_config (dict): configuration file of the class.
-            actor_id (int): the id of the actor. Default: None.
+            actor_id (int): the id of the actor. Default: ``None``.
 
         Returns:
             obj (object), the class instance.
@@ -491,8 +491,8 @@ class MSRL(nn.Cell):
         It will return the instance of replay buffer.
 
         Returns:
-            Buffers (object), The instance of relay buffer. If the buffer is None, the return
-            value will be None.
+            Buffers (object), The instance of relay buffer. If the buffer is ``None``, the return
+            value will be ``None``.
         """
 
         return self.buffers
@@ -503,8 +503,8 @@ class MSRL(nn.Cell):
 
         Args:
             transpose (bool): whether the output element needs to be transpose,
-                if transpose is true, shape will also need to be filled. Default: False.
-            shape (tuple[int]): the shape used in transpose. Default: None.
+                if `transpose` is ``True``, `shape` will also need to be filled. Default: ``False``.
+            shape (tuple[int]): the shape used in transpose. Default: ``None``.
 
         Returns:
             elements (List[Tensor]), A set of tensor contains all the elements in the replay buffer.

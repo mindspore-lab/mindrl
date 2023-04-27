@@ -33,8 +33,8 @@ class ReservoirReplayBuffer(nn.Cell):
         capcity (int64): Capacity of the buffer.
         shapes (list[tuple[int]]): The dimensionality of the transition.
         dtypes (list[:class:`mindspore.dtype`]): The type of the transition.
-        seed0 (int): Random seed0, must be non-negative. Default: 0.
-        seed1 (int): Random seed1, must be non-negative. Default: 0.
+        seed0 (int): Random seed0, must be non-negative. Default: ``0``.
+        seed1 (int): Random seed1, must be non-negative. Default: ``0``.
 
     Outputs:
         handle(Tensor): Handle of created replay buffer instance with dtype int64 and shape :math:`(1,)`.

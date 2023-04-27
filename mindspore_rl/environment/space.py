@@ -42,11 +42,11 @@ class Space:
     Args:
         feature_shape (Union[list(int), tuple(int), int]): The action/observation shape before batching.
         dtype (np.dtype): The action/observation space dtype.
-        low (Union[int, float], optional): The action/observation space lower boundary.
-        high (Union[int, float], optional): The action/observation space upper boundary.
+        low (Union[int, float], optional): The action/observation space lower boundary. Default: ``None`` .
+        high (Union[int, float], optional): The action/observation space upper boundary. Default: ``None`` .
         batch_shape (Union[list(int), tuple(int), int], optional): The batch shape for vectorization.
-          It usually be used in multi-environment and multi-agent cases.
-        mask (Sequence[int], optional): The mask for discrete action space.
+          It usually be used in multi-environment and multi-agent cases. Default: ``None`` .
+        mask (Sequence[int], optional): The mask for discrete action space. Default: ``None`` .
 
     Examples:
         >>> action_space = Space(feature_shape=(6,), dtype=np.int32)

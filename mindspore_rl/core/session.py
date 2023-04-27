@@ -50,11 +50,11 @@ class Session:
 
     Args:
         alg_config (dict): the algorithm configuration or the deployment configuration of the algorithm.
-        deploy_config (dict): the deployment configuration for distribution. Default: None.
+        deploy_config (dict): the deployment configuration for distribution. Default: ``None``.
             For more details of configuration of algorithm, please have a look at
             `detail <https://www.mindspore.cn/reinforcement/docs/zh-CN/master/custom_config_info.html>`_.
-        params (dict): The algorithm specific training parameters. Default: None.
-        callbacks (list[Callback]): The callback list. Default: None.
+        params (dict): The algorithm specific training parameters. Default: ``None``.
+        callbacks (list[Callback]): The callback list. Default: ``None``.
     """
 
     def __init__(self, alg_config, deploy_config=None, params=None, callbacks=None):
@@ -77,10 +77,10 @@ class Session:
         Execute the reinforcement learning algorithm.
 
         Args:
-            class_type (Trainer): The class type of the algorithm"s trainer class. Default: None.
-            is_train (bool): Run the algorithm in train mode or eval mode. Default: True
-            episode (int): The number of episode of the training. Default: 0.
-            duration (int): The number of duration of the training. Default: 0.
+            class_type (Trainer): The class type of the algorithm"s trainer class. Default: ``None``.
+            is_train (bool): Run the algorithm in train mode or eval mode. Default: ``True``.
+            episode (int): The number of episode of the training. Default: ``0``.
+            duration (int): The number of duration of the training. Default: ``0``.
         """
 
         if self.dist:
