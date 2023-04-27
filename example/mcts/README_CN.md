@@ -22,5 +22,5 @@ python mcts_demo.py
 
 ## 支持平台
 
-蒙特卡洛树搜索支持GPU和CPU。
+蒙特卡洛树搜索支持GPU和CPU(x86)。
 

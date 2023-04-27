@@ -15,7 +15,7 @@
 """TD3 Trainer"""
 import mindspore
 from mindspore import Parameter, Tensor
-from mindspore.common.api import ms_function
+
 from mindspore.ops import operations as P
 
 from mindspore_rl.agent import trainer

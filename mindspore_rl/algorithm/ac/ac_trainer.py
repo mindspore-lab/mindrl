@@ -15,7 +15,7 @@
 """AC Trainer"""
 import mindspore
 from mindspore import Tensor
-from mindspore.common.api import ms_function
+
 from mindspore.common.parameter import Parameter
 from mindspore.ops import operations as P
 

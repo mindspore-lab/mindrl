@@ -15,7 +15,7 @@
 """DQN Trainer"""
 import mindspore as ms
 from mindspore import Parameter, Tensor
-from mindspore.common.api import ms_function
+
 from mindspore.ops import operations as P
 
 from mindspore_rl.agent import trainer
