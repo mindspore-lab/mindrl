@@ -2,7 +2,7 @@
 
 [View English](./RELEASE.md)
 
-## Reinforcement 0.6.0-rc1 Release Notes
+## MindSpore Reinforcement 0.6.0 Release Notes
 
 ### 主要特性和增强
 
