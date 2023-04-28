@@ -16,7 +16,6 @@
 #pylint: disable=W0613
 import mindspore as ms
 import mindspore.numpy as mnp
-from mindspore.common.api import ms_function
 from mindspore import Tensor, Parameter, set_seed, vmap
 from mindspore.ops import operations as P
 from mindspore.ops import functional as F
@@ -158,7 +157,7 @@ class MAPPOTrainer(Trainer):
             for eval_env in self.msrl.eval_environment.mpe_env_procs:
                 eval_env.terminate()
 
-    @ms_function
+    @ms.jit
     def init(self):
         """Init method, it will be called once"""
         # ---------------------- initialize ------------------------- #
@@ -169,7 +168,7 @@ class MAPPOTrainer(Trainer):
         # ------------------------------------------------------------ #
         return self.true
 
-    @ms_function
+    @ms.jit
     def train_one_episode(self):
         """the algorithm in one episode"""
         # ----------------------------------------- actor -------------------------------------------
