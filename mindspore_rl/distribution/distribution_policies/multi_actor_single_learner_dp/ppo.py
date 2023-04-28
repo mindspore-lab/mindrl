@@ -28,7 +28,6 @@ from mindspore.ops import composite as C
 from mindspore.ops import operations as P
 from mindspore.common.parameter import Parameter
 from mindspore.common.initializer import initializer
-from mindspore.common.api import ms_function
 
 from mindspore_rl.core import Session
 from mindspore_rl.core import UniformReplayBuffer
@@ -369,7 +368,7 @@ class PPOTrainer(Trainer):
         plt.ylabel('Averaged episode reward')
         plt.show()
 
-    @ms_function
+    @ms.jit
     def train_one_episode(self):
         """the algorithm in one episode"""
         state = self.msrl.collect_environment.reset()

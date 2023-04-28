@@ -2,7 +2,6 @@ import mindspore
 import mindspore.numpy as np
 from mindspore_rl.core import MSRL
 import mindspore.nn as nn
-from mindspore.common.api import ms_function
 from mindspore import Tensor
 from mindspore.ops import operations as P
 from mindspore.ops import composite as C
@@ -22,7 +21,7 @@ class $fragment_name$(nn.Cell):
         self.episode = episode
         self.duration = duration
 
-    @ms_function
+    @mindspore.jit
     def kernel(self):
         pass
         return self.reward
@@ -40,7 +39,7 @@ class $fragment_name$(nn.Cell):
         self.episode = episode
         self.duration = duration
 
-    @ms_function
+    @mindspore.jit
     def kernel(self):
         pass 
         return self.training_loss
