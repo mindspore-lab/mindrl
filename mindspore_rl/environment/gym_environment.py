@@ -152,7 +152,6 @@ class GymEnvironment(Environment):
         Render the game. Only support on PyNative mode.
         """
         try:
-<<<<<<< HEAD
             self._env.render()
         except:
             raise RuntimeError("Failed to render, run in PyNative mode and comment the ms_function.")
@@ -185,17 +184,6 @@ class GymEnvironment(Environment):
         # Add cast ops for mixed precision case. Redundant cast ops will be eliminated automatically.
         action = self.cast(action, self.action_dtype)
         return self._step_op(action)
-=======
-            if is_old_gym:
-                img = self._env.render(self._render_mode, **self._render_kwargs)
-            else:
-                img = self._env.render(**self._render_kwargs)
-        except BaseException:
-            raise RuntimeError(
-                "Failed to render, run in PyNative mode and comment the ms.jit."
-            )
-        return img
->>>>>>> 5aadb92 (Remove ms_func)
 
     def _reset(self):
         """
