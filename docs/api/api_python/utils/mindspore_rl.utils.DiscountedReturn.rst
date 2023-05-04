@@ -11,12 +11,12 @@
     参数：
         - **gamma** (float) - 折扣系数。
         - **need_bprop** (bool) - 是否需要计算discounted return的反向，默认值： ``False`` 。
+        - **dtype** (mindspore.dtype) - 张量数据类型，默认值： ``ms.float32`` 。
 
     输入：
         - **reward** (Tensor) - 包含多个episode的奖励序列。 张量的维度 :math:`(Timestep, Batch, ...)`。
         - **done** (Tensor) - Episode结束标识。 张量维度 :math:`(Timestep, Batch)`。
         - **last_state_value** (Tensor) - 表示最后一个epsode的最后一个step的价值， 张量的维度 :math:`(Batch, ...)`。
-        - **dtype** (mindspore.dtype) - 张量数据类型，默认值： ``ms.float32`` 。
 
     返回：
         折扣回报。
