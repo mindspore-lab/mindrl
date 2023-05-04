@@ -181,11 +181,6 @@ class MAPPOTrainer(Trainer):
                 self.msrl.buffers["global_replaybuffer"].reset()
 
             callback_list.end(cb_params)
-            for collect_env in self.msrl.collect_environment.mpe_env_procs:
-                collect_env.terminate()
-
-            for eval_env in self.msrl.eval_environment.mpe_env_procs:
-                eval_env.terminate()
 
     @ms.jit
     def init(self):
