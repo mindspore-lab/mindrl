@@ -18,6 +18,7 @@ from typing import List, Optional, Sequence, Union
 
 import numpy as np
 from mindspore import Tensor
+from mindspore import log as logger
 
 from mindspore_rl.environment.environment import Environment
 from mindspore_rl.environment.space import Space
@@ -76,7 +77,7 @@ class PythonEnvironment(Environment):
         )
 
         self._need_auto_reset = need_auto_reset
-        self._done_flag = np.zeros(self._done_space.shape, self._done_space.np_dtype)
+        self._done_flag = np.ones(self._done_space.shape, self._done_space.np_dtype)
         # Pre-run environment
         reset_out = self._reset()
         action = self._action_space.sample()
@@ -84,6 +85,12 @@ class PythonEnvironment(Environment):
         # Obtain the output number of reset and step
         self._num_env_reset_out = check_valid_return_value(reset_out, "reset")
         self._num_env_step_out = check_valid_return_value(step_out, "step")
+        if (
+            self._num_env_reset_out > 1 or self._num_env_step_out > 3
+        ) and self._need_auto_reset:
+            logger.warning(
+                "There are extra output for reset or step, the auto reset may not work properly."
+            )
 
     @property
     def action_space(self) -> Space:
@@ -184,11 +191,15 @@ class PythonEnvironment(Environment):
         """
         if self.should_reset(self._done_flag):
             reset_out = self.reset()
-            init_reward = np.array(0, np.float32)
+            init_reward = (
+                np.zeros_like(self._reward_space.shape, self._reward_space.np_dtype)
+                if len(self._reward_space.shape)
+                else np.zeros((), self._reward_space.np_dtype)
+            )
             self._done_flag = np.zeros_like(self._done_flag)
             step_out = (
                 (reset_out, init_reward, self._done_flag)
-                if self._num_reset_out == 0
+                if self._num_reset_out == 1
                 else (reset_out, init_reward, self._done_flag, *reset_out[1:])
             )
         else:

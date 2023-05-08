@@ -243,7 +243,7 @@ class ProcessEnvironment(Environment):
         """
         payload = name, args, kwargs
         self._local_conn.send((self._CALL, payload))
-        return self._receive
+        return self.receive
 
     def get_attr(self, name: str):
         """
@@ -257,7 +257,7 @@ class ProcessEnvironment(Environment):
 
         """
         self._local_conn.send((self._GETATTR, name))
-        return self._receive
+        return self.receive
 
     def close(self) -> bool:
         r"""
@@ -302,7 +302,7 @@ class ProcessEnvironment(Environment):
         """
         raise ValueError("ProcessEnvironment does not support recv yet")
 
-    def _receive(self):
+    def receive(self):
         """Inner receive function"""
         message, payload = self._local_conn.recv()
         if message == self._EXCEPTION:
