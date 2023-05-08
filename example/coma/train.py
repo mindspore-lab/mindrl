@@ -63,7 +63,7 @@ def train(episode=options.episode):
         context.set_context(device_target=options.device_target)
     if context.get_context("device_target") in ["CPU", "GPU"]:
         context.set_context(enable_graph_kernel=False)
-    context.set_context(mode=context.PYNATIVE_MODE, save_graphs=False)
+    context.set_context(mode=context.GRAPH_MODE, save_graphs=False)
     compute_type = (
         mstype.float32 if options.precision_mode == "fp32" else mstype.float16
     )

@@ -52,14 +52,7 @@ class COMAPolicy:
             self.num_env = 8
             self.num_agent = params["environment_config"]["num_agent"]
             self.agent_id = Tensor(
-                np.array(
-                    [
-                        np.expand_dims(np.eye(self.num_agent), 0).reshape(
-                            self.num_agent, -1
-                        )
-                    ]
-                    * self.num_env
-                ),
+                np.eye(self.num_agent),
                 ms.float32,
             )
 
@@ -85,8 +78,7 @@ class COMAPolicy:
                 .view(num_env, max_length, 1, -1)
                 .repeat(num_agents, 2)
             )
-            agent_id = F.eye(num_agents, num_agents)
-            agent_mask = 1 - agent_id
+            agent_mask = 1 - self.agent_id
             agent_mask = (
                 agent_mask.view(-1, 1).repeat(n_actions, 1).view(num_agents, -1)
             )
@@ -100,7 +92,7 @@ class COMAPolicy:
             inputs.append(last_actions)
 
             inputs.append(
-                agent_id.unsqueeze(0)
+                self.agent_id.unsqueeze(0)
                 .repeat(max_length, 0)
                 .unsqueeze(0)
                 .repeat(num_env, 0)
@@ -127,8 +119,7 @@ class COMAPolicy:
                 .view(num_env, 1, 1, -1)
                 .repeat(num_agents, 2)
             )
-            agent_id = F.eye(num_agents, num_agents)
-            agent_mask = 1 - agent_id
+            agent_mask = 1 - self.agent_id
             agent_mask = (
                 agent_mask.view(-1, 1).repeat(n_actions, 1).view(num_agents, -1)
             )
@@ -141,7 +132,7 @@ class COMAPolicy:
             inputs.append(last_actions)
 
             inputs.append(
-                agent_id.unsqueeze(0).repeat(1, 0).unsqueeze(0).repeat(num_env, 0)
+                self.agent_id.unsqueeze(0).repeat(1, 0).unsqueeze(0).repeat(num_env, 0)
             )
 
             inputs = F.concat(inputs, axis=-1)
@@ -236,18 +227,18 @@ class COMAPolicy:
 
             # normalize
             action_prob = action_prob / action_prob.sum(-1, keepdims=True)
-            # random_action = self.dist.sample((), action_prob)
+            random_action = self.dist.sample((), action_prob)
 
-            action_prob = action_prob.reshape(-1, action_prob.shape[-1])
+            # action_prob = action_prob.reshape(-1, action_prob.shape[-1])
 
-            random_action = []
-            for i in range(action_prob.shape[0]):
-                np.random.seed(42)
-                random_action.append(
-                    np.random.choice(11, 1, p=action_prob.asnumpy()[i]).item()
-                )
-            random_action = Tensor(np.array(random_action, np.int32))
-            random_action = random_action.reshape(8, 5)
+            # random_action = []
+            # for i in range(action_prob.shape[0]):
+            #     np.random.seed(42)
+            #     random_action.append(
+            #         np.random.choice(11, 1, p=action_prob.asnumpy()[i]).item()
+            #     )
+            # random_action = Tensor(np.array(random_action, np.int32))
+            # random_action = random_action.reshape(8, 5)
 
             return random_action, hy
 
