@@ -16,7 +16,7 @@
 
 import mindspore as ms
 import numpy as np
-from mindspore import Parameter, Tensor, nn
+from mindspore import Parameter, Tensor, mutable, nn
 from mindspore.ops import composite as C
 from mindspore.ops import functional as F
 from mindspore.ops import operations as P
@@ -34,9 +34,12 @@ def swap_axis(shape):
 
 
 class BatchTranspose(nn.Cell):
+    """apply batch transpose"""
+
     def __init__(self):
         super().__init__()
         self.hyper_map = C.HyperMap()
+        self.enable_tuple_broaden = True
 
     def _transpose(self, item):
         return item.transpose(swap_axis(item.shape))
@@ -118,7 +121,7 @@ class COMATrainer(Trainer):
                 action,
                 hy,
                 next_state,
-                avail_action,
+                next_avail_action,
             ) = self.msrl.agent_act(
                 trainer.COLLECT,
                 (
@@ -130,7 +133,7 @@ class COMATrainer(Trainer):
             )
 
             terminated = P.LogicalOr()(done, (self.episode_limit < steps))
-            mark_filled = P.LogicalNot()(terminated)
+            mark_filled = F.ones_like(terminated)
             self.msrl.buffers.insert(
                 (
                     obs,
@@ -149,6 +152,7 @@ class COMATrainer(Trainer):
 
             obs = next_obs
             state = next_state
+            avail_action = next_avail_action
             last_onehot_action = F.cast(
                 self.onehot(action, self.action_dim, Tensor(1.0), Tensor(0.0)),
                 ms.float32,
@@ -193,15 +197,17 @@ class COMATrainer(Trainer):
         actions = actions.unsqueeze(-1)
         self.episode_steps += filled.sum() + self.num_env
 
-        experience = (
-            state,
-            obs,
-            actions,
-            avail_actions,
-            rewards,
-            terminated,
-            last_actions_onehot,
-            filled,
+        experience = mutable(
+            (
+                state,
+                obs,
+                actions,
+                avail_actions,
+                rewards,
+                terminated,
+                last_actions_onehot,
+                filled,
+            )
         )
         critic_loss, actor_loss = self.msrl.learner.learn(experience)
         return critic_loss, actor_loss
