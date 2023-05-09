@@ -65,6 +65,7 @@ class GymEnvironment(PythonEnvironment):
         self._info_key = params.get("info_key", None)
         self._render_mode = params.get("render_mode", "rgb_array")
         self._render_kwargs = params.get("render_kwargs", {})
+        self._need_auto_reset = params.get("need_auto_reset", False)
 
         # Create environment instance and adapt gym space to mindspore space
         if is_old_gym:
@@ -77,7 +78,12 @@ class GymEnvironment(PythonEnvironment):
         observation_space = gym2ms_adapter(self._env.observation_space)
         action_space = gym2ms_adapter(self._env.action_space)
         config = self._env.spec.__dict__
-        super().__init__(action_space, observation_space, config=config)
+        super().__init__(
+            action_space,
+            observation_space,
+            config=config,
+            need_auto_reset=self._need_auto_reset,
+        )
 
     def close(self):
         r"""
