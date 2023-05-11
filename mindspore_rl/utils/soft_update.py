@@ -17,12 +17,12 @@ Soft Update.
 """
 
 import mindspore
-import mindspore.nn as nn
-from mindspore.ops import operations as P
+from mindspore import nn
+from mindspore.common.initializer import initializer
+from mindspore.common.parameter import Parameter, ParameterTuple
 from mindspore.ops import composite as C
 from mindspore.ops import functional as F
-from mindspore.common.parameter import Parameter, ParameterTuple
-from mindspore.common.initializer import initializer
+from mindspore.ops import operations as P
 
 
 class SoftUpdate(nn.Cell):
@@ -46,7 +46,7 @@ class SoftUpdate(nn.Cell):
         >>> from mindspore_rl.utils import SoftUpdate
         >>> class Net(nn.Cell):
         >>>     def __init__(self):
-        >>>         super(Net, self).__init__()
+        >>>         super().__init__()
         >>>         self.behavior_params = ParameterTuple(nn.Dense(10, 20).trainable_params())
         >>>         self.target_params = ParameterTuple(nn.Dense(10, 20).trainable_params())
         >>>         self.updater = SoftUpdate(0.9, 2, self.behavior_params, self.target_params)
@@ -58,9 +58,9 @@ class SoftUpdate(nn.Cell):
         >>> np.allclose(net.behavior_params[0].asnumpy(), net.target_params[0].asnumpy(), atol=1e-5)
         True
     """
-    def __init__(self, factor, update_interval, behavior_params, target_params):
 
-        super(SoftUpdate, self).__init__()
+    def __init__(self, factor, update_interval, behavior_params, target_params):
+        super().__init__()
         self.factor = factor
         self.update_interval = update_interval
         self.behavior_params = ParameterTuple(behavior_params)
@@ -69,10 +69,12 @@ class SoftUpdate(nn.Cell):
         self.mod = P.Mod()
         self.assign = P.Assign()
         self.hyper_map = C.HyperMap()
-        self.steps = Parameter(initializer(0, [1], mindspore.int32), name="steps", requires_grad=False)
+        self.steps = Parameter(
+            initializer(0, [1], mindspore.int32), name="steps", requires_grad=False
+        )
 
     def _update(self, factor, behavior_param, target_param):
-        new_param = (1. - factor) * target_param + factor * behavior_param
+        new_param = (1.0 - factor) * target_param + factor * behavior_param
         self.assign(target_param, new_param)
         return target_param
 
@@ -81,4 +83,4 @@ class SoftUpdate(nn.Cell):
             updater = F.partial(self._update, self.factor)
             self.hyper_map(updater, self.behavior_params, self.target_params)
         self.steps += 1
-        return True
+        return self.steps
