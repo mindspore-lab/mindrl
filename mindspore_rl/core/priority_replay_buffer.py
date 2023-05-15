@@ -16,10 +16,15 @@
 Implementation of Priority Replay Buffer class.
 """
 
-import mindspore.nn as nn
-from mindspore.ops.operations._rl_inner_ops import PriorityReplayBufferCreate, PriorityReplayBufferPush
-from mindspore.ops.operations._rl_inner_ops import PriorityReplayBufferSample, PriorityReplayBufferUpdate
-from mindspore.ops.operations._rl_inner_ops import PriorityReplayBufferDestroy
+import mindspore
+from mindspore import Tensor, nn
+from mindspore.ops.operations._rl_inner_ops import (
+    PriorityReplayBufferCreate,
+    PriorityReplayBufferDestroy,
+    PriorityReplayBufferPush,
+    PriorityReplayBufferSample,
+    PriorityReplayBufferUpdate,
+)
 
 
 class PriorityReplayBuffer(nn.Cell):
@@ -46,21 +51,31 @@ class PriorityReplayBuffer(nn.Cell):
         >>> capacity = 10000
         >>> batch_size = 10
         >>> shapes = [(4,), (1,), (1,), (4,)]
-        >>> dtypes = [ms.float32, ms.int32, ms.float32, ms.float32]
-        >>> replaybuffer = PriorityReplayBuffer(alpha, capacity, batch_size, shapes, dtypes)
+        >>> types = [ms.float32, ms.int32, ms.float32, ms.float32]
+        >>> replaybuffer = PriorityReplayBuffer(alpha, capacity, batch_size, shapes, types)
         >>> print(replaybuffer)
         PriorityReplayBuffer<>
     """
 
-    def __init__(self, alpha, capacity, sample_size, shapes, dtypes, seed0=0, seed1=0):
-        super(PriorityReplayBuffer, self).__init__()
-        handle = PriorityReplayBufferCreate(capacity, alpha, shapes, dtypes, seed0, seed1)().asnumpy().item()
-        self.push_op = PriorityReplayBufferPush(handle).add_prim_attr('side_effect_io', True)
-        self.sample_op = PriorityReplayBufferSample(handle, sample_size, shapes, dtypes)
-        self.update_op = PriorityReplayBufferUpdate(handle).add_prim_attr('side_effect_io', True)
-        self.destroy_op = PriorityReplayBufferDestroy(handle).add_prim_attr('side_effect_io', True)
+    def __init__(self, alpha, capacity, sample_size, shapes, types, seed0=0, seed1=0):
+        super().__init__()
+        handle = (
+            PriorityReplayBufferCreate(capacity, alpha, shapes, types, seed0, seed1)()
+            .asnumpy()
+            .item()
+        )
+        self.push_op = PriorityReplayBufferPush(handle).add_prim_attr(
+            "side_effect_io", True
+        )
+        self.sample_op = PriorityReplayBufferSample(handle, sample_size, shapes, types)
+        self.update_op = PriorityReplayBufferUpdate(handle).add_prim_attr(
+            "side_effect_io", True
+        )
+        self.destroy_op = PriorityReplayBufferDestroy(handle).add_prim_attr(
+            "side_effect_io", True
+        )
 
-    def push(self, *transition):
+    def insert(self, *transition):
         """
         Push a transition to the buffer. If the buffer is full, the oldest one will be removed.
 
@@ -103,6 +118,14 @@ class PriorityReplayBuffer(nn.Cell):
         """
 
         return self.update_op(indices, priorities)
+
+    def full(self):
+        """whether the buffer is full"""
+        return Tensor(False, mindspore.bool_)
+
+    def reset(self):
+        """reset the buffer"""
+        raise ValueError("reset() is not supported by PriorityReplayBuffer.")
 
     def destroy(self):
         r"""

@@ -72,7 +72,6 @@ algorithm_config = {
     "replay_buffer": {
         "number": 1,
         "type": UniformReplayBuffer,
-        "capacity": 100000,
-        "sample_size": 64,
+        "params": {"capacity": 100000, "sample_size": 64},
     },
 }
