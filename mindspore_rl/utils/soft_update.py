@@ -17,7 +17,7 @@ Soft Update.
 """
 
 import mindspore
-from mindpsore import nn
+from mindspore import nn
 from mindspore.common.initializer import initializer
 from mindspore.common.parameter import Parameter, ParameterTuple
 from mindspore.ops import composite as C
