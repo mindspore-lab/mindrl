@@ -66,11 +66,12 @@ class Session:
         self.alg_config = alg_config
         if deploy_config:
             self.dist = True
-            self.worker_num = deploy_config["worker_num"]
-            self.config = deploy_config["config"]
-            self.dist_policy = deploy_config["distribution_policy"]
-            self.is_auto = deploy_config["auto_distribution"]
-            self.algo_name = deploy_config["algo_name"]
+            self.worker_num = deploy_config.get("worker_num")
+            self.config = deploy_config.get("config")
+            self.dist_policy = deploy_config.get("distribution_policy")
+            self.is_auto = deploy_config.get("auto_distribution")
+            self.algo_name = deploy_config.get("algo_name")
+            self.frag_file = deploy_config.get("fragment_file")
 
     def run(self, class_type=None, is_train=True, episode=0, duration=0):
         """
@@ -87,7 +88,11 @@ class Session:
             init("nccl")
             if self.is_auto:
                 fragment_list = fragment_generation(
-                    self.algo_name, self.worker_num, self.dist_policy, self.msrl
+                    self.algo_name,
+                    self.worker_num,
+                    self.dist_policy,
+                    self.msrl,
+                    self.frag_file,
                 )
             else:
                 from fragments import get_all_fragments  # pylint: disable=C0415

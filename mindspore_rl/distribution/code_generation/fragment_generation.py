@@ -19,15 +19,16 @@ Generate fragment
 from .generate_code import GenerateFragment
 
 
-def fragment_generation(algo_name, worker_num, policy, msrl) -> list:
+def fragment_generation(algo_name, worker_num, policy, msrl, frag_file=None) -> list:
     """
     Function of generate fragments.
     algo_name: the name of the standard algorithm, used to find the trainer
     worker_num: it will determinate to the fragment num.
     policy: the distribution policy.
     msrl: used to init the distribution policy.
+    frag_file: skip auto-generate, and create fragment list from frag_file.
     """
     policy = policy(msrl)
     gen_fragment = GenerateFragment(algo_name, policy, worker_num)
-    fragments = gen_fragment.create_fragment()
+    fragments = gen_fragment.create_fragment(frag_file)
     return fragments
