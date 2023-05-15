@@ -663,7 +663,7 @@ class GenerateFragment:
             interface_parameters = interfaces
         return interface_parameters
 
-    def create_fragment(self) -> list:
+    def create_fragment(self, frag_file=None) -> list:
         """Main function to create fragment."""
         # 1 read source code and transform to ast module. `train.py` and `template.py`
         ast_source = self.generate_ast_from_py(self.src_file)
@@ -676,7 +676,11 @@ class GenerateFragment:
             ast_target, ast_source, parameter_list, self.policy
         )
         # 4 Unparse the ast module to python code, and create the module of Actor and Learner.
-        frag_name = self.save_fragment(ast_target)
+        if frag_file is None:
+            frag_name = self.save_fragment(ast_target)
+        else:
+            frag_name = frag_file.strip(".py")
+            print("Import fragment from file: {file}.")
         fragment_module = importlib.import_module(frag_name)
         actor = getattr(fragment_module, "Actor")
         learner = getattr(fragment_module, "Learner")
