@@ -15,13 +15,17 @@
 """
 A2C session.
 """
+from mindspore_rl.algorithm.a2c import config
 from mindspore_rl.core import Session
 from mindspore_rl.utils.utils import update_config
-from mindspore_rl.algorithm.a2c import config
 
 
 class A2CSession(Session):
-    '''A2C session'''
-    def __init__(self, env_yaml=None, algo_yaml=None):
+    """A2C session"""
+
+    def __init__(self, env_yaml=None, algo_yaml=None, is_distribution=None):
         update_config(config, env_yaml, algo_yaml)
-        super().__init__(config.algorithm_config)
+        deploy_config = None
+        if is_distribution:
+            deploy_config = config.deploy_config
+        super().__init__(config.algorithm_config, deploy_config)

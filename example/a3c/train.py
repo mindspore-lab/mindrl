@@ -35,7 +35,7 @@ parser.add_argument(
     choices=["Ascend", "GPU", "Auto"],
     help="Choose a device to run the a3c example(Default: Auto).",
 )
-parser.add_argument("--actor_num", type=int, default=3, help="actor number")
+parser.add_argument("--worker_num", type=int, default=4, help="worker number")
 parser.add_argument(
     "--env_yaml",
     type=str,
@@ -48,16 +48,23 @@ parser.add_argument(
     default=None,
     help="Choose an algo yaml to update the a3c example(Default: None).",
 )
+parser.add_argument(
+    "--enable_distribute",
+    type=bool,
+    default=True,
+    help="Train in distribute mode (Default: True).",
+)
 options, _ = parser.parse_known_args()
 
 
 def train(episode=options.episode):
+    """Train a3c"""
     if options.device_target != "Auto":
         context.set_context(device_target=options.device_target)
     if context.get_context("device_target") in ["Ascend"]:
         os.environ["GRAPH_OP_RUN"] = "1"
     context.set_context(mode=context.GRAPH_MODE)
-    config.algorithm_config["actor"]["number"] = options.actor_num
+    config.algorithm_config["actor"]["number"] = options.worker_num - 1
     ac_session = A3CSession(options.env_yaml, options.algo_yaml)
     ac_session.run(class_type=A3CTrainer, episode=episode)
 

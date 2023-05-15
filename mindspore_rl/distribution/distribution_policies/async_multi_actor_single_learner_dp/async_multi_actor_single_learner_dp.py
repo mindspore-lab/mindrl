@@ -14,7 +14,7 @@
 # ============================================================================
 
 """
-Distribution policy for Asy multi actor single learner
+Distribution policy for Async multi actor single learner
 """
 from mindspore_rl.distribution.distribution_policies.distribution_policy import (
     DistributionPolicy,
@@ -22,9 +22,9 @@ from mindspore_rl.distribution.distribution_policies.distribution_policy import 
 
 
 class AsyncMultiActorSingleLearnerDP(DistributionPolicy):
-    """define the asy multi actor policy"""
+    """define the async multi actor policy"""
 
-    def __init__(self, algorithm_config=None):
+    def __init__(self, msrl, algorithm_config=None):
         # pylint: disable=R1725
         super(AsyncMultiActorSingleLearnerDP, self).__init__()
         if algorithm_config is not None:
@@ -32,17 +32,13 @@ class AsyncMultiActorSingleLearnerDP(DistributionPolicy):
             self.set_learner_number(algorithm_config["learner"]["number"])
             self.set_fragment_number(self.actor_number + self.learner_number)
         self.set_boundary("algorithmic")
-        self.add_interface("Actor", {"operations": {"Send": "grads", "Receive": None}})
-        self.add_interface(
-            "Learner",
-            {
-                "operations": {
-                    "Send": "self.msrl.learner.global_params",
-                    "Receive": None,
-                }
-            },
+        self.add_interface("Actor", {"operations": {"MuxSend", "MuxReceive"}})
+        self.add_interface("Learner", {"operations": {"MuxSend", "MuxReceive"}})
+        self.add_communication_data("Data", None)
+        self.add_communication_data(
+            "Weight", list(map(lambda b: b.name, msrl.shared_network.get_parameters()))
         )
         self.set_replicate_list("Actor", self.actor_number)
-        self.set_topology({"Actor": "Learner"})
+        self.set_topology({"Learner": "Actor"})
         self.auto = True
         self.name = "AsyncMultiActorSingleLearnerDP"

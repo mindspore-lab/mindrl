@@ -29,7 +29,7 @@ import astor
 class GenerateFragment:
     """Class for generate fargments."""
 
-    def __init__(self, algo_name, policy, worker_num):
+    def __init__(self, algo_name, policy, worker_num, config):
         """
         algo_name : the algo name, used to find the strandard trainer class defined in MSRL.
         policy : distribute policy
@@ -39,6 +39,7 @@ class GenerateFragment:
         self.template = self.get_template_by_policy(policy)
         self.policy = policy
         self.worker_num = worker_num
+        self.config = config
 
     @classmethod
     def get_template_by_policy(cls, policy) -> str:
@@ -103,7 +104,7 @@ class GenerateFragment:
                                     buffer_names.append(i.targets[0].id)
                             if i.value.func.attr in learn_func:
                                 # loss = msrl.agent_learn(s, r ,s1) or loss = msrl.agent_learn(exp)
-                                if isinstance(i.value.args[0], ast.Tuple):
+                                if isinstance(i.value.args[0], (ast.List, ast.Tuple)):
                                     for item in i.value.args[0].elts:
                                         learn_args.append(item.id)
                                 else:
@@ -195,7 +196,12 @@ class GenerateFragment:
                             if isinstance(j, ast.Pass):
                                 i.body.pop(0)
                                 if isinstance(frag, list):
-                                    i.body[-1:-1] = iter(frag[:-1])
+                                    frag = (
+                                        frag[:-1]
+                                        if isinstance(frag[-1], ast.Return)
+                                        else frag
+                                    )
+                                    i.body[-1:-1] = iter(frag)
                                 else:
                                     i.body.insert(0, frag)
         ast.fix_missing_locations(ast_target)
@@ -209,11 +215,116 @@ class GenerateFragment:
         self.insert_to_target(ast_target, "Learner", learner_frag)
         return ast_target
 
-    @classmethod
-    def build_send(cls, frag_type):
-        """TODO"""
-        print(frag_type)
-        return None, None
+    def build_muxsend(
+        self,
+        frag_type,
+        learn_args,
+    ):
+        """Build the communication nodes for MuxSend/Receive."""
+        top_op_nodes = []
+        bottom_op_nodes = []
+        ast_args = []
+        single_out = False
+        for arg in learn_args:
+            ast_args.append(ast.Name(id=arg, ctx=ast.Load()))
+        if len(ast_args) == 1:
+            # True:  grad = msrl.agent_act(state)
+            # False: states, rewards, actions = msrl.agent_act(state)
+            single_out = True
+        if frag_type == "Actor":
+            # 1 insert cast
+            weight_name = "weight"
+            for arg in learn_args:
+                cast_node = ast.Assign(
+                    targets=[ast.Name(id=arg, ctx=ast.Store())],
+                    value=ast.Call(
+                        func=ast.Name(id="self.cast", ctx=ast.Load()),
+                        args=[
+                            ast.Name(id=arg, ctx=ast.Load()),
+                            ast.Name(id="mindspore.float32", ctx=ast.Load()),
+                        ],
+                        keywords=[],
+                    ),
+                )
+                if not single_out:
+                    bottom_op_nodes.append(cast_node)
+            # 2 add send
+            send_arg = ast.Tuple(elts=ast_args, ctx=ast.Load())
+            if single_out:
+                send_arg = ast.Name(id=ast_args[0], ctx=ast.Load())
+            send_op = ast.Expr(
+                value=ast.Call(
+                    func=ast.Name(id="self.send", ctx=ast.Load()),
+                    args=[send_arg],
+                    keywords=[],
+                )
+            )
+            bottom_op_nodes.append(send_op)
+            # 3 add receive
+            receive_node = ast.Assign(
+                targets=[ast.Name(id=weight_name, ctx=ast.Store())],
+                value=ast.Call(
+                    func=ast.Name(id="self.receive", ctx=ast.Load()),
+                    args=[],
+                    keywords=[],
+                ),
+            )
+            bottom_op_nodes.append(receive_node)
+            # 4 add update weight
+            update_node = ast.Expr(
+                value=ast.Call(
+                    func=ast.Name(id="self.update", ctx=ast.Load()),
+                    args=[
+                        ast.Name(id="self.weight", ctx=ast.Load()),
+                        ast.Name(id=weight_name, ctx=ast.Load()),
+                    ],
+                    keywords=[],
+                )
+            )
+            bottom_op_nodes.append(update_node)
+        elif frag_type == "Learner":
+            # 1 recive exp
+            recv_arg = ast.Tuple(elts=ast_args, ctx=ast.Load())
+            if single_out:
+                recv_arg = ast.Name(id=ast_args[0], ctx=ast.Load())
+            receive_node = ast.Assign(
+                targets=[recv_arg],
+                value=ast.Call(
+                    func=ast.Name(id="self.receive", ctx=ast.Load()),
+                    args=[],
+                    keywords=[],
+                ),
+            )
+            top_op_nodes.append(receive_node)
+            # 2 cast back
+            for i, arg in enumerate(learn_args):
+                cast_node = ast.Assign(
+                    targets=[ast.Name(id=arg, ctx=ast.Store())],
+                    value=ast.Call(
+                        func=ast.Name(id="self.cast", ctx=ast.Load()),
+                        args=[
+                            ast.Name(id=arg, ctx=ast.Load()),
+                            ast.Name(
+                                id=str(self.config.get("TYPE")[i]), ctx=ast.Load()
+                            ),
+                        ],
+                        keywords=[],
+                    ),
+                )
+                if not single_out:
+                    top_op_nodes.append(cast_node)
+            # 3 send weight
+            send_op = ast.Expr(
+                value=ast.Call(
+                    func=ast.Name(id="self.send", ctx=ast.Load()),
+                    args=[ast.Name(id="self.weight", ctx=ast.Load())],
+                    keywords=[],
+                )
+            )
+            bottom_op_nodes.append(send_op)
+        else:
+            raise RuntimeError("Fragment {frag_type} is not supported yet.")
+        return top_op_nodes, bottom_op_nodes
 
     @classmethod
     def build_allgather(
@@ -531,8 +642,11 @@ class GenerateFragment:
                 learn_args,
                 learn_return,
             )
-        if "Send" in communication_op:
-            top_state, bottom_state = self.build_send(frag_type)
+        if "MuxSend" in communication_op:
+            top_state, bottom_state = self.build_muxsend(
+                frag_type,
+                learn_args,
+            )
 
         return top_state, bottom_state
 
@@ -552,6 +666,75 @@ class GenerateFragment:
         """Get fragments names in parameter_list."""
         fragment_list = list(parameter_list.keys())
         return fragment_list
+
+    def init_communication(self, ast_target, frag_type, communication_op):
+        """
+        Init communication, add comunication opertor that not include in common ops.
+        If framework_buffer_name is none, we choose learn_args to communicate between actor and learner.
+        """
+        if self.config.get("DATA") is None:
+            raise ValueError(
+                "If the DATA not provided in DP, it must be provided in depoly config."
+            )
+        node = []
+        if frag_type == "Learner" and "MuxReceive" in communication_op:
+            muxsend = ast.Assign(
+                targets=[
+                    ast.Attribute(
+                        value=ast.Name(id="self", ctx=ast.Load()),
+                        attr="receive",
+                        ctx=ast.Store(),
+                    )
+                ],
+                value=ast.Call(
+                    func=ast.Name(id="MuxReceive", ctx=ast.Load()),
+                    args=[],
+                    keywords=[
+                        ast.keyword(
+                            arg="shape",
+                            value=ast.Tuple(
+                                elts=list(
+                                    map(
+                                        lambda s: ast.List(
+                                            elts=list(map(lambda e: ast.Num(n=e), s))
+                                        ),
+                                        self.config.get("DATA"),
+                                    )
+                                ),
+                                ctx=ast.Load(),
+                            ),
+                        ),
+                        ast.keyword(
+                            arg="dtype",
+                            value=ast.Name(id="mindspore.float32", ctx=ast.Load()),
+                        ),
+                        ast.keyword(
+                            arg="group",
+                            value=ast.Name(id="NCCL_WORLD_COMM_GROUP", ctx=ast.Load()),
+                        ),
+                    ],
+                ),
+            )
+            node.append(muxsend)
+        for n in ast.iter_child_nodes(ast_target):
+            if isinstance(n, ast.ClassDef) and n.name in ["Learner"]:
+                for i in ast.iter_child_nodes(n):
+                    if isinstance(i, ast.FunctionDef) and i.name == "__init__":
+                        i.body[-1:-1] = iter(node)
+        return ast_target
+
+    @classmethod
+    def replace_return(cls, ast_target, frag_type, new_return):
+        """Replace template return with the input new_return."""
+        return_node = ast.Return(value=ast.Name(id=new_return[0], ctx=ast.Load()))
+        for nodes in ast.iter_child_nodes(ast_target):
+            if isinstance(nodes, ast.ClassDef) and nodes.name == frag_type:
+                for i in ast.iter_child_nodes(nodes):
+                    if isinstance(i, ast.FunctionDef) and i.name == "kernel":
+                        for j in ast.iter_child_nodes(i):
+                            if isinstance(j, ast.Return):
+                                i.body[-1] = return_node
+        return ast_target
 
     def insert_communication_states(
         self, ast_target, ast_source, parameter_list, policy
@@ -576,7 +759,12 @@ class GenerateFragment:
                 learn_args,
                 learn_return,
             )
+            if framework_buffer_name is None:
+                ast_target = self.init_communication(
+                    ast_target, frag_type, communication_op
+                )
             ast_target = self.insert_states(ast_target, frag_type, top, bottom)
+        ast_target = self.replace_return(ast_target, "Learner", learn_return)
         return ast_target
 
     @classmethod
