@@ -7,3 +7,4 @@ extend-ignore = E203
 per-file-ignores =
     */__init__.py:F401,F403
     examples/*,tests/*:E402
+    mindspore_rl/algorithm/a3c_single/a3c_single_trainer.py:F841
