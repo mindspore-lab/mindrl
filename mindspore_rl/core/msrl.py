@@ -239,34 +239,24 @@ class MSRL(nn.Cell):
         Returns:
             replay_buffer (object), created replay buffer object.
         """
-        compulsory_item = ["type", "capacity", "data_shape", "data_type"]
-        self._compulsory_items_check(
-            replay_buffer_config, compulsory_item, "replay_buffer"
-        )
 
-        num_replay_buffer = replay_buffer_config.get("number")
-        if num_replay_buffer is None:
-            num_replay_buffer = 1
+        num_replay_buffer = replay_buffer_config.get("number", 1)
         replay_buffer_type = replay_buffer_config["type"]
-        capacity = replay_buffer_config["capacity"]
-        buffer_data_shapes = replay_buffer_config["data_shape"]
-        buffer_data_type = replay_buffer_config["data_type"]
 
-        sample_size = replay_buffer_config.get("sample_size")
-        if not sample_size:
-            sample_size = 1
+        params = replay_buffer_config.get("params", None)
+        if not params:
+            params = {
+                "sample_size": replay_buffer_config.get("sample_size", 1),
+                "capacity": replay_buffer_config.get("capacity"),
+            }
+
+        params["shapes"] = tuple(replay_buffer_config.get("data_shape"))
+        params["types"] = tuple(replay_buffer_config.get("data_type"))
 
         if num_replay_buffer == 1:
-            buffer = replay_buffer_type(
-                sample_size, capacity, buffer_data_shapes, buffer_data_type
-            )
+            buffer = replay_buffer_type(**params)
         else:
-            buffer = [
-                replay_buffer_type(
-                    sample_size, capacity, buffer_data_shapes, buffer_data_type
-                )
-                for _ in range(num_replay_buffer)
-            ]
+            buffer = [replay_buffer_type(**params) for _ in range(num_replay_buffer)]
             buffer = nn.CellList(buffer)
         return buffer
 

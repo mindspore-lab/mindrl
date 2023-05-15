@@ -16,13 +16,11 @@
 Implementation of Replay Buffer class.
 """
 
-import numpy as np
 import mindspore as ms
-from mindspore import get_seed
-from mindspore import context, Tensor
-from mindspore.ops import operations as P
+import numpy as np
+from mindspore import Tensor, context, get_seed, nn
 from mindspore.common.parameter import Parameter, ParameterTuple
-import mindspore.nn as nn
+from mindspore.ops import operations as P
 
 
 def _create_tensor(capacity, shapes, types):
@@ -38,9 +36,14 @@ def _create_tensor(capacity, shapes, types):
         buffer(List[Tensor]), a list of tensor which states for the replay buffer
     """
     buffer = []
-    for i in range(len(shapes)):
-        buffer.append(Parameter(Tensor(np.zeros(((capacity,) + shapes[i])),
-                                       types[i]), name=('buffer_%d' % i), requires_grad=False))
+    for i, shape in enumerate(shapes):
+        buffer.append(
+            Parameter(
+                Tensor(np.zeros(((capacity,) + shape)), types[i]),
+                name=f"buffer_{i}",
+                requires_grad=False,
+            )
+        )
     return buffer
 
 
@@ -52,7 +55,7 @@ class UniformReplayBuffer(nn.Cell):
     UniformReplayBuffer class takes the shape and type of each tensor as an argument.
 
     Args:
-        batch_size (int): size for sampling from the buffer.
+        sample_size (int): size for sampling from the buffer.
         capacity (int): the capacity of the buffer.
         shapes (list[int]): the shape of each tensor in a buffer element.
         types (list[mindspore.dtype]): the data type of each tensor in a buffer element.
@@ -60,49 +63,40 @@ class UniformReplayBuffer(nn.Cell):
     Examples:
         >>> import mindspore as ms
         >>> from mindspore_rl.core.uniform_replay_buffer import UniformReplayBuffer
-        >>> batch_size = 10
+        >>> sample_size = 10
         >>> capacity = 10000
         >>> shapes = [(4,), (1,), (1,), (4,)]
         >>> types = [ms.float32, ms.int32, ms.float32, ms.float32]
-        >>> replaybuffer = UniformReplayBuffer(batch_size, capacity, shapes, types)
+        >>> replaybuffer = UniformReplayBuffer(sample_size, capacity, shapes, types)
         >>> print(replaybuffer)
         UniformReplayBuffer<>
     """
 
-    def __init__(self, batch_size, capacity, shapes, types):
+    def __init__(self, sample_size, capacity, shapes, types):
         nn.Cell.__init__(self)
         self.buffer = ParameterTuple(_create_tensor(capacity, shapes, types))
         self._capacity = capacity
-        self.count = Parameter(
-            Tensor(
-                0,
-                ms.int32),
-            name="count",
-            requires_grad=False)
-        self.head = Parameter(
-            Tensor(
-                0,
-                ms.int32),
-            name="head",
-            requires_grad=False)
+        self.count = Parameter(Tensor(0, ms.int32), name="count", requires_grad=False)
+        self.head = Parameter(Tensor(0, ms.int32), name="head", requires_grad=False)
         self.zero = Tensor(0, ms.int32)
         self.buffer_append = P.BufferAppend(self._capacity, shapes, types)
         self.buffer_get = P.BufferGetItem(self._capacity, shapes, types)
         seed = get_seed()
-        if seed == None:
+        if seed is None:
             seed = 0
         self.buffer_sample = P.BufferSample(
-            self._capacity, batch_size, shapes, types, seed)
-        if context.get_context('device_target') in ['Ascend']:
-            self.buffer_append.add_prim_attr('primitive_target', 'CPU')
-            self.buffer_get.add_prim_attr('primitive_target', 'CPU')
-            self.buffer_sample.add_prim_attr('primitive_target', 'CPU')
+            self._capacity, sample_size, shapes, types, seed
+        )
+        if context.get_context("device_target") in ["Ascend"]:
+            self.buffer_append.add_prim_attr("primitive_target", "CPU")
+            self.buffer_get.add_prim_attr("primitive_target", "CPU")
+            self.buffer_sample.add_prim_attr("primitive_target", "CPU")
 
         self.reshape = P.Reshape()
         self.assign = P.Assign()
 
         self.greater_equal = P.GreaterEqual()
-        self.capacity_tensor = Tensor([capacity,], ms.int32)
+        self.capacity_tensor = Tensor([capacity], ms.int32)
 
     def insert(self, exp):
         """
