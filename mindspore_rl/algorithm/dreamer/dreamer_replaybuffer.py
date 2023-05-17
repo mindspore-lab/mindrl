@@ -14,28 +14,34 @@
 # ============================================================================
 """Dreamer cpu replay buffer"""
 
-import numpy as np
-import mindspore.nn as nn
 import mindspore as ms
-from mindspore import Tensor
+import numpy as np
+from mindspore import Tensor, nn
 from mindspore.ops import operations as P
 
 
 class DreamerReplayBuffer(nn.Cell):
     """Dreamer replay buffer"""
-    def __init__(self, batch_size, capacity, shapes, types):
+
+    def __init__(self, sample_size, capacity, shapes, types):
         super().__init__()
         self.state = []
         self.action = []
         self.reward = []
         self.discount = []
-        self.batch_size = batch_size
+        self.batch_size = sample_size
         self.capacity = capacity
         self.seed = np.random.RandomState()
         self.insert_ops = P.PyFunc(self._insert, types, shapes, types, shapes)
         sample_out_shape = []
         for _, shape in enumerate(shapes):
-            sample_out_shape.append((self.batch_size, 50,) + shape[1:])
+            sample_out_shape.append(
+                (
+                    self.batch_size,
+                    50,
+                )
+                + shape[1:]
+            )
         self.sample_ops = P.PyFunc(self._sample, (), (), types, sample_out_shape)
 
     def insert(self, state, action, reward, discount):
@@ -74,10 +80,10 @@ class DreamerReplayBuffer(nn.Cell):
         out_discount = []
         for index in selected_index:
             start_index = self.seed.randint(0, self.state[0].shape[0] - 50)
-            out_state.append(self.state[index][start_index: start_index + 50])
-            out_action.append(self.action[index][start_index: start_index + 50])
-            out_reward.append(self.reward[index][start_index: start_index + 50])
-            out_discount.append(self.discount[index][start_index: start_index + 50])
+            out_state.append(self.state[index][start_index : start_index + 50])
+            out_action.append(self.action[index][start_index : start_index + 50])
+            out_reward.append(self.reward[index][start_index : start_index + 50])
+            out_discount.append(self.discount[index][start_index : start_index + 50])
         out_state = np.stack(out_state)
         out_action = np.stack(out_action)
         out_reward = np.stack(out_reward)
