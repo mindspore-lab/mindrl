@@ -445,6 +445,32 @@ In general, researchers use native Python data structures or numpy data structur
     </tr>
 </table>
 
+### Distribution
+We describe MindSpore Reinforcement Learning (MSRL), a distributed RL training system that supports distribution
+policies that govern how RL training computation is parallelised and distributed on cluster resources, without requiring changes to the algorithm implementation. MSRL introduces the new abstraction of a fragmented dataflow graph, which maps Python functions from an RL algorithm’s training loop to parallel computational fragments. Fragments are executed on different devices by translating them to low-level dataflow representations, e.g. computational graphs as supported by deep learning engines, CUDA implementations or multi-threaded CPU processe
+
+<center><img src=docs/images/msrl.png width=700 height=350></center>
+
+By now we have supported such distribution policies：
+
+<table>
+    <tr>
+        <th rowspan="1">Policy Type</th>
+        <th rowspan="1">Policy</th>
+        <th rowspan="1">Example</th>
+    </tr>
+    <tr>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/distribution_policies/multi_actor_single_learner_dp">MultiActorSingleLearnerDP</a></td>
+        <td align="left">structure of single leaner with multi actors</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/ppo/train.py">ppo</td>
+    </tr>
+    <tr>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/distribution_policies/async_multi_actor_single_learner_dp">AsyncMultiActorSingleLearnerDP</a></td>
+        <td align="left">async structure of single leaner with multi actors</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/a3c/train.py">a3c</td>
+    </tr>
+<table>
+
 ## Future Roadmap
 
 This initial release of MindSpore Reinforcement contains a stable API for implementing reinforcement learning algorithms and executing computation using MindSpore's computational graphs.  Now it supports semi-automatic distributed execution of algorithms and multi-agent, but does not support fully automatic distributed capabilities yet. These features will be included in the subsequent version of MindSpore Reinforcement. Please look forward to it.
