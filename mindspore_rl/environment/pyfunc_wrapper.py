@@ -25,42 +25,42 @@ from mindspore.common import dtype as mstype
 from mindspore.ops import operations as P
 
 from mindspore_rl.environment.environment import Environment
-from mindspore_rl.environment.space import Space
+from mindspore_rl.environment.wrapper import Wrapper
 
 EnvCreator = Callable[[], Environment]
 
 
-class PyFuncWrapper(Environment):
+class PyFuncWrapper(Wrapper):
     r"""
     PyFuncWrapper is a wrapper which is able to exposes a python environment as an in-graph MS environment.
     It will transfer reset, step and render function from python to mindspore ops.
 
     Args:
-        env_instance (Environment): The environment instance.
+        env_creator (Environment): The environment instance.
+        stateful (bool): Whether add side effect mark for pyfunc ops. Default: True.
 
     Supported Platforms:
         ``Ascend`` ``GPU`` ``CPU``
     """
 
-    def __init__(self, env_creator: EnvCreator):
-        super().__init__()
+    def __init__(self, env_creator: EnvCreator, stateful: bool = True):
         if not callable(env_creator):
             raise TypeError(
                 f"The input env_creators must be a list of callable, but got {env_creator}"
             )
-        self._env = env_creator()
-        env_name = self._env.__class__.__name__
+        super().__init__(env_creator)
+        env_name = self.environment.__class__.__name__
 
         # pre-run environment
-        reset_out = self._env.reset()
-        if self._env.batched:
+        reset_out = self.environment.reset()
+        if self.environment.batched:
             action = []
-            for _ in range(self._env.num_environment):
-                action.append(self._env.action_space.sample())
+            for _ in range(self.environment.num_environment):
+                action.append(self.environment.action_space.sample())
             action = np.array(action)
         else:
-            action = self._env.action_space.sample()
-        step_out = self._env.step(action)
+            action = self.environment.action_space.sample()
+        step_out = self.environment.step(action)
 
         # Check whether the output of reset/step func is a numpy array
         self._check_ndarray(reset_out, "reset")
@@ -88,6 +88,16 @@ class PyFuncWrapper(Environment):
             step_out_batch_shape,
         ) = self._get_dtype_shape(step_out)
 
+        # reset output dtype and shape
+        self._reset_output_msdtype = reset_out_msdtype
+        self._reset_output_full_shape = reset_output_full_shape
+        # step input dtype and shape
+        self._step_input_msdtype = step_input_msdtype
+        self._step_input_full_shape = step_input_full_shape
+        # step output dtype and shape
+        self._step_output_msdtype = step_output_msdtype
+        self._step_output_full_shape = step_output_full_shape
+
         logger.info(f"Start create PyFunc of {env_name}...")
         logger.info(
             "Please check whether the dtype/shape of input/output meet the expectation."
@@ -108,135 +118,87 @@ class PyFuncWrapper(Environment):
         logger.info(f"The output shape of step is {step_output_full_shape}")
         logger.info(f"The output batch axis of step is {step_out_batch_shape}")
         logger.info(f"Start create Space of {env_name}...")
-        logger.info(f"Observation space is {self._env.observation_space}")
-        logger.info(f"Action space is {self._env.action_space}")
-        logger.info(f"Reward space is {self._env.reward_space}")
-        logger.info(f"Done space is {self._env.done_space}")
+        logger.info(f"Observation space is {self.environment.observation_space}")
+        logger.info(f"Action space is {self.environment.action_space}")
+        logger.info(f"Reward space is {self.environment.reward_space}")
+        logger.info(f"Done space is {self.environment.done_space}")
 
         self.reset_ops = P.PyFunc(
-            self._env.reset, [], [], reset_out_msdtype, reset_output_full_shape
+            self.environment.reset,
+            [],
+            [],
+            reset_out_msdtype,
+            reset_output_full_shape,
+            stateful=stateful,
         )
         self.step_ops = P.PyFunc(
-            self._env.step,
+            self.environment.step,
             step_input_msdtype,
             step_input_full_shape,
             step_output_msdtype,
             step_output_full_shape,
+            stateful=stateful,
         )
 
     @property
-    def action_space(self) -> Space:
+    def reset_output_shape(self) -> Sequence[int]:
         """
-        Get the action space of the environment.
+        Get the output shape of reset function.
 
         Returns:
-            action_space(Space): The action space of environment.
+            reset_output_shape(tuple): The output shape of reset function.
         """
-        return self._env.action_space
+        return self._reset_output_full_shape
 
     @property
-    def observation_space(self) -> Space:
+    def reset_output_dtype(self) -> Sequence[int]:
         """
-        Get the observation space of the environment.
+        Get the output dtype of reset function.
 
         Returns:
-            observation_space(Space): The observation space of environment.
+            reset_output_dtype(str): The output dtype of reset function.
         """
-        return self._env.observation_space
+        return self._reset_output_msdtype
 
     @property
-    def reward_space(self) -> Space:
+    def step_input_shape(self) -> Sequence[int]:
         """
-        Get the reward space of the environment.
+        Get the input shape of step function.
 
         Returns:
-            reward_space(Space): The reward space of environment.
+            step_input_shape(tuple): The input shape of step function.
         """
-        return self._env.reward_space
+        return self._step_input_full_shape
 
     @property
-    def done_space(self) -> Space:
+    def step_input_dtype(self) -> Sequence[int]:
         """
-        Get the done space of the environment.
+        Get the input dtype of step function.
 
         Returns:
-            done_space(Space): The done space of environment.
+            step_input_dtype(str): The input dtype of step function.
         """
-        return self._env.done_space
+        return self._step_input_msdtype
 
     @property
-    def config(self) -> dict:
+    def step_output_shape(self) -> Sequence[int]:
         """
-        Get the config of environment.
+        Get the output shape of step function.
 
         Returns:
-            config_dict(dict): A dictionary which contains environment's info.
+            step_output_shape(tuple): The output shape of step function.
         """
-        return self._env.config
+        return self._step_output_full_shape
 
     @property
-    def num_environment(self) -> int:
-        r"""
-        Number of environment
+    def step_output_dtype(self) -> Sequence[int]:
+        """
+        Get the output dtype of step function.
 
         Returns:
-            num_env (int, optional), If the environment is not batched, it will return
-                None. Otherwise, it needs to return an int value which is larger than 0. Default: None.
+            step_output_dtype(str): The output dtype of step function.
         """
-        return self._env.num_environment
-
-    @property
-    def num_agent(self) -> int:
-        """
-        Number of agents in the environment.
-
-        Returns:
-            num_agent (int), Number of agent in the current environment. If the environment is
-                single agent, it will return 1. Otherwise, subclass needs to override this property
-                to return correct number of agent. Default: 1.
-        """
-        return self._env.num_agent
-
-    @property
-    def _num_reset_out(self) -> int:
-        """
-        Inner method, return the number of return value of reset.
-
-        Returns:
-            int, The number of return value of reset.
-        """
-        return getattr(self._env, "_num_reset_out")
-
-    @property
-    def _num_step_out(self) -> int:
-        """
-        Inner method, return the number of return value of step.
-
-        Returns:
-            int, The number of return value of step.
-        """
-        return getattr(self._env, "_num_step_out")
-
-    def set_seed(self, seed_value: Union[int, Sequence[int]]) -> bool:
-        r"""
-        Set seed to control the randomness of environment.
-
-        Args:
-            seed_value (int), The value that is used to set
-
-        Returns:
-            Success (np.bool\_), Whether successfully set the seed.
-        """
-        return self._env.set_seed(seed_value)
-
-    def render(self) -> Union[Tensor, np.ndarray]:
-        """
-        Generate the image for current frame of environment.
-
-        Returns:
-            img (Tensor), The image of environment at current frame.
-        """
-        return self._env.render()
+        return self._step_output_msdtype
 
     def reset(self):
         """
@@ -252,6 +214,18 @@ class PyFuncWrapper(Environment):
             state = self.reset_ops()[0]
             return state
         return self.reset_ops()
+
+    def _reset(self):
+        """
+        Reset the environment to the initial state. It is always used at the beginning of each
+        episode. It will return the value of initial state or other initial information.
+
+        Returns:
+            - state (Tensor), A Tensor which states for the initial state of environment.
+            - args (Tensor, optional), Support arbitrary outputs, but user needs to ensure the
+                dtype. This output is optional.
+        """
+        return self.environment.reset()
 
     def step(self, action: Tensor):
         r"""
@@ -269,16 +243,23 @@ class PyFuncWrapper(Environment):
         """
         return self.step_ops(action)
 
-    def close(self) -> bool:
-        r"""
-        Close the environment to release the resource.
+    def _step(self, action: Union[np.ndarray]):
+        """
+        The inner step function implementation. Subclass needs to implement this function.
+
+        Args:
+            action (Union[np.ndarray, Tensor]): A numpy array or Tensor that states for the action of agent(s).
 
         Returns:
-            - Success(np.bool\_), Whether shutdown the process or threading successfully.
+            - state (np.ndarray), The environment state after performing the action.
+            - reward (np.ndarray), The reward after performing the action.
+            - done (np.ndarray), Whether the simulation finishes or not.
+            - args (np.ndarray], optional), Support arbitrary outputs, but user needs to ensure the
+                dtype. This output is optional.
         """
-        return self._env.close()
+        return self.environment.step(action)
 
-    def send(self, action: Tensor, env_id: Tensor):
+    def _send(self, action: Tensor, env_id: Tensor):
         r"""
         Execute the environment step asynchronously. User can obtain result by using recv.
 
@@ -291,7 +272,7 @@ class PyFuncWrapper(Environment):
         """
         raise ValueError("PyFuncWrapper does not support send yet")
 
-    def recv(self):
+    def _recv(self):
         r"""
         Receive the result of interacting with environment.
 

@@ -13,20 +13,22 @@
 # limitations under the License.
 # ============================================================================
 """Sync Parallel Wrapper"""
+from functools import partial
+
 # pylint:disable=W0106
-from typing import Callable, Optional, Sequence, Union
+from typing import Callable, Sequence, Union
 
 import numpy as np
 from mindspore import Tensor
 
 from mindspore_rl.environment.environment import Environment
 from mindspore_rl.environment.process_environment import ProcessEnvironment
-from mindspore_rl.environment.space import Space
+from mindspore_rl.environment.wrapper import Wrapper
 
 EnvCreator = Callable[[], Environment]
 
 
-class SyncParallelWrapper(Environment):
+class SyncParallelWrapper(Wrapper):
     r"""
     Execute environment synchronously in parallel. The result will be returned when all the environment are
     finished.
@@ -45,7 +47,6 @@ class SyncParallelWrapper(Environment):
         num_proc: int = 0,
         shared_memory: bool = False,
     ):
-        super().__init__()
         self._shared_memory = shared_memory
         type_check = [not callable(env_creator) for env_creator in env_creators]
         if any(type_check):
@@ -61,7 +62,7 @@ class SyncParallelWrapper(Environment):
                 "The number of processes must be less or equal to number of environment, "
                 f"but got number of processes {self._num_proc}, number of environment {self._num_env}"
             )
-        self._envs = []
+        self._env_creators = []
         avg_env_per_proc = int(self._num_env / self._num_proc)
         for i in range(self._num_proc):
             assigned_env_num = i * avg_env_per_proc
@@ -69,127 +70,27 @@ class SyncParallelWrapper(Environment):
                 env_num = avg_env_per_proc
             else:
                 env_num = self._num_env - assigned_env_num
-            proc_env = ProcessEnvironment(
+            proc_env = partial(
+                ProcessEnvironment,
                 env_creators[env_num * i : env_num * (i + 1)],
                 range(env_num * i, env_num * (i + 1)),
             )
-            self._envs.append(proc_env)
-            proc_env.start()
+            self._env_creators.append(proc_env)
+        super().__init__(self._env_creators)
+        self._start()
 
-    @property
-    def batched(self) -> bool:
-        """
-        Whether the environment is batched.
-
-        Returns:
-            batched (bool), Whether the environment is batched. Default: False.
-        """
-        return True
-
-    @property
-    def action_space(self) -> Space:
-        """
-        Get the action space of the environment.
-
-        Returns:
-            action_space(Space): The action space of environment.
-        """
-        return self._envs[0].action_space
-
-    @property
-    def observation_space(self) -> Space:
-        """
-        Get the observation space of the environment.
-
-        Returns:
-            observation_space(Space): The observation space of environment.
-        """
-        return self._envs[0].observation_space
-
-    @property
-    def reward_space(self) -> Space:
-        """
-        Get the reward space of the environment.
-
-        Returns:
-            reward_space(Space): The reward space of environment.
-        """
-        return self._envs[0].reward_space
-
-    @property
-    def done_space(self) -> Space:
-        """
-        Get the done space of the environment.
-
-        Returns:
-            done_space(Space): The done space of environment.
-        """
-        return self._envs[0].done_space
-
-    @property
-    def config(self) -> dict:
-        """
-        Get the config of environment.
-
-        Returns:
-            config_dict(dict): A dictionary which contains environment's info.
-        """
-        return self._envs[0].config
-
-    @property
-    def num_environment(self) -> Optional[int]:
-        """
-        Number of environment
-
-        Returns:
-            num_env (int),  Number of environment.
-        """
-        return self._num_env
-
-    @property
-    def num_agent(self) -> int:
-        """
-        Number of agents in the environment.
-
-        Returns:
-            num_agent (int), Number of agent in the current environment. If the environment is
-                single agent, it will return 1. Otherwise, subclass needs to override this property
-                to return correct number of agent. Default: 1.
-        """
-        return self._envs[0].num_agent
-
-    @property
-    def _num_reset_out(self) -> int:
-        """
-        Inner method, return the number of return value of reset.
-
-        Returns:
-            int, The number of return value of reset.
-        """
-        return getattr(self._envs[0], "_num_reset_out")
-
-    @property
-    def _num_step_out(self) -> int:
-        """
-        Inner method, return the number of return value of step.
-
-        Returns:
-            int, The number of return value of step.
-        """
-        return getattr(self._envs[0], "_num_step_out")
-
-    def start(self) -> bool:
+    def _start(self) -> bool:
         """
         Start all the process environment.
 
         Returns:
             bool, Whether start processes successfully.
         """
-        for env in self._envs:
+        for env in self.environment:
             env.start()
         return True
 
-    def reset(self):
+    def _reset(self):
         """
         Reset the environment to the initial state. It is always used at the beginning of each
         episode. It will return the value of initial state or other initial information.
@@ -200,7 +101,7 @@ class SyncParallelWrapper(Environment):
             - args (Union[np.ndarray, Tensor], optional), Support arbitrary outputs, but user needs to ensure the
                 dtype. This output is optional.
         """
-        promise_list = [env.reset() for env in self._envs]
+        promise_list = [env.reset() for env in self.environment]
         reset_out = []
         [reset_out.extend(promise()) for promise in promise_list]
         if self._num_reset_out == 1:
@@ -212,7 +113,7 @@ class SyncParallelWrapper(Environment):
             stacked_reset_out = (s0, *others)
         return stacked_reset_out
 
-    def step(self, action):
+    def _step(self, action):
         r"""
         Execute the environment step, which means that interact with environment once.
 
@@ -229,13 +130,13 @@ class SyncParallelWrapper(Environment):
         promise_list = []
         accum_env_num = 0
         for i in range(self._num_proc):
-            worker_env_num = getattr(self._envs[i], "_num_env_per_worker")
+            worker_env_num = getattr(self.environment[i], "_num_env_per_worker")
             action_i = action[accum_env_num : worker_env_num + accum_env_num]
             if (len(action_i.shape) - len(self.action_space.shape) > 0) and (
                 action_i.shape[0] == 1
             ):
                 action_i = action_i.squeeze(0)
-            promise_list.append(self._envs[i].step(action_i))
+            promise_list.append(self.environment[i].step(action_i))
             accum_env_num += worker_env_num
         step_out = []
         [step_out.extend(promise()) for promise in promise_list]
@@ -256,10 +157,10 @@ class SyncParallelWrapper(Environment):
         accum_env_num = 0
         success_list = []
         for i in range(self._num_proc):
-            worker_env_num = getattr(self._envs[i], "_num_env_per_worker")
+            worker_env_num = getattr(self.environment[i], "_num_env_per_worker")
             seed_list = seed_value[accum_env_num : worker_env_num + accum_env_num]
             accum_env_num += worker_env_num
-            success_list.append(self._envs[i].set_seed(seed_list))
+            success_list.append(self.environment[i].set_seed(seed_list))
         return np.array(success_list).all()
 
     def close(self):
@@ -269,7 +170,7 @@ class SyncParallelWrapper(Environment):
         Returns:
             Success(np.bool\_), Whether shutdown the process or threading successfully.
         """
-        for env in self._envs:
+        for env in self.environment:
             env.close()
         return True
 
