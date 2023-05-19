@@ -1,0 +1,95 @@
+"""template for async policy"""
+from mindspore_rl.agent.learner import Learner
+from mindspore_rl.agent.actor import Actor
+from mindspore_rl.utils import DiscountedReturn
+from mindspore_rl.utils import TensorArray
+from mindspore_rl.utils import BatchRead
+from mindspore_rl.utils import BatchWrite
+import mindspore
+from mindspore import nn
+from mindspore import Tensor
+from mindspore.common.parameter import Parameter
+from mindspore.common.parameter import ParameterTuple
+from mindspore import ops
+import mindspore.nn.probability.distribution as msd
+from mindspore.ops import operations as P
+from mindspore.ops import composite as C
+import numpy as np
+
+import collections
+import statistics
+import tqdm
+
+from mindspore_rl.environment import GymEnvironment
+from mindspore_rl.agent.trainer import Trainer
+from mindspore_rl.agent import trainer
+from mindspore.ops.operations._rl_inner_ops import MuxSend, MuxReceive
+from mindspore.communication.management import init, NCCL_WORLD_COMM_GROUP, get_rank, get_group_size
+
+# pylint disable=E0001
+class Actor(nn.Cell):
+    def __init__(self, msrl, rank, duration, episode):
+        super(Actor, self).__init__()
+        self.msrl = msrl
+        self.rank = rank
+        self.episode = episode
+        self.duration = duration
+        self.actor_num = self.msrl.proc_num - 1 # worker_num = actor_num + learner_num
+        self.zero = Tensor(0, mindspore.float32)
+        self.reduce_mean = P.ReduceMean()
+        self.update = BatchWrite()
+
+        shapes = list(map(lambda b: b.shape, msrl.shared_network.get_parameters()))
+        types = list(map(lambda b: b.dtype, msrl.shared_network.get_parameters()))
+        self.weight = ParameterTuple(msrl.shared_network.get_parameters())
+        weight = self.__dict__
+        weight_names = self.__dict__
+        for i, w in enumerate(self.weight):
+            weight["weight_" + str(i)] = w
+            weight_names["_weight_data_" + str(i)] = Parameter(Tensor(np.zeros((1,) + w.shape), w.dtype), name="actor_w" + str(i))
+        # actor send the buffer to learner, and receive weight from learner.
+        self.send = MuxSend(dest_rank=0, group=NCCL_WORLD_COMM_GROUP)
+        self.receive = MuxReceive(shape=shapes, dtype=mindspore.float32, group=NCCL_WORLD_COMM_GROUP)
+
+    @mindspore.jit
+    def kernel(self):
+        pass
+        return reward
+
+    def run(self):
+        for i in range(self.episode):
+            res = self.kernel()
+            print("Reward is ", res, flush=True)
+
+
+class Learner(nn.Cell):
+    def __init__(self, msrl, rank, duration, episode):
+        super(Learner, self).__init__()
+        self.msrl = msrl
+        self.rank = rank
+        self.episode = episode
+        self.duration = duration
+        self.worker_num = msrl.proc_num
+
+        names = list(map(lambda b: b.name, msrl.shared_network.get_parameters()))
+        shapes = list(map(lambda b: b.shape, msrl.shared_network.get_parameters()))
+        types = list(map(lambda b: b.dtype, msrl.shared_network.get_parameters()))
+        self.weight = ParameterTuple(msrl.shared_network.get_parameters())
+        weight = self.__dict__
+        weight_names = self.__dict__
+        for i, w in enumerate(self.weight):
+            weight["weight_" + str(i)] = w
+            weight_names["_weight_data_" + str(i)] = Parameter(Tensor(np.zeros(w.shape), w.dtype), name="learner_w" + str(i))
+        # learner receive the buffer from an actor and send the weight to the indeed actor.
+        # self.receive = MuxReceive(shape=??, dtype=mindspore.float32, group=NCCL_WORLD_COMM_GROUP)
+        self.send = MuxSend(dest_rank=-1, group=NCCL_WORLD_COMM_GROUP)
+
+    @mindspore.jit
+    def kernel(self):
+        pass
+        return training_loss
+
+    def run(self):
+        for i in range(self.episode * self.worker_num):
+            res = self.kernel()
+            print("Loss is ", res, flush=True)

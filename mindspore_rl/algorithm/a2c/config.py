@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2021-2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,6 +17,9 @@ A2C config.
 """
 import mindspore
 
+from mindspore_rl.distribution.distribution_policies.async_multi_actor_single_learner_dp import (
+    AsyncMultiActorSingleLearnerDP,
+)
 from mindspore_rl.environment import GymEnvironment
 from mindspore_rl.environment.pyfunc_wrapper import PyFuncWrapper
 
@@ -69,5 +72,22 @@ algorithm_config = {
         "type": GymEnvironment,
         "wrappers": [PyFuncWrapper],
         "params": collect_env_params,
+    },
+}
+
+deploy_config = {
+    "auto_distribution": True,
+    "distribution_policy": AsyncMultiActorSingleLearnerDP,
+    "worker_num": 2,
+    "network": "a2c_net",
+    "algo_name": "a2c",
+    "config": {
+        "DATA": [(200, 1), (200, 4), (200, 1), (200, 1)],
+        "TYPE": [
+            "mindspore.float32",
+            "mindspore.float32",
+            "mindspore.int32",
+            "mindspore.bool_",
+        ],
     },
 }

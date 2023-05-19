@@ -28,6 +28,8 @@ class A2CTrainer(Trainer):
     """A2CTrainer"""
 
     def __init__(self, msrl):
+        """init"""
+        # pylint: disable=R1725
         super(A2CTrainer, self).__init__(msrl)
         self.reduce_sum = ops.ReduceSum()
 
@@ -60,11 +62,11 @@ class A2CTrainer(Trainer):
     def train_one_episode(self):
         """Train one episode"""
         state = self.msrl.collect_environment.reset()
-        rewards, states, actions, masks, done_num = self.msrl.agent_act(
+        rewards, states, actions, masks, reward = self.msrl.agent_act(
             trainer.COLLECT, state
         )
         a2c_loss = self.msrl.agent_learn([rewards, states, actions, masks])
-        return a2c_loss, done_num
+        return a2c_loss, reward
 
     def evaluate(self):
         """Default evaluate"""

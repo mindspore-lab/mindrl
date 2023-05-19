@@ -92,6 +92,7 @@ class Session:
                     self.worker_num,
                     self.dist_policy,
                     self.msrl,
+                    self.config,
                     self.frag_file,
                 )
             else:
