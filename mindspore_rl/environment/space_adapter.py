@@ -44,3 +44,28 @@ def gym2ms_adapter(gym_space):
     return Space(
         shape, dtype, low=gym_space.low, high=gym_space.high, batch_shape=batch_shape
     )
+
+
+def dmc2ms_adapter(dmc_space):
+    """dmc space to ms space adapter"""
+    batch_shape = None
+    if isinstance(dmc_space, list):
+        batch_shape = (len(dmc_space),)
+        dmc_space = dmc_space[0]
+
+    shape = dmc_space.shape
+    dmc_type = dmc_space.dtype.type
+    if dmc_type == np.int64:
+        dtype = np.int32
+    elif dmc_type == np.float64:
+        dtype = np.float32
+    else:
+        dtype = dmc_type
+
+    return Space(
+        shape,
+        dtype,
+        low=dmc_space.minimum,
+        high=dmc_space.maximum,
+        batch_shape=batch_shape,
+    )

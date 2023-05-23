@@ -15,32 +15,54 @@
 """
 MAPPO session.
 """
-from mindspore_rl.core import Session
-from mindspore_rl.utils.utils import update_config
-from mindspore_rl.utils.callback import LossCallback, TimeCallback
 from mindspore_rl.algorithm.mappo import config
+from mindspore_rl.core import Session
+from mindspore_rl.utils.callback import LossCallback, TimeCallback
+from mindspore_rl.utils.utils import update_config
 
 
 class MAPPOSession(Session):
-    '''MAPPO session'''
+    """MAPPO session"""
+
     def __init__(self, env_yaml=None, algo_yaml=None):
         update_config(config, env_yaml, algo_yaml)
-        env_config = config.algorithm_config.get('collect_environment')
-        env = env_config.get('type')(env_config.get('params'))
-        env_num = config.algorithm_config.get('collect_environment').get('number')
+        env_config = config.algorithm_config.get("collect_environment")
+        env = env_config.get("type")(
+            env_config.get("params")[env_config.get("type").__name__]
+        )
+        env_num = config.algorithm_config.get("collect_environment").get("number")
         env.close()
         agent_num = config.NUM_AGENT
         _, obs_dtype = env.observation_space.shape, env.observation_space.ms_dtype
         _, action_dtype = env.action_space.shape, env.action_space.ms_dtype
-        local_buffer_config = config.algorithm_config.get('replay_buffer').get('local_replaybuffer')
-        local_buffer_config['data_shape'] = [(env_num, agent_num * 6), (env_num, 1, 64),
-                                             (env_num, 1, 64), (env_num, 1), (env_num, 1),
-                                             (env_num, 1), (env_num, 1), (env_num, 1)]
-        local_buffer_config['data_type'] = [obs_dtype, obs_dtype, obs_dtype, obs_dtype, action_dtype,
-                                            obs_dtype, obs_dtype, obs_dtype]
-        global_buffer_config = config.algorithm_config.get('replay_buffer').get('global_replaybuffer')
-        global_buffer_config['data_shape'] = [(env_num, agent_num * agent_num * 6)]
-        global_buffer_config['data_type'] = [obs_dtype]
+        local_buffer_config = config.algorithm_config.get("replay_buffer").get(
+            "local_replaybuffer"
+        )
+        local_buffer_config["data_shape"] = [
+            (env_num, agent_num * 6),
+            (env_num, 1, 64),
+            (env_num, 1, 64),
+            (env_num, 1),
+            (env_num, 1),
+            (env_num, 1),
+            (env_num, 1),
+            (env_num, 1),
+        ]
+        local_buffer_config["data_type"] = [
+            obs_dtype,
+            obs_dtype,
+            obs_dtype,
+            obs_dtype,
+            action_dtype,
+            obs_dtype,
+            obs_dtype,
+            obs_dtype,
+        ]
+        global_buffer_config = config.algorithm_config.get("replay_buffer").get(
+            "global_replaybuffer"
+        )
+        global_buffer_config["data_shape"] = [(env_num, agent_num * agent_num * 6)]
+        global_buffer_config["data_type"] = [obs_dtype]
         loss_cb = LossCallback()
         time_cb = TimeCallback()
         cbs = [time_cb, loss_cb]

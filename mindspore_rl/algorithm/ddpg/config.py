@@ -23,8 +23,8 @@ from mindspore_rl.environment.pyfunc_wrapper import PyFuncWrapper
 
 from .ddpg import DDPGActor, DDPGLearner, DDPGPolicy
 
-collect_env_params = {"name": "HalfCheetah-v2"}
-eval_env_params = {"name": "HalfCheetah-v2"}
+collect_env_params = {"GymEnvironment": {"name": "HalfCheetah-v2"}}
+eval_env_params = {"GymEnvironment": {"name": "HalfCheetah-v2"}}
 
 policy_params = {
     "epsilon": 0.2,

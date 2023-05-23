@@ -32,7 +32,9 @@ class PPOSession(Session):
     def __init__(self, env_yaml=None, algo_yaml=None, is_distribution=None):
         update_config(config, env_yaml, algo_yaml)
         env_config = config.algorithm_config.get("collect_environment")
-        env = env_config.get("type")(env_config.get("params"))
+        env = env_config.get("type")(
+            env_config.get("params")[env_config.get("type").__name__]
+        )
         env_num = config.algorithm_config.get("collect_environment").get("number")
         obs_shape, obs_dtype = (
             env.observation_space.shape,

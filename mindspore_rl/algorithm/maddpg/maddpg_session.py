@@ -15,29 +15,47 @@
 """
 MADDPG session.
 """
-from mindspore_rl.core import Session
-from mindspore_rl.utils.utils import update_config
-from mindspore_rl.algorithm.maddpg import config
 import mindspore as ms
 from gym import spaces
 
+from mindspore_rl.algorithm.maddpg import config
+from mindspore_rl.core import Session
+from mindspore_rl.utils.utils import update_config
+
 
 class MADDPGSession(Session):
-    '''MADDPG session'''
+    """MADDPG session"""
+
     def __init__(self, env_yaml=None, algo_yaml=None):
         update_config(config, env_yaml, algo_yaml)
-        env_config = config.algorithm_config.get('collect_environment')
-        env = env_config.get('type')(env_config.get('params'))
+        env_config = config.algorithm_config.get("collect_environment")
+        env = env_config.get("type")(
+            env_config.get("params")[env_config.get("type").__name__]
+        )
         if env_config.get("continous_actions"):
             assert isinstance(env.action_space[0], spaces.Box)
         env.close()
         agent_num = config.NUM_AGENT
-        obs_shape, obs_dtype = env.observation_space.shape, env.observation_space.ms_dtype
+        obs_shape, obs_dtype = (
+            env.observation_space.shape,
+            env.observation_space.ms_dtype,
+        )
         action_shape, _ = env.action_space.shape, env.action_space.ms_dtype
         reward_shape, reward_dtype = env.reward_space.shape, env.reward_space.ms_dtype
-        buffer_config = config.algorithm_config.get('replay_buffer')
-        buffer_config['data_shape'] = [(*obs_shape,), (*action_shape,),
-                                       (*reward_shape,), (*obs_shape,), (agent_num, 1)]
-        buffer_config['data_type'] = [obs_dtype, ms.float32, reward_dtype, obs_dtype, ms.bool_]
+        buffer_config = config.algorithm_config.get("replay_buffer")
+        buffer_config["data_shape"] = [
+            (*obs_shape,),
+            (*action_shape,),
+            (*reward_shape,),
+            (*obs_shape,),
+            (agent_num, 1),
+        ]
+        buffer_config["data_type"] = [
+            obs_dtype,
+            ms.float32,
+            reward_dtype,
+            obs_dtype,
+            ms.bool_,
+        ]
         params = config.trainer_params
         super().__init__(config.algorithm_config, None, params=params, callbacks=None)

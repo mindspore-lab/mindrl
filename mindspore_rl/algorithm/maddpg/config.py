@@ -32,12 +32,21 @@ CONTINUOUS_ACTIONS = False
 SEED = 10
 
 collect_env_params = {
-    "name": "simple_spread",
-    "num": NUM_AGENT,
-    "continuous_actions": CONTINUOUS_ACTIONS,
-    "seed": SEED,
+    "PettingZooMPEEnvironment": {
+        "name": "simple_spread",
+        "num": NUM_AGENT,
+        "continuous_actions": CONTINUOUS_ACTIONS,
+        "seed": SEED,
+    }
 }
-eval_env_params = collect_env_params
+eval_env_params = {
+    "PettingZooMPEEnvironment": {
+        "name": "simple_spread",
+        "num": NUM_AGENT,
+        "continuous_actions": CONTINUOUS_ACTIONS,
+        "seed": SEED,
+    }
+}
 
 policy_params = {
     "state_space_dim": 18,

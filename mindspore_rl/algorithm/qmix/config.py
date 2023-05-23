@@ -27,8 +27,16 @@ from .qmix import QMIXActor, QMIXMPELearner, QMIXPolicy
 
 BATCH_SIZE = 32
 NUM_AGENT = 3
-collect_env_params = {"name": "simple_spread", "num_agent": NUM_AGENT, "seed": 1}
-eval_env_params = {"name": "simple_spread", "num_agent": NUM_AGENT}
+collect_env_params = {
+    "MultiAgentParticleEnvironment": {
+        "name": "simple_spread",
+        "num_agent": NUM_AGENT,
+        "seed": 1,
+    }
+}
+eval_env_params = {
+    "MultiAgentParticleEnvironment": {"name": "simple_spread", "num_agent": NUM_AGENT}
+}
 
 policy_params = {
     "epsi_high": 1.0,
