@@ -16,11 +16,12 @@
 Test case for fully connected layer module
 """
 
-import pytest
 import numpy as np
-import mindspore.nn as nn
-from mindspore import Tensor
+import pytest
+from mindspore import Tensor, nn
+
 from mindspore_rl.network.fully_connected_net import FullyConnectedLayers
+
 
 class Net(nn.Cell):
     """
@@ -29,8 +30,8 @@ class Net(nn.Cell):
 
     def __init__(self):
         super().__init__()
-        self.fc1 = nn.Dense(10, 20)
-        self.fc2 = nn.Dense(20, 3)
+        self.fc1 = nn.Dense(10, 20, bias_init="zeros")
+        self.fc2 = nn.Dense(20, 3, bias_init="zeros")
         self.relu = nn.ReLU()
 
     def construct(self, x):
@@ -39,6 +40,7 @@ class Net(nn.Cell):
         x = self.fc2(x)
         return self.relu(x)
 
+
 @pytest.mark.level0
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_ascend_training
@@ -46,19 +48,19 @@ class Net(nn.Cell):
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 def test_fully_connected_layer():
-    '''
+    """
     Feature: Test test_fully_connected_layer class
     Description: Test test_fully_connected_layer class
     Expectation: success.
-    '''
+    """
     net = Net()
     fc_layers = FullyConnectedLayers(fc_layer_params=[10, 20, 3])
     net_fc1_weight = net.trainable_params()[0]
     net_fc2_weight = net.trainable_params()[2]
     for k, v in fc_layers.parameters_dict().items():
-        if 'weight' in k and '0' in k:
+        if "weight" in k and "0" in k:
             v.set_data(net_fc1_weight)
-        if 'weight' in k and '1' in k:
+        if "weight" in k and "1" in k:
             v.set_data(net_fc2_weight)
 
     input_x = Tensor(np.random.random([5, 10]).astype(np.float32))
@@ -67,5 +69,6 @@ def test_fully_connected_layer():
 
     assert np.allclose(expected.asnumpy(), actual.asnumpy(), atol=1e-5)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     test_fully_connected_layer()

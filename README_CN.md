@@ -449,7 +449,7 @@ Evaluate for episode 10 total rewards is 9.600
 ### 分布式
 MindSpore Reinforcement 将强化学习的算法定义与算法如何并行或分布式执行在硬件上进行了解偶。我们通过一个新的抽象，即数据流片段图（**Fragmented Dataflow Graphs**)来实现这一目标，算法的每一部分都将成为数据流片段，并由MSRL灵活地分发与并行。
 
-<center><img src=docs/images/msrl.png width=700 height=350></center>
+<center><img src=docs/images/msrl.png width=700 height=460><p>Overview of the MSRL architecture</p></center>
 
 当前已经支持如下分布式策略：
 
@@ -471,9 +471,26 @@ MindSpore Reinforcement 将强化学习的算法定义与算法如何并行或�
     </tr>
 <table>
 
+<table align="center">
+    <tr>
+        <td align="center">
+            <center>
+                <img src=docs/images/multiactorsinglelearnerdp.png width="60%">
+                </br><p>MultiActorSingleLearnerDP</p>
+            </center>
+        </td>
+        <td align="center">
+            <center>
+                <img src=docs/images/asyncmultiactorsinglelearnerdp.png width="60%">
+                </br><p>AsyncMultiActorSingleLearnerDP</p>
+            </center>
+        </td>
+    </tr>
+<table>
+
 ## 未来路标
 
-MindSpore Reinforcement初始版本包含了一个稳定的API， 用于实现强化学习算法和使用MindSpore的计算图执行计算。现已支持算法并行和半自动分布式执行能力，支持多agent场景，暂不支持自动的分布式能力。MindSpore Reinforcement的后续版本将包含这些功能，敬请期待。
+MindSpore Reinforcement初始版本包含了一个稳定的API， 用于实现强化学习算法和使用MindSpore的计算图执行计算。现已支持算法并行和自动分布式执行能力，支持多智能体，offline-rl，门特卡罗树等多种场景。MindSpore Reinforcement的后续版本将继续完善并提升自动分布式功能以及接入大模型的能力，敬请期待。
 
 ## 社区
 
