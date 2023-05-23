@@ -110,6 +110,7 @@ class DeepMindControlEnvironment(PythonEnvironment):
         """
 
         self._env.close()
+        self._env_queue.put(None)
         return True
 
     def _step(self, action):
@@ -139,6 +140,8 @@ class DeepMindControlEnvironment(PythonEnvironment):
         """Render function"""
         while True:
             env = self._env_queue.get()
+            if env is None:
+                break
             rendered_img = env.physics.render(*self._size, camera_id=self._camera)
             self._img_queue.put(rendered_img)
 
