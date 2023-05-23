@@ -446,6 +446,31 @@ Evaluate for episode 10 total rewards is 9.600
     </tr>
 </table>
 
+### 分布式
+MindSpore Reinforcement 将强化学习的算法定义与算法如何并行或分布式执行在硬件上进行了解偶。我们通过一个新的抽象，即数据流片段图（**Fragmented Dataflow Graphs**)来实现这一目标，算法的每一部分都将成为数据流片段，并由MSRL灵活地分发与并行。
+
+<center><img src=docs/images/msrl.png width=700 height=350></center>
+
+当前已经支持如下分布式策略：
+
+<table>
+    <tr>
+        <th rowspan="1">策略类别</th>
+        <th rowspan="1">策略</th>
+        <th rowspan="1">示例</th>
+    </tr>
+    <tr>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/distribution_policies/multi_actor_single_learner_dp">MultiActorSingleLearnerDP</a></td>
+        <td align="left">同步单learner多actor结构分布式策略</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/ppo/train.py">ppo</td>
+    </tr>
+    <tr>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/distribution_policies/async_multi_actor_single_learner_dp">AsyncMultiActorSingleLearnerDP</a></td>
+        <td align="left">异步单learner多actor结构分布式策略</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/a3c/train.py">a3c</td>
+    </tr>
+<table>
+
 ## 未来路标
 
 MindSpore Reinforcement初始版本包含了一个稳定的API， 用于实现强化学习算法和使用MindSpore的计算图执行计算。现已支持算法并行和半自动分布式执行能力，支持多agent场景，暂不支持自动的分布式能力。MindSpore Reinforcement的后续版本将包含这些功能，敬请期待。
