@@ -16,15 +16,15 @@
 """
 Implementation of MAPPO replaybuffer .
 """
-#pylint: disable=W0235
+# pylint: disable=W0235
 from mindspore_rl.core.uniform_replay_buffer import UniformReplayBuffer
 
 
 class MAPPOReplayBuffer(UniformReplayBuffer):
     """MAPPO Replaybuffer implementation"""
 
-    def __init__(self, batch_size, capacity, shapes, types):
-        super().__init__(batch_size, capacity, shapes, types)
+    def __init__(self, sample_size, capacity, shapes, types):
+        super().__init__(sample_size, capacity, shapes, types)
 
     def construct(self, exp, command):
         """

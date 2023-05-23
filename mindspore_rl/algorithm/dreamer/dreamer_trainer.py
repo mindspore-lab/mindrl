@@ -90,6 +90,7 @@ class DreamerTrainer(Trainer):
             # =========================================================================
             action = ops.cast(half_action, ms.float32)
             new_state, reward, _, discount = self.msrl.collect_environment.step(action)
+            reward = self.expand_dims(reward, 0)
             new_state = ops.cast(new_state, self.dtype)
             reward = ops.cast(reward, self.dtype)
             discount = ops.cast(discount, self.dtype)
@@ -151,6 +152,7 @@ class DreamerTrainer(Trainer):
             # =========================================================================
             action = ops.cast(half_action, ms.float32)
             new_state, reward, _, discount = self.msrl.collect_environment.step(action)
+            reward = self.expand_dims(reward, 0)
             new_state = ops.cast(new_state, self.dtype)
             reward = ops.cast(reward, self.dtype)
             discount = ops.cast(discount, self.dtype)

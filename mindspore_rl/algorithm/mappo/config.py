@@ -33,11 +33,19 @@ else:
 
 NUM_AGENT = 3
 collect_env_params = {
-    "name": "simple_spread",
-    "num_agent": NUM_AGENT,
-    "auto_reset": True,
+    "MultiAgentParticleEnvironment": {
+        "name": "simple_spread",
+        "num_agent": NUM_AGENT,
+        "auto_reset": True,
+    }
 }
-eval_env_params = {"name": "simple_spread", "num_agent": NUM_AGENT, "auto_reset": True}
+eval_env_params = {
+    "MultiAgentParticleEnvironment": {
+        "name": "simple_spread",
+        "num_agent": NUM_AGENT,
+        "auto_reset": True,
+    }
+}
 
 policy_params = {
     "state_space_dim": 0,

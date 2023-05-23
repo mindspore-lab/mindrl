@@ -27,8 +27,8 @@ from mindspore_rl.environment.sync_parallel_wrapper import SyncParallelWrapper
 
 from .ppo import PPOActor, PPOLearner, PPOPolicy
 
-collect_env_params = {"name": "HalfCheetah-v2"}
-eval_env_params = {"name": "HalfCheetah-v2"}
+collect_env_params = {"GymEnvironment": {"name": "HalfCheetah-v2"}}
+eval_env_params = {"GymEnvironment": {"name": "HalfCheetah-v2"}}
 
 policy_params = {
     "state_space_dim": 0,

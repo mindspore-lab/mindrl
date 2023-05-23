@@ -16,8 +16,8 @@ trainer_params = {
     "td_step": 1,
 }
 
-collect_env_params = {"name": "CartPole-v0"}
-eval_env_params = {"name": "CartPole-v0"}
+collect_env_params = {"GymEnvironment": {"name": "CartPole-v0"}}
+eval_env_params = {"GymEnvironment": {"name": "CartPole-v0"}}
 
 policy_params = {
     "epsi_high": 0.1,

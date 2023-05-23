@@ -28,7 +28,9 @@ class DreamerSession(Session):
     def __init__(self, env_yaml=None, algo_yaml=None):
         update_config(config, env_yaml, algo_yaml)
         env_config = config.algorithm_config.get("collect_environment")
-        env = env_config.get("type")(env_config.get("params"))
+        env = env_config.get("type")(
+            env_config.get("params")[env_config.get("type").__name__]
+        )
         env.close()
         episode_limits = config.all_params.get("episode_limits")
         action_repeat = config.all_params.get("action_repeat")
@@ -37,13 +39,12 @@ class DreamerSession(Session):
             env.observation_space.ms_dtype,
         )
         action_shape, _ = env.action_space.shape, env.action_space.ms_dtype
-        reward_shape, _ = env.reward_space.shape, env.reward_space.ms_dtype
         replay_buffer_config = config.algorithm_config.get("replay_buffer")
         replay_buffer_config["data_shape"] = [
             (int(episode_limits / action_repeat) + 1,) + obs_shape,
             (int(episode_limits / action_repeat) + 1,) + action_shape,
-            (int(episode_limits / action_repeat + 1),) + reward_shape,
-            (int(episode_limits / action_repeat) + 1,) + reward_shape,
+            (int(episode_limits / action_repeat + 1),) + (1,),
+            (int(episode_limits / action_repeat) + 1,) + (1,),
         ]
         replay_buffer_config["data_type"] = [
             config.all_params["dtype"],

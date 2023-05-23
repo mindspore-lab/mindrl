@@ -23,12 +23,16 @@ from mindspore_rl.environment.pyfunc_wrapper import PyFuncWrapper
 from .cql import CQLActor, CQLLearner, CQLPolicyAndNetwork
 
 collect_env_params = {
-    "name": "hopper-medium-expert-v0",
-    "seed": 10,
+    "GymEnvironment": {
+        "name": "hopper-medium-expert-v0",
+        "seed": 10,
+    }
 }
 eval_env_params = {
-    "name": "hopper-medium-expert-v0",
-    "seed": 10,
+    "GymEnvironment": {
+        "name": "hopper-medium-expert-v0",
+        "seed": 10,
+    }
 }
 
 trainer_params = {

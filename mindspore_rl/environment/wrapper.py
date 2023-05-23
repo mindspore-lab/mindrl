@@ -33,15 +33,22 @@ class Wrapper(Environment):
     It will transfer reset, step and render function from python to mindspore ops.
 
     Args:
-        env_instance (Environment): The environment instance.
+        env_creators (Union[Sequence[EnvCreator], EnvCreator]): A list of env creator or a single env creator.
+        num_environment (int, optional): The number of environment. If user does not provide, the length of
+            env_creators will be the number of environment. Default: None.
 
     Supported Platforms:
         ``Ascend`` ``GPU`` ``CPU``
     """
 
-    def __init__(self, env_creators: Union[Sequence[EnvCreator], EnvCreator]):
+    def __init__(
+        self,
+        env_creators: Union[Sequence[EnvCreator], EnvCreator],
+        num_environment: int = None,
+    ):
         super().__init__()
         self._batched = False
+        self._num_environment = num_environment
         if isinstance(env_creators, Iterable):
             self._batched = True
             self._envs = [env_creator() for env_creator in env_creators]
@@ -131,7 +138,13 @@ class Wrapper(Environment):
             num_env (int, optional), If the environment is not batched, it will return
                 None. Otherwise, it needs to return an int value which is larger than 0. Default: None.
         """
-        return len(self._envs) if self._batched else 1
+        if self._num_environment is not None:
+            num_environment = self._num_environment
+        elif self._batched:
+            num_environment = len(self._envs)
+        else:
+            num_environment = 1
+        return num_environment
 
     @property
     def num_agent(self) -> int:
@@ -279,7 +292,7 @@ class Wrapper(Environment):
         Returns:
             Success (bool): True if the action is successfully executed, otherwise False.
         """
-        raise ValueError("Python Environment does not support send yet")
+        raise NotImplementedError("Method _send should be overridden by subclass.")
 
     def _recv(self):
         r"""
@@ -293,7 +306,7 @@ class Wrapper(Environment):
             - args (Union[np.ndarray, Tensor], optional), Support arbitrary outputs, but user needs to ensure the
                 dtype. This output is optional.
         """
-        raise ValueError("Python Environment does not support recv yet")
+        raise NotImplementedError("Method _recv should be overridden by subclass.")
 
     def _reset(self):
         """

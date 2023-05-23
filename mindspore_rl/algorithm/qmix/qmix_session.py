@@ -141,7 +141,9 @@ class QMIXSession(Session):
     def __init__(self, env_yaml=None, algo_yaml=None):
         update_config(config, env_yaml, algo_yaml)
         env_config = config.algorithm_config.get("collect_environment")
-        env = env_config.get("type")(env_config.get("params"))
+        env = env_config.get("type")(
+            env_config.get("params")[env_config.get("type").__name__]
+        )
         num_agent = env.config.get("num_agent")
         epsode_limit = env.config.get("episode_limit")
         global_obs_dim = env.config.get("global_observation_dim")

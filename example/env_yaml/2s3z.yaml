@@ -1,5 +1,5 @@
 env: 2s3z
 env_class: mindspore_rl.environment.sc2_environment
 env_type: StarCraft2Environment
-collect_env_params: {'sc2_args': {'map_name': '2s3z', 'seed': 1}, 'info_key': ['battle_won', 'dead_allies', 'dead_enemies']}
-eval_env_params: {'sc2_args': {'map_name': '2s3z'},  'info_key': ['battle_won', 'dead_allies', 'dead_enemies']}
+collect_env_params: {"StarCraft2Environment": {'sc2_args': {'map_name': '2s3z', 'seed': 1}, 'info_key': ['battle_won', 'dead_allies', 'dead_enemies']}}
+eval_env_params: {"StarCraft2Environment": {'sc2_args': {'map_name': '2s3z'},  'info_key': ['battle_won', 'dead_allies', 'dead_enemies']}}
