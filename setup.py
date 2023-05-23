@@ -23,8 +23,11 @@ setup(
     author="The MindSpore Authors",
     author_email="contact@mindspore.cn",
     description="A MindSpore reinforcement learning framework.",
-    url="https://gitee.com/mindspore/reinforcement",
+    url="https://github.com/mindspore-lab/mindrl",
     packages=find_packages(include=["mindspore_rl*"]),
+    package_data={
+        "mindspore_rl": ["distribution/distribution_policies/*/*.tp"],
+    },
     install_requires=[
         "numpy>=1.17.0",
         "matplotlib>=3.1.3",

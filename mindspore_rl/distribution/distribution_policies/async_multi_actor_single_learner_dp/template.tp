@@ -90,6 +90,6 @@ class Learner(nn.Cell):
         return training_loss
 
     def run(self):
-        for i in range(self.episode * self.worker_num):
+        for i in range(self.episode * (self.worker_num - 1)):
             res = self.kernel()
             print("Loss is ", res, flush=True)
