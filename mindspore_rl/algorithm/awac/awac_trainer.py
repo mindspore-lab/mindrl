@@ -70,7 +70,7 @@ class AWACTrainer(Trainer):
         self.num_evaluate_episode = params["num_evaluate_episode"]
         self.ms_buffer = msrl.buffers
         # pylint: disable=W0212
-        InitBuffer(self.env._env._env, self.ms_buffer)
+        InitBuffer(self.env.environment._env, self.ms_buffer)
         # train offline then fit online
         self.warmup = Parameter(
             Tensor(0, mindspore.float32), requires_grad=False, name="warmup"
