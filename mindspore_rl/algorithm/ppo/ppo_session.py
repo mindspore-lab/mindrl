@@ -17,6 +17,7 @@ PPO session.
 """
 from mindspore_rl.algorithm.ppo import config
 from mindspore_rl.core import Session
+from mindspore_rl.core.msrl import MSRL
 from mindspore_rl.utils.callback import (
     CheckpointCallback,
     EvaluateCallback,
@@ -31,11 +32,12 @@ class PPOSession(Session):
 
     def __init__(self, env_yaml=None, algo_yaml=None, is_distribution=None):
         update_config(config, env_yaml, algo_yaml)
-        env_config = config.algorithm_config.get("collect_environment")
-        env = env_config.get("type")(
-            env_config.get("params")[env_config.get("type").__name__]
+        env, env_num = MSRL.create_environments(
+            config.algorithm_config,
+            "collect_environment",
+            support_remote_env=True,
+            deploy_config=config.deploy_config,
         )
-        env_num = config.algorithm_config.get("collect_environment").get("number")
         obs_shape, obs_dtype = (
             env.observation_space.shape,
             env.observation_space.ms_dtype,

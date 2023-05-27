@@ -22,6 +22,7 @@ from functools import partial
 from mindspore import nn
 from mindspore.ops import operations as P
 
+from mindspore_rl.environment._remote_env_wrapper import _RemoteEnvWrapper
 from mindspore_rl.environment.multi_environment_wrapper import MultiEnvironmentWrapper
 
 
@@ -158,72 +159,72 @@ class MSRL(nn.Cell):
         return MultiEnvironmentWrapper(env_list, proc_num)
 
     # pylint: disable=W0613
-    def __create_environments(self, config, env_type, need_batched=False):
-        """
+    @staticmethod
+    def create_environments(
+        config, env_type, support_remote_env=False, deploy_config=None
+    ):
+        r"""
         Create the environments object from the configuration file, and return the instance
         of environment and evaluate environment.
 
         Args:
             config (dict): algorithm configuration file.
+            env_type (str): type of environment in collect\_environment and eval\_environment.
+            support_remote_env (bool): whether to support auto parallel. Default: False.
+            deploy_config (dict): the configuration for deploy. Default: None.
 
         Returns:
             - env (object), created environment object.
-            - eval_env (object), created evaluate environment object.
+            - num_env (int), the number of environment.
         """
+        if support_remote_env and (deploy_config is None):
+            raise ValueError(
+                "Please provide deploy_config when support_auto_parallel is True."
+            )
         env_config = config[env_type]
         num_env = env_config.get("number")
-        compulsory_item = ["type"]
-        self._compulsory_items_check(env_config, compulsory_item, env_type)
-        if not config[env_type].get("params"):
-            config[env_type]["params"] = {}
-        new_api = True if config[env_type].get("wrappers") is not None else False
-        if not new_api:
-            num_parallel = (
-                num_env
-                if env_config.get("num_parallel") is None
-                else env_config.get("num_parallel")
-            )
-            if num_env > 1:
-                env = self._create_batch_env(config[env_type], num_env, num_parallel)
-            else:
-                env = self._create_instance(config[env_type], None)
-                if need_batched:
-                    env = MultiEnvironmentWrapper([env], num_parallel)
-        else:
-            num_parallel = (
-                0
-                if env_config.get("num_parallel") is None
-                else env_config.get("num_parallel")
-            )
-            wrappers = env_config.get("wrappers")
-            env_creator = partial(
-                config[env_type]["type"],
-                config[env_type]["params"][config[env_type]["type"].__name__],
-            )
-            if wrappers is not None:
-                for wrapper in reversed(wrappers):
-                    wrapper_name = wrapper.__name__
-                    if wrapper_name == "SyncParallelWrapper":
+        num_parallel = (
+            0
+            if env_config.get("num_parallel") is None
+            else env_config.get("num_parallel")
+        )
+        wrappers = env_config.get("wrappers")
+        env_creator = partial(
+            config[env_type]["type"],
+            config[env_type]["params"][config[env_type]["type"].__name__],
+        )
+
+        if support_remote_env:
+            config[env_type]["params"]["_RemoteEnvWrapper"] = {
+                "deploy_config": deploy_config
+            }
+            wrappers.append(_RemoteEnvWrapper)
+
+        if wrappers is not None:
+            for wrapper in reversed(wrappers):
+                wrapper_name = wrapper.__name__
+                if wrapper_name == "SyncParallelWrapper":
+                    env_creator = partial(
+                        wrapper, [env_creator] * num_env, num_parallel
+                    )
+                elif wrapper_name == "BatchWrapper":
+                    env_creator = partial(wrapper, [env_creator] * num_env)
+                else:
+                    if config[env_type]["params"].get(wrapper_name) is not None:
                         env_creator = partial(
-                            wrapper, [env_creator] * num_env, num_parallel
+                            wrapper,
+                            env_creator,
+                            **config[env_type]["params"][wrapper_name],
                         )
                     else:
-                        if config[env_type]["params"].get(wrapper_name) is not None:
-                            env_creator = partial(
-                                wrapper,
-                                env_creator,
-                                **config[env_type]["params"][wrapper_name],
-                            )
-                        else:
-                            env_creator = partial(
-                                wrapper,
-                                env_creator,
-                            )
-            env = env_creator()
-            if env_config.get("seed") is not None:
-                env.set_seed(env_config.get("seed"))
-
-        return env, num_env
+                        env_creator = partial(
+                            wrapper,
+                            env_creator,
+                        )
+        env = env_creator()
+        if env_config.get("seed") is not None:
+            env.set_seed(env_config.get("seed"))
+        return env, env.num_environment
 
     def __params_generate(self, config, obj, target, attribute):
         """
@@ -405,11 +406,11 @@ class MSRL(nn.Cell):
             if "share_env" in config["actor"]:
                 share_env = config["actor"]["share_env"]
             # ---------------------- Environment ----------------------
-            self.collect_environment, self.num_collect_env = self.__create_environments(
+            self.collect_environment, self.num_collect_env = MSRL.create_environments(
                 config, "collect_environment"
             )
             need_batched = True if (self.num_collect_env > 1) else False
-            self.eval_environment, _ = self.__create_environments(
+            self.eval_environment, _ = MSRL.create_environments(
                 config, "eval_environment", need_batched
             )
             # ---------------------------------------------------------
@@ -436,9 +437,9 @@ class MSRL(nn.Cell):
                     for i in range(num_actors):
                         if not share_env:
                             self.collect_environment.append(
-                                self.__create_environments(
-                                    config, "collect_environment"
-                                )[0]
+                                MSRL.create_environments(config, "collect_environment")[
+                                    0
+                                ]
                             )
                         self.policy_and_network = self.__create_policy_and_network(
                             config
@@ -467,11 +468,11 @@ class MSRL(nn.Cell):
 
             config["agent"]["params"]["num_agent"] = self.num_agent
             # ---------------------- Environment ----------------------
-            self.collect_environment, self.num_collect_env = self.__create_environments(
+            self.collect_environment, self.num_collect_env = MSRL.create_environments(
                 config, "collect_environment"
             )
             need_batched = True if (self.num_collect_env > 1) else False
-            self.eval_environment, _ = self.__create_environments(
+            self.eval_environment, _ = MSRL.create_environments(
                 config, "eval_environment", need_batched
             )
             # ---------------------------------------------------------

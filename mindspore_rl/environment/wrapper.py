@@ -83,7 +83,16 @@ class Wrapper(Environment):
         Returns:
             action_space(Space): The action space of environment.
         """
-        return self._envs[0].action_space if self._batched else self._envs.action_space
+        if self._batched:
+            low, high = self._envs[0].action_space.boundary
+            return Space(
+                self._envs[0].action_space.shape,
+                dtype=self._envs[0].action_space.np_dtype,
+                batch_shape=(self.num_environment,),
+                low=low,
+                high=high,
+            )
+        return self._envs.action_space
 
     @property
     def observation_space(self) -> Space:
@@ -93,11 +102,16 @@ class Wrapper(Environment):
         Returns:
             observation_space(Space): The observation space of environment.
         """
-        return (
-            self._envs[0].observation_space
-            if self._batched
-            else self._envs.observation_space
-        )
+        if self._batched:
+            low, high = self._envs[0].observation_space.boundary
+            return Space(
+                self._envs[0].observation_space.shape,
+                dtype=self._envs[0].observation_space.np_dtype,
+                batch_shape=(self.num_environment,),
+                low=low,
+                high=high,
+            )
+        return self._envs.observation_space
 
     @property
     def reward_space(self) -> Space:
@@ -107,7 +121,16 @@ class Wrapper(Environment):
         Returns:
             reward_space(Space): The reward space of environment.
         """
-        return self._envs[0].reward_space if self._batched else self._envs.reward_space
+        if self._batched:
+            low, high = self._envs[0].reward_space.boundary
+            return Space(
+                self._envs[0].reward_space.shape,
+                dtype=self._envs[0].reward_space.np_dtype,
+                batch_shape=(self.num_environment,),
+                low=low,
+                high=high,
+            )
+        return self._envs.reward_space
 
     @property
     def done_space(self) -> Space:
@@ -117,7 +140,16 @@ class Wrapper(Environment):
         Returns:
             done_space(Space): The done space of environment.
         """
-        return self._envs[0].done_space if self._batched else self._envs.done_space
+        if self._batched:
+            low, high = self._envs[0].done_space.boundary
+            return Space(
+                self._envs[0].done_space.shape,
+                dtype=self._envs[0].done_space.np_dtype,
+                batch_shape=(self.num_environment,),
+                low=low,
+                high=high,
+            )
+        return self._envs.done_space
 
     @property
     def config(self) -> dict:
