@@ -23,7 +23,9 @@ from mindspore import nn
 from mindspore.ops import operations as P
 
 from mindspore_rl.environment._remote_env_wrapper import _RemoteEnvWrapper
+from mindspore_rl.environment.batch_wrapper import BatchWrapper
 from mindspore_rl.environment.multi_environment_wrapper import MultiEnvironmentWrapper
+from mindspore_rl.environment.pyfunc_wrapper import PyFuncWrapper
 
 
 class MSRL(nn.Cell):
@@ -161,7 +163,11 @@ class MSRL(nn.Cell):
     # pylint: disable=W0613
     @staticmethod
     def create_environments(
-        config, env_type, support_remote_env=False, deploy_config=None
+        config,
+        env_type,
+        support_remote_env=False,
+        deploy_config=None,
+        need_batched=False,
     ):
         r"""
         Create the environments object from the configuration file, and return the instance
@@ -172,6 +178,7 @@ class MSRL(nn.Cell):
             env_type (str): type of environment in collect\_environment and eval\_environment.
             support_remote_env (bool): whether to support auto parallel. Default: False.
             deploy_config (dict): the configuration for deploy. Default: None.
+            need_batched (bool): whether to create batched environment. Default: False.
 
         Returns:
             - env (object), created environment object.
@@ -198,8 +205,10 @@ class MSRL(nn.Cell):
             config[env_type]["params"]["_RemoteEnvWrapper"] = {
                 "deploy_config": deploy_config
             }
-            wrappers.append(_RemoteEnvWrapper)
+            wrappers.insert(0, _RemoteEnvWrapper)
 
+        if need_batched:
+            wrappers.insert(wrappers.index(PyFuncWrapper) + 1, BatchWrapper)
         if wrappers is not None:
             for wrapper in reversed(wrappers):
                 wrapper_name = wrapper.__name__
@@ -411,7 +420,7 @@ class MSRL(nn.Cell):
             )
             need_batched = True if (self.num_collect_env > 1) else False
             self.eval_environment, _ = MSRL.create_environments(
-                config, "eval_environment", need_batched
+                config, "eval_environment", need_batched=need_batched
             )
             # ---------------------------------------------------------
             if self.distributed:

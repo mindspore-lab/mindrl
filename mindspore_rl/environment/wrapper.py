@@ -73,7 +73,7 @@ class Wrapper(Environment):
         Returns:
             batched (bool), Whether the environment is batched. Default: False.
         """
-        return self._batched
+        return self._batched or self.environment.batched
 
     @property
     def action_space(self) -> Space:
@@ -173,9 +173,9 @@ class Wrapper(Environment):
         if self._num_environment is not None:
             num_environment = self._num_environment
         elif self._batched:
-            num_environment = len(self._envs)
+            num_environment = self._envs[0].num_environment * len(self._envs)
         else:
-            num_environment = 1
+            num_environment = self._envs.num_environment
         return num_environment
 
     @property
