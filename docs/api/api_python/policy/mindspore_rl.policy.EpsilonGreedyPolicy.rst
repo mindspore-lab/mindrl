@@ -1,5 +1,5 @@
 
-.. py:class:: mindspore_rl.policy.EpsilonGreedyPolicy(input_network, size, epsi_high, epsi_low, decay, action_space_dim)
+.. py:class:: mindspore_rl.policy.EpsilonGreedyPolicy(input_network, size, epsi_high, epsi_low, decay, action_space_dim, shape=(1,))
 
     基于给定的epsilon-greedy策略生成采样动作。
 
@@ -10,6 +10,7 @@
         - **epsi_low** (float) - 探索的下限epsilon值，介于[0, epsi_high]。
         - **decay** (float) - epsilon的衰减系数。
         - **action_space_dim** (int) - 动作空间的维度。
+        - **shape** (tuple, 可选) - random policy输出的动作shape，需要和greedy policy保持一致。默认值为(1,)。
 
     .. py:method:: construct(state, step)
 

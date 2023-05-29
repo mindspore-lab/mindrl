@@ -16,12 +16,11 @@
 GreedyEpsilonGreedyPolicyPolicy.
 """
 
-from mindspore_rl.policy import policy
-from mindspore_rl.policy import GreedyPolicy
-from mindspore_rl.policy import RandomPolicy
 import mindspore
-from mindspore import Tensor
 import numpy as np
+from mindspore import Tensor
+
+from mindspore_rl.policy import GreedyPolicy, RandomPolicy, policy
 
 
 class EpsilonGreedyPolicy(policy.Policy):
@@ -35,6 +34,8 @@ class EpsilonGreedyPolicy(policy.Policy):
         epsi_low (float): A low epsilon for exploration betweens [0, epsi_high].
         decay (float): A decay factor applied to epsilon.
         action_space_dim (int): Dimensions of the action space.
+        shape (tuple, optional): Shape of output action in random policy, it should be the same as action get in
+            greedy policy. Default: (1,).
 
     Examples:
         >>> state_dim, hidden_dim, action_dim = (4, 10, 2)
@@ -47,14 +48,17 @@ class EpsilonGreedyPolicy(policy.Policy):
         (1,)
     """
 
-    def __init__(self,
-                 input_network,
-                 size,
-                 epsi_high,
-                 epsi_low,
-                 decay,
-                 action_space_dim):
-        super(EpsilonGreedyPolicy, self).__init__()
+    def __init__(
+        self,
+        input_network,
+        size,
+        epsi_high,
+        epsi_low,
+        decay,
+        action_space_dim,
+        shape=(1,),
+    ):
+        super().__init__()
         self._input_network = input_network
 
         self.sub = mindspore.ops.Sub()
@@ -68,7 +72,7 @@ class EpsilonGreedyPolicy(policy.Policy):
         self.select = mindspore.ops.Select()
         self.randreal = mindspore.ops.UniformReal()
 
-        self.decay_epsilon = (epsi_high != epsi_low)
+        self.decay_epsilon = epsi_high != epsi_low
         self.epsi_low = epsi_low
         self._size = size
         self._shape = (1,)
@@ -85,7 +89,7 @@ class EpsilonGreedyPolicy(policy.Policy):
 
         self._action_space_dim = action_space_dim
         self.greedy_policy = GreedyPolicy(self._input_network)
-        self.random_policy = RandomPolicy(self._action_space_dim)
+        self.random_policy = RandomPolicy(self._action_space_dim, shape=shape)
 
     # pylint:disable=W0221
     def construct(self, state, step):
@@ -104,12 +108,7 @@ class EpsilonGreedyPolicy(policy.Policy):
 
         if self.decay_epsilon:
             epsi_sub = self.sub(self._epsi_high, self._epsi_low)
-            epsi_exp = self.exp(
-                self.mul(
-                    self._mins_one,
-                    self.div(
-                        step,
-                        self._decay)))
+            epsi_exp = self.exp(self.mul(self._mins_one, self.div(step, self._decay)))
             epsi_mul = self.mul(epsi_sub, epsi_exp)
             epsi = self.add(self._epsi_low, epsi_mul)
             epsi = self.slice(epsi, (0, 0), (1, 1))
@@ -117,6 +116,6 @@ class EpsilonGreedyPolicy(policy.Policy):
         else:
             epsi = self.epsi_low
 
-        cond = self.less(self.randreal(self._shape), epsi)
+        cond = self.less(self.randreal(random_action.shape), epsi)
         output_action = self.select(cond, random_action, greedy_action)
         return output_action
