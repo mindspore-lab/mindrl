@@ -16,9 +16,10 @@
 RandomPolicy.
 """
 
-from mindspore_rl.policy import Policy
 import mindspore
 from mindspore import Tensor
+
+from mindspore_rl.policy import Policy
 
 
 class RandomPolicy(Policy):
@@ -27,6 +28,7 @@ class RandomPolicy(Policy):
 
     Args:
         action_space_dim(int): dimension of the action space.
+        shape(tuple, optional): shape of output action in random policy. Default: (1,).
 
     Examples:
         >>> action_space_dim = 2
@@ -36,12 +38,12 @@ class RandomPolicy(Policy):
         (1,)
     """
 
-    def __init__(self, action_space_dim):
-        super(RandomPolicy, self).__init__()
+    def __init__(self, action_space_dim, shape=(1,)):
+        super().__init__()
         self.randint = mindspore.ops.UniformInt()
         self.minval = Tensor(0, mindspore.int32)
         self.maxval = Tensor(action_space_dim, mindspore.int32)
-        self.shape = (1,)
+        self.shape = shape
 
     # pylint:disable=W0221
     def construct(self):
