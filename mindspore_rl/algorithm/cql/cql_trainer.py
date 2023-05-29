@@ -65,7 +65,7 @@ class CQLTrainer(Trainer):
         self.test_freq = params["eval_per_episode"]
         self.ms_buffer = msrl.buffers
         # pylint: disable=W0212
-        InitBuffer(self.env._env._env, self.ms_buffer)
+        InitBuffer(self.env.environment._env, self.ms_buffer)
 
     @jit
     def train_one_episode(self):
