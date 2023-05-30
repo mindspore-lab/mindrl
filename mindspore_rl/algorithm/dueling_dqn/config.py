@@ -31,8 +31,8 @@ trainer_params = {
     "eval_per_episode": 10,
 }
 
-collect_env_params = {"name": "CartPole-v0"}
-eval_env_params = {"name": "CartPole-v0"}
+collect_env_params = {"GymEnvironment": {"name": "CartPole-v0"}}
+eval_env_params = {"GymEnvironment": {"name": "CartPole-v0"}}
 
 policy_params = {
     "epsi_high": 0.1,

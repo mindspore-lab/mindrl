@@ -196,15 +196,29 @@ class MSRL(nn.Cell):
                 else env_config.get("num_parallel")
             )
             wrappers = env_config.get("wrappers")
-            env_creator = partial(config[env_type]["type"], config[env_type]["params"])
+            env_creator = partial(
+                config[env_type]["type"],
+                config[env_type]["params"][config[env_type]["type"].__name__],
+            )
             if wrappers is not None:
                 for wrapper in reversed(wrappers):
-                    if wrapper.__name__ == "SyncParallelWrapper":
+                    wrapper_name = wrapper.__name__
+                    if wrapper_name == "SyncParallelWrapper":
                         env_creator = partial(
                             wrapper, [env_creator] * num_env, num_parallel
                         )
                     else:
-                        env_creator = partial(wrapper, env_creator)
+                        if config[env_type]["params"].get(wrapper_name) is not None:
+                            env_creator = partial(
+                                wrapper,
+                                env_creator,
+                                **config[env_type]["params"][wrapper_name],
+                            )
+                        else:
+                            env_creator = partial(
+                                wrapper,
+                                env_creator,
+                            )
             env = env_creator()
             if env_config.get("seed") is not None:
                 env.set_seed(env_config.get("seed"))

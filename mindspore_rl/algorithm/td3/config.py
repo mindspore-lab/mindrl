@@ -22,8 +22,8 @@ from mindspore_rl.environment.pyfunc_wrapper import PyFuncWrapper
 
 from .td3 import TD3Actor, TD3Learner, TD3Policy
 
-collect_env_params = {"name": "HalfCheetah-v2"}
-eval_env_params = {"name": "HalfCheetah-v2"}
+collect_env_params = {"GymEnvironment": {"name": "HalfCheetah-v2"}}
+eval_env_params = {"GymEnvironment": {"name": "HalfCheetah-v2"}}
 
 policy_params = {
     "state_space_dim": 0,

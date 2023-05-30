@@ -76,7 +76,7 @@ class SyncParallelWrapper(Wrapper):
                 range(env_num * i, env_num * (i + 1)),
             )
             self._env_creators.append(proc_env)
-        super().__init__(self._env_creators)
+        super().__init__(self._env_creators, num_environment=self._num_env)
         self._start()
 
     def _start(self) -> bool:
@@ -163,18 +163,7 @@ class SyncParallelWrapper(Wrapper):
             success_list.append(self.environment[i].set_seed(seed_list))
         return np.array(success_list).all()
 
-    def close(self):
-        r"""
-        Close the environment to release the resource.
-
-        Returns:
-            Success(np.bool\_), Whether shutdown the process or threading successfully.
-        """
-        for env in self.environment:
-            env.close()
-        return True
-
-    def send(self, action: Tensor, env_id: Tensor):
+    def _send(self, action: Tensor, env_id: Tensor):
         r"""
         Execute the environment step asynchronously. User can obtain result by using recv.
 
@@ -187,7 +176,7 @@ class SyncParallelWrapper(Wrapper):
         """
         raise ValueError("SyncParallelWrapper does not support send yet")
 
-    def recv(self):
+    def _recv(self):
         r"""
         Receive the result of interacting with environment.
 
@@ -200,12 +189,3 @@ class SyncParallelWrapper(Wrapper):
                 dtype. This output is optional.
         """
         raise ValueError("SyncParallelWrapper does not support recv yet")
-
-    def render(self) -> Union[Tensor, np.ndarray]:
-        """
-        Generate the image for current frame of environment.
-
-        Returns:
-            img (Union[Tensor, np.ndarray]), The image of environment at current frame.
-        """
-        raise ValueError("Parallel rendering does not support yet")

@@ -19,6 +19,9 @@ import mindspore as ms
 
 from mindspore_rl.algorithm.dreamer.dreamer_replaybuffer import DreamerReplayBuffer
 from mindspore_rl.environment import DeepMindControlEnvironment
+from mindspore_rl.environment.action_norm_wrapper import ActionNormWrapper
+from mindspore_rl.environment.action_repeat_wrapper import ActionRepeatWrapper
+from mindspore_rl.environment.pyfunc_wrapper import PyFuncWrapper
 
 from .dreamer import DreamerActor, DreamerLearner, DreamerPolicy
 
@@ -74,8 +77,26 @@ all_params = {
     "ckpt_path": "./ckpt",
 }
 
-collect_env_params = all_params
-eval_env_params = all_params
+collect_env_params = {
+    "DeepMindControlEnvironment": {
+        "env_name": "walker_walk",
+        "img_size": (64, 64),
+        "seed": 1,
+    },
+    "ActionRepeatWrapper": {
+        "repeat_num": 2,
+    },
+}
+eval_env_params = {
+    "DeepMindControlEnvironment": {
+        "env_name": "walker_walk",
+        "img_size": (64, 64),
+        "seed": 1,
+    },
+    "ActionRepeatWrapper": {
+        "repeat_num": 2,
+    },
+}
 
 trainer_part = {
     "duration": 1000,
@@ -110,11 +131,13 @@ algorithm_config = {
     "collect_environment": {
         "number": 1,
         "type": DeepMindControlEnvironment,
+        "wrappers": [PyFuncWrapper, ActionRepeatWrapper, ActionNormWrapper],
         "params": collect_env_params,
     },
     "eval_environment": {
         "number": 1,
         "type": DeepMindControlEnvironment,
+        "wrappers": [PyFuncWrapper, ActionRepeatWrapper, ActionNormWrapper],
         "params": eval_env_params,
     },
     "replay_buffer": {

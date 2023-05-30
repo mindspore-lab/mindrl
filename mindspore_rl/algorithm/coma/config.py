@@ -26,9 +26,15 @@ from .coma import COMAActor, COMALearner, COMAPolicy
 
 BATCH_SIZE = 8
 collect_env_params = {
-    "sc2_args": {"map_name": "2s3z", "state_last_action": False, "seed": 1}
+    "StarCraft2Environment": {
+        "sc2_args": {"map_name": "2s3z", "state_last_action": False, "seed": 1}
+    }
 }
-eval_env_params = {"sc2_args": {"map_name": "2s3z", "state_last_action": False}}
+eval_env_params = {
+    "StarCraft2Environment": {
+        "sc2_args": {"map_name": "2s3z", "state_last_action": False}
+    }
+}
 
 policy_params = {
     "epsi_high": 0.5,

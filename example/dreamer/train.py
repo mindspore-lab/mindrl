@@ -66,6 +66,7 @@ def train(episode=options.episode):
     context.set_context(mode=context.GRAPH_MODE, max_call_depth=100000)
     dreamer_session = DreamerSession(options.env_yaml, options.algo_yaml)
     dreamer_session.run(class_type=DreamerTrainer, episode=episode)
+    dreamer_session.env.close()
 
 
 if __name__ == "__main__":

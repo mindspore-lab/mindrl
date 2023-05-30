@@ -21,8 +21,8 @@ from mindspore_rl.core.uniform_replay_buffer import UniformReplayBuffer
 from mindspore_rl.environment import GymEnvironment
 from mindspore_rl.environment.pyfunc_wrapper import PyFuncWrapper
 
-collect_env_params = {"name": "HalfCheetah-v2"}
-eval_env_params = {"name": "HalfCheetah-v2"}
+collect_env_params = {"GymEnvironment": {"name": "HalfCheetah-v2"}}
+eval_env_params = {"GymEnvironment": {"name": "HalfCheetah-v2"}}
 
 policy_params = {
     "state_space_dim": 0,

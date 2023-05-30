@@ -23,12 +23,16 @@ from mindspore_rl.environment.pyfunc_wrapper import PyFuncWrapper
 from .awac import AWACActor, AWACLearner, AWACPolicyAndNetwork
 
 collect_env_params = {
-    "name": "ant-expert-v2",
-    "seed": 10,
+    "GymEnvironment": {
+        "name": "ant-expert-v2",
+        "seed": 10,
+    }
 }
 eval_env_params = {
-    "name": "ant-expert-v2",
-    "seed": 10,
+    "GymEnvironment": {
+        "name": "ant-expert-v2",
+        "seed": 10,
+    }
 }
 
 trainer_params = {

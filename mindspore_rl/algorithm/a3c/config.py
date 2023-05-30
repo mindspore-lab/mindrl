@@ -22,10 +22,12 @@ from mindspore_rl.environment.pyfunc_wrapper import PyFuncWrapper
 from .a3c import A3CActor, A3CLearner, A3CPolicyAndNetwork
 
 collect_env_params = {
-    "name": "CartPole-v0",
-    "seed": 42,
+    "GymEnvironment": {
+        "name": "CartPole-v0",
+        "seed": 42,
+    }
 }
-eval_env_params = {"name": "CartPole-v0"}
+eval_env_params = {"GymEnvironment": {"name": "CartPole-v0"}}
 policy_params = {
     "state_space_dim": 4,
     "action_space_dim": 2,

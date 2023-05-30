@@ -23,12 +23,16 @@ from mindspore_rl.environment.pyfunc_wrapper import PyFuncWrapper
 from .iql import IQLActor, IQLLearner, IQLPolicyAndNetwork
 
 collect_env_params = {
-    "name": "walker2d-medium-v2",
-    "seed": 10,
+    "GymEnvironment": {
+        "name": "walker2d-medium-v2",
+        "seed": 10,
+    }
 }
 eval_env_params = {
-    "name": "walker2d-medium-v2",
-    "seed": 10,
+    "GymEnvironment": {
+        "name": "walker2d-medium-v2",
+        "seed": 10,
+    }
 }
 
 trainer_params = {

@@ -34,7 +34,9 @@ class DDPGSession(Session):
         # Collect environment information and update replay buffer shape/dtype.
         # So the algorithm could change the environment type without aware of replay buffer schema.
         env_config = config.algorithm_config.get("collect_environment")
-        env = env_config.get("type")(env_config.get("params"))
+        env = env_config.get("type")(
+            env_config.get("params")[env_config.get("type").__name__]
+        )
         obs_shape, obs_dtype = (
             env.observation_space.shape,
             env.observation_space.ms_dtype,
