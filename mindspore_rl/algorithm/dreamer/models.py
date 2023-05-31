@@ -24,7 +24,7 @@ from mindspore_rl.algorithm.sac.tanh_normal import (
     MultivariateNormalDiag,
     TanhMultivariateNormalDiag,
 )
-from mindspore_rl.network import FullyConnectedLayers, GruNet
+from mindspore_rl.network import FullyConnectedLayers
 
 
 class ConvEncoder(nn.Cell):
@@ -256,9 +256,9 @@ class RSSM(nn.Cell):
             activation=nn.ELU(),
             weight_init="xavier_uniform",
         ).to_float(self.dtype)
-        self.gru_img = GruNet(
-            input_size=hidden_size, hidden_size=deter_size, weight_init="xavier_uniform"
-        ).to_float(self.dtype)
+        self.gru_img = nn.GRU(input_size=hidden_size, hidden_size=deter_size).to_float(
+            self.dtype
+        )
         self.fc2_img = nn.Dense(
             in_channels=deter_size,
             out_channels=hidden_size,
