@@ -21,7 +21,7 @@ from mindspore_rl.distribution.distribution_policies.async_multi_actor_single_le
     AsyncMultiActorSingleLearnerDP,
 )
 from mindspore_rl.distribution.distribution_policies.multi_actor_single_learner_dp import (
-    MultiActorEnvSingleLearnerDP,
+    MultiActorSingleLearnerDP,
 )
 from mindspore_rl.distribution.distribution_policies.single_actor_learner_with_multi_env_dp import (
     SingleActorLearnerMultiEnvDP,
@@ -31,7 +31,7 @@ from .distribution_policy import DistributionPolicy
 
 __all__ = [
     "DistributionPolicy",
-    "MultiActorEnvSingleLearnerDP",
+    "MultiActorSingleLearnerDP",
     "AsyncMultiActorSingleLearnerDP",
     "SingleActorLearnerMultiEnvDP",
 ]

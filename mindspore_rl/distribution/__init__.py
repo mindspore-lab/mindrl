@@ -18,9 +18,15 @@ Components for Automatic distributin.
 """
 
 from mindspore_rl.distribution.code_generation import fragment_generation
-from mindspore_rl.distribution.distribution_policies import DistributionPolicy
-from mindspore_rl.distribution.distribution_policies import MultiActorEnvSingleLearnerDP
-from mindspore_rl.distribution.distribution_policies import AsyncMultiActorSingleLearnerDP
+from mindspore_rl.distribution.distribution_policies import (
+    AsyncMultiActorSingleLearnerDP,
+    DistributionPolicy,
+    MultiActorSingleLearnerDP,
+)
 
-__all__ = ["fragment_generation", "DistributionPolicy",
-           "MultiActorEnvSingleLearnerDP", "AsyncMultiActorSingleLearnerDP"]
+__all__ = [
+    "fragment_generation",
+    "DistributionPolicy",
+    "MultiActorSingleLearnerDP",
+    "AsyncMultiActorSingleLearnerDP",
+]
