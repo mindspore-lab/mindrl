@@ -447,9 +447,7 @@ In general, researchers use native Python data structures or numpy data structur
 
 ### Distribution
 We describe MindSpore Reinforcement Learning (MSRL), a distributed RL training system that supports distribution
-policies that govern how RL training computation is parallelised and distributed on cluster resources, without requiring changes to the algorithm implementation. MSRL introduces the new abstraction of a fragmented dataflow graph, which maps Python functions from an RL algorithm’s training loop to parallel computational fragments. Fragments are executed on different devices by translating them to low-level dataflow representations, e.g. computational graphs as supported by deep learning engines, CUDA implementations or multi-threaded CPU processe
-
-<center><img src=docs/images/msrl.png width=700 height=460><p>MultiActorSingleLearnerDP</p></center>
+policies that govern how RL training computation is parallelised and distributed on cluster resources, without requiring changes to the algorithm implementation. MSRL introduces the new abstraction of a fragmented dataflow graph, which maps Python functions from an RL algorithm’s training loop to parallel computational fragments. Fragments are executed on different devices by translating them to low-level dataflow representations, e.g. computational graphs as supported by deep learning engines, CUDA implementations or multi-threaded CPU processe. Refer to the [detail](https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/README.md).
 
 By now we have supported such distribution policies：
 
@@ -469,20 +467,31 @@ By now we have supported such distribution policies：
         <td align="left">async structure of single leaner with multi actors</a></td>
         <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/a3c/train.py">a3c</td>
     </tr>
+    <tr>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/distribution_policies/single_actor_learner_with_multi_env_dp">SingleActorLearnerWithMultEnvDP</a></td>
+        <td align="left">structure of single actor leaner with multi envs</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/ppo/train.py">ppo</td>
+    </tr>
 <table>
 
 <table align="center">
     <tr>
         <td align="center">
             <center>
-                <img src=docs/images/multiactorsinglelearnerdp.png width="60%">
-                </br><p>MultiActorSingleLearnerDP</p>
+                <img src=docs/images/multiactorsinglelearnerdp.png width="100%">
+                </br><p><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/distribution_policies/multi_actor_single_learner_dp">MultiActorSingleLearnerDP</a></p>
             </center>
         </td>
         <td align="center">
             <center>
-                <img src=docs/images/asyncmultiactorsinglelearnerdp.png width="60%">
-                </br><p>AsyncMultiActorSingleLearnerDP</p>
+                <img src=docs/images/asyncmultiactorsinglelearnerdp.png width="100%">
+                </br><p><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/distribution_policies/async_multi_actor_single_learner_dp">AsyncMultiActorSingleLearnerDP</a></p>
+            </center>
+        </td>
+        <td align="center">
+            <center>
+                <img src=docs/images/singleactorlearnerwithmultienv.png width="100%">
+                </br><p><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/distribution_policies/single_actor_learner_with_multi_env_dp">SingleActorLearnerWithMultEnvDP</a></p>
             </center>
         </td>
     </tr>
