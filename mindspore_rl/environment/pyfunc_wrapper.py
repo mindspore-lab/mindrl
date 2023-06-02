@@ -21,6 +21,7 @@ from typing import Callable, Sequence, Union
 import numpy as np
 from mindspore import Tensor
 from mindspore import log as logger
+from mindspore import ops
 from mindspore.common import dtype as mstype
 from mindspore.ops import operations as P
 
@@ -139,6 +140,7 @@ class PyFuncWrapper(Wrapper):
             step_output_full_shape,
             stateful=stateful,
         )
+        self._input_dtype = self.environment.action_space.ms_dtype
 
     @property
     def reset_output_shape(self) -> Sequence[int]:
@@ -241,6 +243,7 @@ class PyFuncWrapper(Wrapper):
             - args (Tensor, optional), Support arbitrary outputs, but user needs to ensure the
                 dtype. This output is optional.
         """
+        action = ops.cast(action, self._input_dtype)
         return self.step_ops(action)
 
     def _step(self, action: Union[np.ndarray]):
