@@ -15,7 +15,6 @@
 """PPO Trainer"""
 import mindspore
 from mindspore import Tensor
-
 from mindspore.ops import operations as P
 
 from mindspore_rl.agent import trainer
@@ -57,9 +56,8 @@ class PPOTrainer(Trainer):
         state = self.msrl.collect_environment.reset()
         self.msrl.replay_buffer_reset()
         while self.less(j, self.duration):
-            reward, new_state, action, miu, sigma = self.msrl.agent_act(
-                trainer.COLLECT, state
-            )
+            action, miu, sigma = self.msrl.actors.get_action(state)
+            new_state, reward, _ = self.msrl.collect_environment.step(action)
             self.msrl.replay_buffer_insert(
                 [state, action, reward, new_state, miu, sigma]
             )

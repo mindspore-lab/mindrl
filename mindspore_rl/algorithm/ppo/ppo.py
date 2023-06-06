@@ -203,9 +203,11 @@ class PPOActor(Actor):
         self.print("Phase is incorrect")
         return 0
 
-    def get_action(self, phase, params):
+    # pylint: disable=W0221
+    def get_action(self, params):
         """Default get_action function"""
-        return
+        action, miu, sigma = self.collect_policy(params)
+        return action, miu, sigma
 
 
 class PPOLearner(Learner):

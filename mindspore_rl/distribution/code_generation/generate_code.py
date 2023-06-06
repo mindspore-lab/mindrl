@@ -40,6 +40,7 @@ class GenerateFragment:
         self.policy = policy
         self.worker_num = worker_num
         self.config = config
+        self.boundary = self.policy.boundary
 
     @classmethod
     def get_template_by_policy(cls, policy) -> str:
@@ -69,23 +70,57 @@ class GenerateFragment:
 
     @classmethod
     # pylint: disable=W0102
-    def find_buffer_and_learn_args(
-        cls,
+    def _find_args_in_node(cls, node_list, args):
+        """Inner function, used to find the input and output args, fill the dict."""
+        for i in node_list:
+            if isinstance(i, (ast.Assign, ast.AugAssign)) and isinstance(
+                i.value, ast.Call
+            ):
+                func_name = i.value.func.attr
+                if func_name in args:
+                    if isinstance(i, ast.AugAssign):
+                        target = i.target
+                    else:
+                        target = i.targets[0]
+                    # xx = msrl.get_buffer() or x1, x2 = msrl.get_buffer()
+                    if isinstance(target, ast.Tuple):
+                        args[func_name]["output"] = list(
+                            map(lambda n: n.id, target.elts)
+                        )
+                    else:
+                        args[func_name]["output"] = target.id
+                        # state = env.reset() or loss = msrl.agent_learn(s, r) or loss = msrl.agent_learn(exp)
+                    if i.value.args == []:
+                        args[func_name]["input"] = None
+                    elif isinstance(i.value.args[0], (ast.List, ast.Tuple)):
+                        args[func_name]["input"] = list(
+                            map(lambda n: n.id, i.value.args[0].elts)
+                        )
+                    else:
+                        args[func_name]["input"] = i.value.args[0].id
+            if isinstance(i, ast.Return):
+                func_name = "return"
+                args[func_name]["output"] = i.value
+        return args
+
+    # pylint: disable=W0102
+    def find_standard_function_args(
+        self,
         ast_source,
-        buffer_func=["get_replay_buffer_elements", "replay_buffer_sample"],
-        learn_func=["agent_learn"],
+        func={
+            "get_replay_buffer_elements": {},
+            "replay_buffer_sample": {},
+            "agent_learn": {},
+            "step": {},
+            "reset": {},
+            "get_action": {},
+            "return": {},
+        },
     ):
         """
-        In trainer, find the function if `train_one_episode`, find the buffer name by `buffer_func`,
-        usually, there is two situations: 1 return the whole buffer by `msrl.get_replay_buffer_elements`
-                                          2 sample a batch of buffer by `replay_buffer_sample`.
-        Also, we need the name of args in `msrl.agent_learn()`.
-        Both of buffer names and learn args are user-defined, so we have to seach the code and find them.
-        Obviously, the `buffer_func` and `learn_func` must be the standard apis in MSRL.
+        Search the code to find the standard functions defined in `func` keys.
+        Used to get the input and output args which defined by the user.
         """
-        buffer_names = []
-        learn_args = []
-        learn_return = []
         # pylint: disable=R1702
         for nodes in ast.iter_child_nodes(ast_source):
             for node in ast.iter_child_nodes(nodes):
@@ -93,43 +128,18 @@ class GenerateFragment:
                     isinstance(node, ast.FunctionDef)
                     and node.name == "train_one_episode"
                 ):
+                    node_list = []
                     for i in node.body:
-                        if isinstance(i, ast.Assign) and isinstance(i.value, ast.Call):
-                            if i.value.func.attr in buffer_func:
-                                # xx = msrl.get_buffer() or x1, x2 = msrl.get_buffer()
-                                if isinstance(i.targets[0], ast.Tuple):
-                                    for name in i.targets[0].elts:
-                                        buffer_names.append(name.id)
-                                else:
-                                    buffer_names.append(i.targets[0].id)
-                            if i.value.func.attr in learn_func:
-                                # loss = msrl.agent_learn(s, r ,s1) or loss = msrl.agent_learn(exp)
-                                if isinstance(i.value.args[0], (ast.List, ast.Tuple)):
-                                    for item in i.value.args[0].elts:
-                                        learn_args.append(item.id)
-                                else:
-                                    learn_args.append(i.value.args[0].id)
-                                # loss = msrl.agent_learn(xx) or l1, l2 = msrl.agent_learn(xx)
-                                if isinstance(i.targets[0], ast.Tuple):
-                                    for name in i.targets[0].elts:
-                                        learn_return.append(name.id)
-                                else:
-                                    learn_return.append(i.targets[0].id)
-                        if isinstance(i, ast.AugAssign) and isinstance(
-                            i.value, ast.Call
-                        ):
-                            if i.value.func.attr in learn_func:
-                                # loss += msrl.agent_learn(exp) or l1 += msrl.agent_learn(xx, xx)
-                                if isinstance(i.value.args[0], ast.Tuple):
-                                    for item in i.value.args[0].elts:
-                                        learn_args.append(item.id)
-                                else:
-                                    learn_args.append(i.value.args[0].id)
-                                learn_return.append(i.target.id)
-        return buffer_names, learn_args, learn_return
+                        if isinstance(i, ast.While):
+                            for n in i.body:
+                                node_list.append(n)
+                        else:
+                            node_list.append(i)
+                    args = self._find_args_in_node(node_list, func)
+        return args
 
     @classmethod
-    def find_func(cls, ast_body, func):
+    def _find_func(cls, ast_body, func):
         """Find the AugAssign node."""
         for i, node in enumerate(ast_body):
             if isinstance(node, ast.AugAssign) and isinstance(node.value, ast.Call):
@@ -141,9 +151,9 @@ class GenerateFragment:
     def replace_augassign(self, ast_body, learn_func=["agent_learn"]):
         """replace the AugAssign by Assign."""
         if not isinstance(ast_body, list):
-            node = self.find_func([ast_body], learn_func)
+            node = self._find_func([ast_body], learn_func)
         else:
-            node = self.find_func(ast_body, learn_func)
+            node = self._find_func(ast_body, learn_func)
         if node:
             new_node = ast.Assign(
                 lineno=node[1].lineno,
@@ -163,7 +173,9 @@ class GenerateFragment:
         """Find the boundary in func `train_one_episode`, we split this function by the keyword in `func`."""
         actor_part = []
         learner_part = []
+        cur_func = ""
         boundary = False
+        # pylint: disable=R1702
         for nodes in ast.iter_child_nodes(ast_source):
             for node in ast.iter_child_nodes(nodes):
                 if (
@@ -171,6 +183,7 @@ class GenerateFragment:
                     and node.name == "train_one_episode"
                 ):
                     for n_body in node.body:
+                        insert_body = n_body
                         if (
                             isinstance(n_body, (ast.AugAssign, ast.Assign))
                             and isinstance(n_body.value, ast.Call)
@@ -178,15 +191,36 @@ class GenerateFragment:
                         ):
                             print("Find boundary function ", n_body.value.func.attr)
                             boundary = True
+                            cur_func = n_body.value.func.attr
+                        elif isinstance(n_body, ast.While):
+                            for n_n_body in n_body.body:
+                                if (
+                                    isinstance(n_n_body, (ast.AugAssign, ast.Assign))
+                                    and isinstance(n_n_body.value, ast.Call)
+                                    and n_n_body.value.func.attr in func
+                                ):
+                                    print(
+                                        "Find boundary function ",
+                                        n_n_body.value.func.attr,
+                                    )
+                                    insert_body = n_n_body
+                                    boundary = True
+                                    cur_func = n_n_body.value.func.attr
                         if boundary:
-                            learner_part.append(n_body)
+                            learner_part.append(insert_body)
                         else:
+                            actor_part.append(insert_body)
+                        if cur_func == "step" and boundary:
+                            n_body.body.remove(insert_body)
                             actor_part.append(n_body)
+                            boundary = False
+                        elif cur_func == "reset" and boundary:
+                            # node.body.remove(n_body)
+                            boundary = False
         return actor_part, learner_part
 
     # pylint: disable=R1702
-    @classmethod
-    def insert_to_target(cls, ast_target, fragment_type, frag):
+    def insert_to_target(self, ast_target, fragment_type, frag):
         """Insert fragment in to traget ast code, replace the pass part in template ast."""
         for nodes in ast.iter_child_nodes(ast_target):
             if isinstance(nodes, ast.ClassDef) and nodes.name == fragment_type:
@@ -201,14 +235,30 @@ class GenerateFragment:
                                         if isinstance(frag[-1], ast.Return)
                                         else frag
                                     )
+                                    frag = (
+                                        frag[1:]
+                                        if self.boundary == "actor-learner"
+                                        else frag
+                                    )
                                     i.body[-1:-1] = iter(frag)
                                 else:
                                     i.body.insert(0, frag)
+                    if isinstance(i, ast.FunctionDef) and i.name == "gather_state":
+                        for j in ast.iter_child_nodes(i):
+                            if isinstance(j, ast.Pass):
+                                i.body.pop(0)
+                                i.body.insert(0, frag[0])
         ast.fix_missing_locations(ast_target)
 
     def split_trainer_to_fragment(self, ast_target, ast_source) -> ast.Module:
         """Read ast source of Trainer, split Trainer into Actor and Learner."""
-        actor_frag, learner_frag = self.find_frag(copy.deepcopy(ast_source))
+        if self.boundary == "actor-learner":
+            func = ["step", "reset"]
+        else:
+            func = ["agent_learn"]
+        actor_frag, learner_frag = self.find_frag(copy.deepcopy(ast_source), func=func)
+        if self.boundary == "actor-learner":
+            actor_frag, learner_frag = learner_frag, actor_frag
         learner_frag = self.replace_augassign(learner_frag)
         self.add_common_kernel(ast_target)
         self.insert_to_target(ast_target, "Actor", actor_frag)
@@ -622,17 +672,209 @@ class GenerateFragment:
 
         return top_op_nodes, bottom_op_nodes
 
+    def build_broadcast(self, frag_type, function_args):
+        """
+        Build the communication nodes for Broadcast.
+        For each Fragment type: `Learner` and `Actor`, the behaveior is different in Broadcast.
+        For the usage of `Actor`, firstly we Allgather the states form each `Actor` to the `Learner`,
+        then Broadcast the actions from the `Learner` to each `Actor`, each `Actor` will cut its own action.
+
+        For the usage of `Learner`, we AllGather all the states and strip the first dim as the top_op_nodes.
+        Then Broadcast the actions to each `Actor`, AllGather the experiences from each `Actor` and then update
+        the network.
+        ######
+        Actor:
+           state  -->  Learner
+           get action form Learner
+           experience --> Learner
+
+        Learner:
+           allgather state
+           broadcast action --> Actor
+           allgather experience
+        ######
+        """
+        top_op_nodes = []
+        bottom_op_nodes = []
+        extras = []
+        experience = function_args.get("step").get("output")
+        experience = list(filter(lambda x: x != "_", experience))
+        step_input = function_args.get("step").get("input")
+        state = function_args.get("get_action").get("input")
+        if frag_type == "Actor":
+            allgather_node = ast.Assign(
+                targets=[ast.Name(id=state, ctx=ast.Store())],
+                value=ast.Call(
+                    func=ast.Name(id="self.allgather", ctx=ast.Load()),
+                    args=[ast.Name(id=state)],
+                    keywords=[],
+                ),
+            )
+            extras.append(allgather_node)
+            # Top: 1 insert broadcast, all actions from learner
+            broadcast_node = ast.Assign(
+                targets=[ast.Name(id=step_input, ctx=ast.Store())],
+                value=ast.Subscript(
+                    value=ast.Call(
+                        func=ast.Name(id="self.broadcast", ctx=ast.Load()),
+                        args=[
+                            ast.Tuple(
+                                elts=[
+                                    ast.Name(
+                                        id="self.action_placeholder", ctx=ast.Load()
+                                    ),
+                                ],
+                                ctx=ast.Load(),
+                            ),
+                        ],
+                        keywords=[],
+                    ),
+                    slice=ast.Index(
+                        value=ast.Num(0),
+                        ctx=ast.Load(),
+                    ),
+                    ctx=ast.Load(),
+                ),
+            )
+            # Top: 2 slice action
+            slice_node = ast.Assign(
+                targets=[ast.Name(id=step_input, ctx=ast.Store())],
+                value=ast.Subscript(
+                    value=ast.Name(id=step_input, ctx=ast.Load()),
+                    slice=ast.Slice(
+                        lower=ast.Name(id="self.index_start"),
+                        upper=ast.Name(id="seld.index_end"),
+                        step=None,
+                    ),
+                    ctx=ast.Load(),
+                ),
+            )
+            top_op_nodes.append(broadcast_node)
+            top_op_nodes.append(slice_node)
+            # Bottom: 1 insert allgather for experience
+            for i, exp in enumerate(experience):
+                allgather_node = ast.Assign(
+                    targets=[ast.Name(id=exp, ctx=ast.Store())],
+                    value=ast.Call(
+                        func=ast.Name(id="self.allgather", ctx=ast.Load()),
+                        args=[ast.Name(id=exp)],
+                        keywords=[],
+                    ),
+                )
+                depend_node = ast.Assign(
+                    targets=[ast.Name(id=exp, ctx=ast.Store())],
+                    value=ast.Call(
+                        func=ast.Name(id="self.depend", ctx=ast.Load()),
+                        args=[
+                            ast.Name(id=exp),
+                            ast.Name(id=(step_input if i == 0 else experience[i - 1])),
+                        ],
+                        keywords=[],
+                    ),
+                )
+                bottom_op_nodes.append(allgather_node)
+                bottom_op_nodes.append(depend_node)
+
+        elif frag_type == "Learner":
+            # Top: 1 allgather states
+            allgather_node = ast.Assign(
+                targets=[ast.Name(id=state, ctx=ast.Store())],
+                value=ast.Call(
+                    func=ast.Name(id="self.allgather", ctx=ast.Load()),
+                    args=[ast.Name(id="self.state_placeholder")],
+                    keywords=[],
+                ),
+            )
+            # Top： 2 split the holder in learner
+            split = ast.Assign(
+                targets=[ast.Name(id=state, ctx=ast.Store())],
+                value=ast.Subscript(
+                    value=ast.Name(id=state, ctx=ast.Load()),
+                    slice=ast.Slice(
+                        lower=ast.Name(id="self.index_start"),
+                        upper=None,
+                        step=None,
+                    ),
+                    ctx=ast.Load(),
+                ),
+            )
+            top_op_nodes.append(allgather_node)
+            top_op_nodes.append(split)
+            # Bottom: broadcast action and gather experience. (need record position)
+            action = ast.Assign(
+                targets=[ast.Name(id=step_input, ctx=ast.Store())],
+                value=ast.Subscript(
+                    value=ast.Call(
+                        func=ast.Name(id="self.broadcast", ctx=ast.Load()),
+                        args=[
+                            ast.Tuple(
+                                elts=[
+                                    ast.Name(id=step_input, ctx=ast.Load()),
+                                ],
+                                ctx=ast.Load(),
+                            ),
+                        ],
+                        keywords=[],
+                    ),
+                    slice=ast.Index(
+                        value=ast.Num(n=0),
+                        ctx=ast.Load(),
+                    ),
+                    ctx=ast.Load(),
+                ),
+            )
+            bottom_op_nodes.append(action)
+            for i, exp in enumerate(experience):
+                allgather_node = ast.Assign(
+                    targets=[ast.Name(id=exp, ctx=ast.Store())],
+                    value=ast.Subscript(
+                        value=ast.Call(
+                            func=ast.Name(id="self.allgather", ctx=ast.Load()),
+                            args=[
+                                ast.Name(
+                                    id="self." + exp + "_placeholder", ctx=ast.Load()
+                                )
+                            ],
+                            keywords=[],
+                        ),
+                        slice=ast.Slice(
+                            lower=ast.Name(id="self.index_start", ctx=ast.Load()),
+                            upper=None,
+                            step=None,
+                        ),
+                        ctx=ast.Load(),
+                    ),
+                )
+                depend_node = ast.Assign(
+                    targets=[ast.Name(id=exp, ctx=ast.Store())],
+                    value=ast.Call(
+                        func=ast.Name(id="self.depend", ctx=ast.Load()),
+                        args=[
+                            ast.Name(id=exp),
+                            ast.Name(id=(step_input if i == 0 else experience[i - 1])),
+                        ],
+                        keywords=[],
+                    ),
+                )
+                bottom_op_nodes.append(allgather_node)
+                bottom_op_nodes.append(depend_node)
+        return top_op_nodes, bottom_op_nodes, extras
+
     def gen_commuicate_statement(
         self,
         frag_type,
         communication_op,
-        user_defined_buffer_name,
+        function_args,
         framework_buffer_name,
         framework_weight_name,
-        learn_args,
-        learn_return,
     ):
         """Genearte communicate statement by the input communicate ops"""
+        user_defined_buffer_name = function_args.get("get_replay_buffer_elements").get(
+            "output"
+        )
+        learn_args = function_args.get("agent_learn").get("output")
+        learn_return = function_args.get("agent_learn").get("input")
+        extras = []
         if "AllGather" in communication_op:
             top_state, bottom_state = self.build_allgather(
                 frag_type,
@@ -647,18 +889,51 @@ class GenerateFragment:
                 frag_type,
                 learn_args,
             )
+        if "Broadcast" in communication_op:
+            top_state, bottom_state, extras = self.build_broadcast(
+                frag_type,
+                function_args,
+            )
 
-        return top_state, bottom_state
+        return top_state, bottom_state, extras
 
-    @classmethod
-    def insert_states(cls, ast_target, frag_type, top, bottom) -> ast.Module:
+    def insert_states(
+        self, ast_target, frag_type, top, bottom, extras, top_pos=0, bottom_pos=-1
+    ) -> ast.Module:
         """Insert the states part into target ast code."""
         for node in ast.iter_child_nodes(ast_target):
             if isinstance(node, ast.ClassDef) and node.name == frag_type:
                 for i in ast.iter_child_nodes(node):
                     if isinstance(i, ast.FunctionDef) and i.name == "kernel":
-                        i.body[-1:-1] = iter(bottom)
-                        i.body[0:0] = iter(top)
+                        if self.boundary == "actor-learner":
+                            for index, n_body in enumerate(i.body):
+                                if isinstance(n_body, ast.Assign) and isinstance(
+                                    n_body.value, ast.Call
+                                ):
+                                    func_name = n_body.value.func.attr
+                                    if func_name == "get_action":
+                                        bottom_pos = index
+                                elif isinstance(n_body, ast.While):
+                                    for ind, n in enumerate(n_body.body):
+                                        if (
+                                            isinstance(n, ast.Assign)
+                                            and isinstance(n.value, ast.Call)
+                                            and n.value.func.attr == "get_action"
+                                        ):
+                                            i.body[index].body[
+                                                ind + 1 : ind + 1
+                                            ] = iter(bottom)
+                                            bottom = []
+                                            break
+                        i.body[bottom_pos:bottom_pos] = iter(bottom)
+                        i.body[top_pos:top_pos] = iter(top)
+                    if (
+                        frag_type == "Actor"
+                        and isinstance(i, ast.FunctionDef)
+                        and i.name == "gather_state"
+                    ):
+                        i.body[bottom_pos:bottom_pos] = iter(extras)
+
         return ast_target
 
     @classmethod
@@ -726,7 +1001,10 @@ class GenerateFragment:
     @classmethod
     def replace_return(cls, ast_target, frag_type, new_return):
         """Replace template return with the input new_return."""
-        return_node = ast.Return(value=ast.Name(id=new_return[0], ctx=ast.Load()))
+        if isinstance(new_return, list):
+            return_node = ast.Return(value=ast.Name(id=new_return[0], ctx=ast.Load()))
+        else:
+            return_node = ast.Return(value=new_return)
         for nodes in ast.iter_child_nodes(ast_target):
             if isinstance(nodes, ast.ClassDef) and nodes.name == frag_type:
                 for i in ast.iter_child_nodes(nodes):
@@ -741,30 +1019,30 @@ class GenerateFragment:
     ) -> ast.Module:
         """Insert communication states into traget ast code."""
         fragment_type = self.get_fragment_types(parameter_list)
-        (
-            user_defined_buffer_name,
-            learn_args,
-            learn_return,
-        ) = self.find_buffer_and_learn_args(ast_source)
+        function_args = self.find_standard_function_args(ast_source)
+        learn_return = function_args.get("agent_learn").get("output")
+        origin_return = function_args.get("return").get("output")
         framework_buffer_name = policy.communication_data.get("Data")
         framework_weight_name = policy.communication_data.get("Weight")
         for frag_type in fragment_type:
             communication_op = parameter_list[frag_type]["operations"]
-            top, bottom = self.gen_commuicate_statement(
+            top, bottom, extras = self.gen_commuicate_statement(
                 frag_type,
                 communication_op,
-                user_defined_buffer_name,
+                function_args,
                 framework_buffer_name,
                 framework_weight_name,
-                learn_args,
-                learn_return,
             )
             if framework_buffer_name is None:
                 ast_target = self.init_communication(
                     ast_target, frag_type, communication_op
                 )
-            ast_target = self.insert_states(ast_target, frag_type, top, bottom)
-        ast_target = self.replace_return(ast_target, "Learner", learn_return)
+            ast_target = self.insert_states(ast_target, frag_type, top, bottom, extras)
+        if self.boundary == "actor-learner":
+            new_return = origin_return
+        else:
+            new_return = learn_return
+        ast_target = self.replace_return(ast_target, "Learner", new_return)
         return ast_target
 
     @classmethod

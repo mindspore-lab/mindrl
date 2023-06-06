@@ -1,0 +1,113 @@
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ============================================================================
+"""PPO Trainer"""
+import mindspore
+from mindspore import Tensor
+
+from mindspore.ops import operations as P
+
+from mindspore_rl.agent import trainer
+from mindspore_rl.agent.trainer import Trainer
+import mindspore
+import mindspore.numpy as np
+from mindspore_rl.core import MSRL
+from mindspore_rl.agent import trainer
+import mindspore.nn as nn
+from mindspore import jit
+from mindspore import Tensor
+from mindspore.ops import operations as P
+from mindspore.ops import composite as C
+from mindspore.common.parameter import Parameter, ParameterTuple
+from mindspore.communication.management import init, NCCL_WORLD_COMM_GROUP, get_rank, get_group_size
+
+class Actor(nn.Cell):
+
+    def __init__(self, msrl, rank, duration, episode):
+        super(Actor, self).__init__()
+        self.msrl = msrl
+        self.rank = rank
+        self.worker_num = msrl.proc_num
+        self.total_env = msrl.collect_environment.num_environment
+        self.env_per_actor = msrl.collect_environment.num_env_per_worker
+        self.index_start = (self.rank - 1) * self.env_per_actor
+        self.index_end = self.rank * self.env_per_actor
+        self.episode = episode
+        self.duration = duration
+        self.allgather = P.AllGather(group=NCCL_WORLD_COMM_GROUP)
+        self.broadcast = P.Broadcast(root_rank=0, group=NCCL_WORLD_COMM_GROUP)
+        types = list(map(lambda b: b.dtype, msrl.buffers.buffer))
+        shapes = list(map(lambda b: b.shape, msrl.buffers.buffer))
+        self.action_placeholder = Tensor(np.zeros((self.total_env, shapes[1][-1])), mindspore.float32)
+        self.depend = P.Depend()
+
+    @mindspore.jit
+    def gather_state(self):
+        pass
+        return state
+
+    @mindspore.jit
+    def kernel(self):
+        pass
+        return reward
+
+    def run(self):
+        print("Start actor run ----- episode ", self.episode)
+        for i in range(self.episode):
+            res = self.gather_state()
+            for j in range(self.duration):
+                res = self.kernel()
+            print("actor episode", i)
+
+class Learner(nn.Cell):
+
+    def __init__(self, msrl, rank, duration, episode):
+        super(Learner, self).__init__()
+        self.msrl = msrl
+        self.rank = rank
+        self.total_env = msrl.collect_environment.num_environment
+        self.env_per_actor = msrl.collect_environment.num_env_per_worker
+        self.index_start = (self.rank + 1) * self.env_per_actor
+        self.episode = episode
+        self.duration = duration
+        self.zero = Tensor(0, mindspore.float32)
+        self.assign = P.Assign()
+        self.squeeze = P.Squeeze()
+        self.mod = P.Mod()
+        self.equal = P.Equal()
+        self.less = P.Less()
+        self.reduce_mean = P.ReduceMean()
+
+        self.allgather = P.AllGather(group=NCCL_WORLD_COMM_GROUP)
+        self.broadcast = P.Broadcast(root_rank=0, group=NCCL_WORLD_COMM_GROUP)
+        shapes = list(map(lambda b: b.shape, msrl.buffers.buffer))
+        types = list(map(lambda b: b.dtype, msrl.buffers.buffer))
+
+        self.state_placeholder = Parameter(Tensor(np.zeros((self.env_per_actor, shapes[0][-1])), types[0]), name='state_holder')
+        self.action_placeholder = Parameter(Tensor(np.zeros((self.env_per_actor, shapes[1][-1])), types[1]), name='action_holder')
+        self.reward_placeholder = Parameter(Tensor(np.zeros((self.env_per_actor, shapes[2][-1])), types[2]), name='reward_holder')
+        self.new_state_placeholder = self.state_placeholder
+        self.print = P.Print()
+        self.depend = P.Depend()
+
+    @mindspore.jit
+    def kernel(self):
+        pass
+        return training_loss
+
+    def run(self):
+        print("Start learner run ----- episode ", self.episode)
+        for i in range(self.episode):
+            res = self.kernel()
+            print("learner res ", res)
