@@ -14,13 +14,6 @@
         - **seed0** (int) - 随机数种子0值。默认值：``0``。
         - **seed1** (int) - 随机数种子1值。默认值：``0``。
 
-    .. py:method:: destroy()
-
-        销毁经验回放缓存。
-
-        返回：
-            - **handle** (Tensor) - 优先级经验回放缓存句柄，数据和shape分别是int64和 :math:`(1,)`。
-
     .. py:method:: insert(*transition)
 
         将transition推送到缓存区。如果缓存区已满，则覆盖最早的数据。
@@ -30,7 +23,6 @@
 
         返回：
             - **handle** (Tensor) - 优先级经验回放缓存句柄，数据和shape分别是int64和 :math:`(1,)`。
-
 
     .. py:method:: sample(beta)
 
@@ -55,16 +47,17 @@
         返回：
             - **handle** (Tensor) - 优先级经验回放缓存句柄，数据和shape分别是int64和 :math:`(1,)`。
 
-    .. py:method:: reset()
-
-        重置缓存区，将count值置零。
-
-        返回：
-            - **success** (bool) - 重置是否成功。
-
     .. py:method:: full()
 
         检查缓存区是否已满。
 
+    .. py:method:: reset()
+
+        重置缓存区，将count值置零。
+
+    .. py:method:: destroy()
+
+        销毁经验回放缓存。
+
         返回：
-            - **Full** (bool) - 缓存区已满返回 ``True``，否则返回 ``False``。
+            - **handle** (Tensor) - 优先级经验回放缓存句柄，数据和shape分别是int64和 :math:`(1,)`。
