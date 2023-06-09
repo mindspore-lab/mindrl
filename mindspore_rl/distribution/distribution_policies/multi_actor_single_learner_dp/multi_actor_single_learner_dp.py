@@ -21,12 +21,12 @@ from mindspore_rl.distribution.distribution_policies.distribution_policy import 
 )
 
 
-class MultiActorEnvSingleLearnerDP(DistributionPolicy):
+class MultiActorSingleLearnerDP(DistributionPolicy):
     """define multi actor single learner policy"""
 
     def __init__(self, msrl, algorithm_config=None):
         # pylint: disable=R1725
-        super(MultiActorEnvSingleLearnerDP, self).__init__()
+        super(MultiActorSingleLearnerDP, self).__init__()
         if algorithm_config is not None:
             self.set_actor_number(algorithm_config["actor"]["number"])
             self.set_learner_number(algorithm_config["learner"]["number"])
@@ -42,5 +42,5 @@ class MultiActorEnvSingleLearnerDP(DistributionPolicy):
         )
         self.set_replicate_list("Actor", self.actor_number)
         self.set_topology({"Learner": "Actor"})
-        self.name = "MultiActorEnvSingleLearnerDP"
+        self.name = "MultiActorSingleLearnerDP"
         self.auto = True
