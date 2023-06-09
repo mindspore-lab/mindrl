@@ -26,7 +26,7 @@ do
         export DEVICE=$OPTARG ;;
     *)
         echo "Unknown opt ${opt}!"
-        echo "Usage:" 
+        echo "Usage:"
         echo "bash build.sh [-d on|off] [-e gpu|cpu]"
         echo ""
         echo "Options:"
@@ -51,6 +51,11 @@ mkdir ${BUILD_PATH}
 cd ${BUILD_PATH}
 cmake ${CMAKE_ARGS} ${BASEPATH}
 make && make install
+
+if [ $? -ne "0" ]; then
+  echo "Cmake failed, please check Error"
+  exit 1
+fi
 
 cd ${BASEPATH}
 python3 setup.py bdist_wheel -d ${BASEPATH}/output
