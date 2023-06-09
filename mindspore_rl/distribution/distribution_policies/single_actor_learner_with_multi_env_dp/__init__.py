@@ -14,24 +14,9 @@
 # ============================================================================
 
 """
-Pre-defined Distribution policies
+Single actor-learner with multi environment policy
 """
 
-from mindspore_rl.distribution.distribution_policies.async_multi_actor_single_learner_dp import (
-    AsyncMultiActorSingleLearnerDP,
-)
-from mindspore_rl.distribution.distribution_policies.multi_actor_single_learner_dp import (
-    MultiActorEnvSingleLearnerDP,
-)
-from mindspore_rl.distribution.distribution_policies.single_actor_learner_with_multi_env_dp import (
-    SingleActorLearnerMultiEnvDP,
-)
+from .single_actor_learner_with_multi_env_dp import SingleActorLearnerMultiEnvDP
 
-from .distribution_policy import DistributionPolicy
-
-__all__ = [
-    "DistributionPolicy",
-    "MultiActorEnvSingleLearnerDP",
-    "AsyncMultiActorSingleLearnerDP",
-    "SingleActorLearnerMultiEnvDP",
-]
+__all__ = ["SingleActorLearnerMultiEnvDP"]
