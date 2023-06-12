@@ -59,7 +59,7 @@ class PPOTrainer(Trainer):
             action, miu, sigma = self.msrl.actors.get_action(state)
             new_state, reward, _ = self.msrl.collect_environment.step(action)
             self.msrl.replay_buffer_insert(
-                [state, action, reward, new_state, miu, sigma]
+                [state, action, reward.expand_dims(-1), new_state, miu, sigma]
             )
             state = new_state
             reward = self.reduce_mean(reward)

@@ -96,7 +96,7 @@ class Learner(nn.Cell):
 
         self.state_placeholder = Parameter(Tensor(np.zeros((self.env_per_actor, shapes[0][-1])), types[0]), name='state_holder')
         self.action_placeholder = Parameter(Tensor(np.zeros((self.env_per_actor, shapes[1][-1])), types[1]), name='action_holder')
-        self.reward_placeholder = Parameter(Tensor(np.zeros((self.env_per_actor, shapes[2][-1])), types[2]), name='reward_holder')
+        self.reward_placeholder = Parameter(Tensor(np.zeros((self.env_per_actor,)), types[2]), name='reward_holder')
         self.new_state_placeholder = self.state_placeholder
         self.print = P.Print()
         self.depend = P.Depend()
