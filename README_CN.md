@@ -479,19 +479,19 @@ MindSpore Reinforcement 将强化学习的算法定义与算法如何并行或�
         <td align="center">
             <center>
                 <img src=docs/images/multiactorsinglelearnerdp.png width="100%">
-                </br><p><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/distribution_policies/multi_actor_single_learner_dp">MultiActorSingleLearnerDP</a></p>
+                </br><p><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/README_CN.md">MultiActorSingleLearnerDP</a></p>
             </center>
         </td>
         <td align="center">
             <center>
                 <img src=docs/images/asyncmultiactorsinglelearnerdp.png width="100%">
-                </br><p><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/distribution_policies/async_multi_actor_single_learner_dp">AsyncMultiActorSingleLearnerDP</a></p>
+                </br><p><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/README_CN.md">AsyncMultiActorSingleLearnerDP</a></p>
             </center>
         </td>
         <td align="center">
             <center>
                 <img src=docs/images/singleactorlearnerwithmultienv.png width="100%">
-                </br><p><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/distribution_policies/single_actor_learner_with_multi_env_dp">SingleActorLearnerWithMultEnvDP</a></p>
+                </br><p><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/README_CN.md">SingleActorLearnerWithMultEnvDP</a></p>
             </center>
         </td>
     </tr>
