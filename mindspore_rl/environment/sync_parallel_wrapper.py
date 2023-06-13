@@ -132,7 +132,7 @@ class SyncParallelWrapper(Wrapper):
         for i in range(self._num_proc):
             worker_env_num = getattr(self.environment[i], "_num_env_per_worker")
             action_i = action[accum_env_num : worker_env_num + accum_env_num]
-            if (len(action_i.shape) - len(self.action_space.shape) > 0) and (
+            if (len(action_i.shape) - len(self.action_space.shape[1:]) > 0) and (
                 action_i.shape[0] == 1
             ):
                 action_i = action_i.squeeze(0)

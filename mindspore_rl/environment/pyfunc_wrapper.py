@@ -54,13 +54,7 @@ class PyFuncWrapper(Wrapper):
 
         # pre-run environment
         reset_out = self.environment.reset()
-        if self.environment.batched:
-            action = []
-            for _ in range(self.environment.num_environment):
-                action.append(self.environment.action_space.sample())
-            action = np.array(action)
-        else:
-            action = self.environment.action_space.sample()
+        action = self.environment.action_space.sample()
         step_out = self.environment.step(action)
 
         # Check whether the output of reset/step func is a numpy array

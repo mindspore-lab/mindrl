@@ -743,7 +743,7 @@ class GenerateFragment:
                     value=ast.Name(id=step_input, ctx=ast.Load()),
                     slice=ast.Slice(
                         lower=ast.Name(id="self.index_start"),
-                        upper=ast.Name(id="seld.index_end"),
+                        upper=ast.Name(id="self.index_end"),
                         step=None,
                     ),
                     ctx=ast.Load(),

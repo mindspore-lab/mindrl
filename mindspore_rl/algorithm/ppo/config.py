@@ -89,7 +89,7 @@ algorithm_config = {
 }
 
 deploy_config = {
-    "auto_distribution": True,
+    "auto_distribution": False,
     "distribution_policy": DP.SingleActorLearnerMultiEnvDP,
     "worker_num": 2,
     "network": "actor_net",
