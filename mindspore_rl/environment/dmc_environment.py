@@ -28,11 +28,6 @@ from mindspore_rl.environment.python_environment import PythonEnvironment
 from mindspore_rl.environment.space import Space
 from mindspore_rl.environment.space_adapter import dmc2ms_adapter
 
-if context.get_context("device_target") in ["GPU"]:
-    os.environ["MUJOCO_GL"] = "egl"
-else:
-    os.environ["MUJOCO_GL"] = "osmesa"
-
 
 class DeepMindControlEnvironment(PythonEnvironment):
     """
@@ -74,6 +69,10 @@ class DeepMindControlEnvironment(PythonEnvironment):
     """
 
     def __init__(self, params, env_id=0):
+        if context.get_context("device_target") in ["GPU"]:
+            os.environ["MUJOCO_GL"] = "egl"
+        else:
+            os.environ["MUJOCO_GL"] = "osmesa"
         env_name = params["env_name"]
         camera = params.get("camera", None)
         self._size = params["img_size"]

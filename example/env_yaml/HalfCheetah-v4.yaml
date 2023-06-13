@@ -1,0 +1,5 @@
+env: HalfCheetah-v4
+env_class: mindspore_rl.environment.gym_environment
+env_type: GymEnvironment
+collect_env_params: {"GymEnvironment": {"name": "HalfCheetah-v4"}}
+eval_env_params: {"GymEnvironment": {"name": "HalfCheetah-v4"}}
