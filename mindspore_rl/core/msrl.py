@@ -494,7 +494,7 @@ class MSRL(nn.Cell):
             config["agent"]["params"]["num_agent"] = self.num_agent
             # ---------------------- Environment ----------------------
             self.collect_environment, self.num_collect_env = MSRL.create_environments(
-                config, "collect_environment", deploy_config=self.deploy_confgi
+                config, "collect_environment", deploy_config=self.deploy_config
             )
             need_batched = True if (self.num_collect_env > 1) else False
             self.eval_environment, _ = MSRL.create_environments(

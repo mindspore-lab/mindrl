@@ -77,7 +77,6 @@ class SyncParallelWrapper(Wrapper):
             )
             self._env_creators.append(proc_env)
         super().__init__(self._env_creators, num_environment=self._num_env)
-        self._start()
 
     def _start(self) -> bool:
         """

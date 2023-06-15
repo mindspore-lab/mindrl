@@ -54,6 +54,20 @@ class Wrapper(Environment):
             self._envs = [env_creator() for env_creator in env_creators]
         else:
             self._envs = env_creators()
+        self._start()
+        if self._batched:
+            self._action_batch_space = self._create_batched_space(
+                self._envs[0].action_space
+            )
+            self._observation_batch_space = self._create_batched_space(
+                self._envs[0].observation_space
+            )
+            self._reward_batch_space = self._create_batched_space(
+                self._envs[0].reward_space
+            )
+            self._done_batch_space = self._create_batched_space(
+                self._envs[0].done_space
+            )
 
     @property
     def environment(self) -> Union[Environment, Sequence[Environment]]:
@@ -84,14 +98,7 @@ class Wrapper(Environment):
             action_space(Space): The action space of environment.
         """
         if self._batched:
-            low, high = self._envs[0].action_space.boundary
-            return Space(
-                self._envs[0].action_space.shape,
-                dtype=self._envs[0].action_space.np_dtype,
-                batch_shape=(self.num_environment,),
-                low=low,
-                high=high,
-            )
+            return self._action_batch_space
         return self._envs.action_space
 
     @property
@@ -103,14 +110,7 @@ class Wrapper(Environment):
             observation_space(Space): The observation space of environment.
         """
         if self._batched:
-            low, high = self._envs[0].observation_space.boundary
-            return Space(
-                self._envs[0].observation_space.shape,
-                dtype=self._envs[0].observation_space.np_dtype,
-                batch_shape=(self.num_environment,),
-                low=low,
-                high=high,
-            )
+            return self._observation_batch_space
         return self._envs.observation_space
 
     @property
@@ -122,14 +122,7 @@ class Wrapper(Environment):
             reward_space(Space): The reward space of environment.
         """
         if self._batched:
-            low, high = self._envs[0].reward_space.boundary
-            return Space(
-                self._envs[0].reward_space.shape,
-                dtype=self._envs[0].reward_space.np_dtype,
-                batch_shape=(self.num_environment,),
-                low=low,
-                high=high,
-            )
+            return self._reward_batch_space
         return self._envs.reward_space
 
     @property
@@ -141,14 +134,7 @@ class Wrapper(Environment):
             done_space(Space): The done space of environment.
         """
         if self._batched:
-            low, high = self._envs[0].done_space.boundary
-            return Space(
-                self._envs[0].done_space.shape,
-                dtype=self._envs[0].done_space.np_dtype,
-                batch_shape=(self.num_environment,),
-                low=low,
-                high=high,
-            )
+            return self._done_batch_space
         return self._envs.done_space
 
     @property
@@ -282,6 +268,20 @@ class Wrapper(Environment):
             return all(env.close() for env in self._envs)
         return self._envs.close()
 
+    def _create_batched_space(self, input_space):
+        """To create batched space for batched environment"""
+        num_environment = (self.num_environment,)
+        low, high = input_space.boundary
+        space = Space(
+            input_space.shape,
+            dtype=input_space.np_dtype,
+            low=low,
+            high=high,
+            batch_shape=num_environment,
+            mask=getattr(input_space, "_mask"),
+        )
+        return space
+
     def send(
         self, action: Union[Tensor, np.ndarray], env_id: Union[Tensor, np.ndarray]
     ):
@@ -310,6 +310,10 @@ class Wrapper(Environment):
                 dtype. This output is optional.
         """
         return self._recv()
+
+    def _start(self):
+        """Some action needs to be done after creating environment. For example, start each process"""
+        return True
 
     def _send(
         self, action: Union[Tensor, np.ndarray], env_id: Union[Tensor, np.ndarray]

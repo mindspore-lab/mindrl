@@ -72,7 +72,6 @@ class AsyncParallelWrapper(Wrapper):
             for i, env_creator in enumerate(env_creators)
         ]
         super().__init__(self._envs_creators)
-        self._start()
 
     def _start(self) -> bool:
         """
