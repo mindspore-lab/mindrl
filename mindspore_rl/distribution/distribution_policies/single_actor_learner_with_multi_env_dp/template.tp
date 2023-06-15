@@ -43,13 +43,15 @@ class Actor(nn.Cell):
         self.env_per_actor = msrl.collect_environment.num_env_per_worker
         self.index_start = (self.rank - 1) * self.env_per_actor
         self.index_end = self.rank * self.env_per_actor
+        step_input_shape = msrl.collect_environment.step_input_shape[0]
+        step_input_dtype = msrl.collect_environment.step_input_dtype[0]
+        shape = list(step_input_shape)
+        shape[0] = self.total_env
+        self.action_placeholder = Tensor(np.zeros(shape), step_input_dtype)
         self.episode = episode
         self.duration = duration
         self.allgather = P.AllGather(group=NCCL_WORLD_COMM_GROUP)
         self.broadcast = P.Broadcast(root_rank=0, group=NCCL_WORLD_COMM_GROUP)
-        types = list(map(lambda b: b.dtype, msrl.buffers.buffer))
-        shapes = list(map(lambda b: b.shape, msrl.buffers.buffer))
-        self.action_placeholder = Tensor(np.zeros((self.total_env, shapes[1][-1])), mindspore.float32)
         self.depend = P.Depend()
 
     @mindspore.jit
@@ -88,18 +90,16 @@ class Learner(nn.Cell):
         self.equal = P.Equal()
         self.less = P.Less()
         self.reduce_mean = P.ReduceMean()
-
-        self.allgather = P.AllGather(group=NCCL_WORLD_COMM_GROUP)
-        self.broadcast = P.Broadcast(root_rank=0, group=NCCL_WORLD_COMM_GROUP)
-        shapes = list(map(lambda b: b.shape, msrl.buffers.buffer))
-        types = list(map(lambda b: b.dtype, msrl.buffers.buffer))
-
-        self.state_placeholder = Parameter(Tensor(np.zeros((self.env_per_actor, shapes[0][-1])), types[0]), name='state_holder')
-        self.action_placeholder = Parameter(Tensor(np.zeros((self.env_per_actor, shapes[1][-1])), types[1]), name='action_holder')
-        self.reward_placeholder = Parameter(Tensor(np.zeros((self.env_per_actor,)), types[2]), name='reward_holder')
-        self.new_state_placeholder = self.state_placeholder
         self.print = P.Print()
         self.depend = P.Depend()
+        self.allgather = P.AllGather(group=NCCL_WORLD_COMM_GROUP)
+        self.broadcast = P.Broadcast(root_rank=0, group=NCCL_WORLD_COMM_GROUP)
+
+        step_output_shape = msrl.collect_environment.step_output_shape
+        step_output_dtype = msrl.collect_environment.step_output_dtype
+        param_dict = self.__dict__
+        for i, p in enumerate(step_output_shape):
+            param_dict["placeholder_" + str(i)] = Parameter(Tensor(np.zeros(p), step_output_dtype[i]), name="step_out_" + str(i))
 
     @mindspore.jit
     def kernel(self):

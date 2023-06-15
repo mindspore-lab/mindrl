@@ -89,6 +89,7 @@ def train(episode=options.episode):
     is_distribte = options.enable_distribute
     if is_distribte:
         config.deploy_config["worker_num"] = options.worker_num
+        config.deploy_config["auto_distribution"] = is_distribte
     ppo_session = PPOSession(options.env_yaml, options.algo_yaml, is_distribte)
     ppo_session.run(class_type=PPOTrainer, episode=episode, duration=duration)
 

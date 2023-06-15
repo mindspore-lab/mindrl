@@ -781,7 +781,7 @@ class GenerateFragment:
                 targets=[ast.Name(id=state, ctx=ast.Store())],
                 value=ast.Call(
                     func=ast.Name(id="self.allgather", ctx=ast.Load()),
-                    args=[ast.Name(id="self.state_placeholder")],
+                    args=[ast.Name(id="self.placeholder_0")],
                     keywords=[],
                 ),
             )
@@ -832,7 +832,7 @@ class GenerateFragment:
                             func=ast.Name(id="self.allgather", ctx=ast.Load()),
                             args=[
                                 ast.Name(
-                                    id="self." + exp + "_placeholder", ctx=ast.Load()
+                                    id="self." + "placeholder_" + str(i), ctx=ast.Load()
                                 )
                             ],
                             keywords=[],
