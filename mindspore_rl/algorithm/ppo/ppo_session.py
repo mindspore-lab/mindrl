@@ -37,6 +37,7 @@ class PPOSession(Session):
             "collect_environment",
             deploy_config=config.deploy_config,
         )
+        env.close()
         obs_shape, obs_dtype = (
             env.observation_space.shape,
             env.observation_space.ms_dtype,
