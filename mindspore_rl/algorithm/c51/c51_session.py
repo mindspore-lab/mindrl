@@ -43,7 +43,9 @@ class CategoricalSession(Session):
             "compute_type"
         ] = compute_type
         env = config.algorithm_config.get("collect_environment").get("type")(
-            config.collect_env_params
+            config.collect_env_params[
+                config.algorithm_config.get("collect_environment").get("type").__name__
+            ]
         )
         config.algorithm_config["replay_buffer"]["data_shape"] = [
             env.observation_space.shape,
