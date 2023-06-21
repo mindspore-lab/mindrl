@@ -1073,7 +1073,6 @@ class GenerateFragment:
             "Depend": {},
             "Less": {},
             "Print": {},
-            "AllGather": {"group": "NCCL_WORLD_COMM_GROUP"},
         }
         kernel_list = []
         for key, var in kernel_names.items():
@@ -1146,7 +1145,7 @@ class GenerateFragment:
             frag_name = self.save_fragment(ast_target)
         else:
             frag_name = frag_file.strip(".py")
-            print("Import fragment from file: {file}.")
+            print(f"Import fragment from file: {frag_name}.")
         fragment_module = importlib.import_module(frag_name)
         actor = getattr(fragment_module, "Actor")
         learner = getattr(fragment_module, "Learner")

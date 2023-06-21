@@ -30,7 +30,7 @@ from mindspore import Tensor
 from mindspore.ops import operations as P
 from mindspore.ops import composite as C
 from mindspore.common.parameter import Parameter, ParameterTuple
-from mindspore.communication.management import init, NCCL_WORLD_COMM_GROUP, get_rank, get_group_size
+from mindspore.communication.management import init, MCCL_WORLD_COMM_GROUP, get_rank, get_group_size
 
 class Actor(nn.Cell):
 
@@ -50,16 +50,18 @@ class Actor(nn.Cell):
         self.action_placeholder = Tensor(np.zeros(shape), step_input_dtype)
         self.episode = episode
         self.duration = duration
-        self.allgather = P.AllGather(group=NCCL_WORLD_COMM_GROUP)
-        self.broadcast = P.Broadcast(root_rank=0, group=NCCL_WORLD_COMM_GROUP)
+        self.allgather = P.AllGather(group=MCCL_WORLD_COMM_GROUP)
+        #self.allgather.add_prim_attr('primitive_target', 'CPU')
+        self.broadcast = P.Broadcast(root_rank=0, group=MCCL_WORLD_COMM_GROUP)
+        #self.broadcast.add_prim_attr('primitive_target', 'CPU')
         self.depend = P.Depend()
 
-    @mindspore.jit
+    #@mindspore.jit
     def gather_state(self):
         pass
         return state
 
-    @mindspore.jit
+    #@mindspore.jit
     def kernel(self):
         pass
         return reward
@@ -92,16 +94,17 @@ class Learner(nn.Cell):
         self.reduce_mean = P.ReduceMean()
         self.print = P.Print()
         self.depend = P.Depend()
-        self.allgather = P.AllGather(group=NCCL_WORLD_COMM_GROUP)
-        self.broadcast = P.Broadcast(root_rank=0, group=NCCL_WORLD_COMM_GROUP)
-
+        self.allgather = P.AllGather(group=MCCL_WORLD_COMM_GROUP)
+        self.allgather.add_prim_attr('primitive_target', 'CPU')
+        self.broadcast = P.Broadcast(root_rank=0, group=MCCL_WORLD_COMM_GROUP)
+        self.broadcast.add_prim_attr('primitive_target', 'CPU')
         step_output_shape = msrl.collect_environment.step_output_shape
         step_output_dtype = msrl.collect_environment.step_output_dtype
         param_dict = self.__dict__
         for i, p in enumerate(step_output_shape):
             param_dict["placeholder_" + str(i)] = Parameter(Tensor(np.zeros(p), step_output_dtype[i]), name="step_out_" + str(i))
 
-    @mindspore.jit
+    #@mindspore.jit
     def kernel(self):
         pass
         return training_loss
