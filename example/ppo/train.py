@@ -22,7 +22,9 @@ import os
 
 from mindspore import context
 from mindspore import dtype as mstype
+from mindspore.communication import get_rank, init
 
+import mindspore_rl.distribution.distribution_policies as DP
 from mindspore_rl.algorithm.ppo import config
 from mindspore_rl.algorithm.ppo.ppo_session import PPOSession
 from mindspore_rl.algorithm.ppo.ppo_trainer import PPOTrainer
@@ -88,6 +90,13 @@ def train(episode=options.episode):
     context.set_context(mode=context.GRAPH_MODE, max_call_depth=100000)
     is_distribte = options.enable_distribute
     if is_distribte:
+        context.set_context(enable_graph_kernel=False)
+        dp = config.deploy_config.get("distribution_policy")
+        if dp == DP.SingleActorLearnerMultiEnvHeterDP:
+            init("mccl")
+            rank_id = get_rank()
+            if rank_id == 0:
+                context.set_context(device_target="GPU")
         config.deploy_config["worker_num"] = options.worker_num
         config.deploy_config["auto_distribution"] = is_distribte
     ppo_session = PPOSession(options.env_yaml, options.algo_yaml, is_distribte)

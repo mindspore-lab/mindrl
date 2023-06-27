@@ -14,23 +14,11 @@
 # ============================================================================
 
 """
-Components for Automatic distributin.
+Single actor-learner with multi heterogeneous environment policy
 """
 
-from mindspore_rl.distribution.code_generation import fragment_generation
-from mindspore_rl.distribution.distribution_policies import (
-    AsyncMultiActorSingleLearnerDP,
-    DistributionPolicy,
-    MultiActorSingleLearnerDP,
-    SingleActorLearnerMultiEnvDP,
+from .single_actor_learner_with_multi_env_heterogeneous_dp import (
     SingleActorLearnerMultiEnvHeterDP,
 )
 
-__all__ = [
-    "fragment_generation",
-    "DistributionPolicy",
-    "MultiActorSingleLearnerDP",
-    "AsyncMultiActorSingleLearnerDP",
-    "SingleActorLearnerMultiEnvDP",
-    "SingleActorLearnerMultiEnvHeterDP",
-]
+__all__ = ["SingleActorLearnerMultiEnvHeterDP"]

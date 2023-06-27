@@ -190,7 +190,10 @@ class MSRL(nn.Cell):
         if deploy_config:
             auto_dist = deploy_config.get("auto_distribution", False)
             dp = deploy_config.get("distribution_policy", None)
-            is_dist_env = dp is DP.SingleActorLearnerMultiEnvDP
+            is_dist_env = dp in (
+                DP.SingleActorLearnerMultiEnvDP,
+                DP.SingleActorLearnerMultiEnvHeterDP,
+            )
             support_remote_env = auto_dist and is_dist_env
         env_config = config[env_type]
         wrappers = copy.deepcopy(env_config.get("wrappers"))

@@ -26,6 +26,9 @@ from mindspore_rl.distribution.distribution_policies.multi_actor_single_learner_
 from mindspore_rl.distribution.distribution_policies.single_actor_learner_with_multi_env_dp import (
     SingleActorLearnerMultiEnvDP,
 )
+from mindspore_rl.distribution.distribution_policies.single_actor_learner_with_multi_env_heterogeneous_dp import (
+    SingleActorLearnerMultiEnvHeterDP,
+)
 
 from .distribution_policy import DistributionPolicy
 
@@ -34,4 +37,5 @@ __all__ = [
     "MultiActorSingleLearnerDP",
     "AsyncMultiActorSingleLearnerDP",
     "SingleActorLearnerMultiEnvDP",
+    "SingleActorLearnerMultiEnvHeterDP",
 ]

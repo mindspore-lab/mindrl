@@ -25,6 +25,7 @@ class Actor(nn.Cell):
         self.duration = duration
         self.zero = Tensor(0, mindspore.float32)
         self.reduce_mean = P.ReduceMean()
+        self.allgather = P.AllGather(group=NCCL_WORLD_COMM_GROUP)
 
         names = list(map(lambda b: b.name, msrl.buffers.buffer))
         shapes = list(map(lambda b: b.shape, msrl.buffers.buffer))
@@ -54,7 +55,7 @@ class Actor(nn.Cell):
     def run(self):
         for i in range(self.episode):
             res = self.kernel()
-            print("Reward is ", res.asnumpy())
+            print("Reward is ", res.asnumpy(), flush=True)
 
 
 class Learner(nn.Cell):
@@ -64,6 +65,7 @@ class Learner(nn.Cell):
         self.rank = rank
         self.episode = episode
         self.duration = duration
+        self.allgather = P.AllGather(group=NCCL_WORLD_COMM_GROUP)
         names = list(map(lambda b: b.name, msrl.buffers.buffer))
         shapes = list(map(lambda b: b.shape, msrl.buffers.buffer))
         types = list(map(lambda b: b.dtype, msrl.buffers.buffer))

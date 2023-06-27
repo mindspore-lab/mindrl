@@ -18,6 +18,7 @@ Implementation of the session class.
 from mindspore import nn
 from mindspore.communication import get_rank, init
 
+import mindspore_rl.distribution.distribution_policies as DP
 from mindspore_rl.core import MSRL
 from mindspore_rl.distribution import fragment_generation
 
@@ -85,7 +86,8 @@ class Session:
         """
 
         if self.dist:
-            init("nccl")
+            if self.dist_policy != DP.SingleActorLearnerMultiEnvHeterDP:
+                init()
             if self.is_auto:
                 fragment_list = fragment_generation(
                     self.algo_name,
