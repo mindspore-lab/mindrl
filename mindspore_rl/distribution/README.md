@@ -29,9 +29,15 @@ The difference between MultiActorSingleLearnerDP and AsyncSingleLearnerMultiActo
 
 ### SingleLearnerSingleActorWithMultiEnvDP
 
-SingleLearnerSingleActorWithMultiEnvDP binds Actor and Learner to a single process, distributing the environment across different processes. This distributed policy is suitable for situations where the environment is large or the environment node is a CPU node.
+SingleLearnerSingleActorWithMultiEnvDP binds Actor and Learner to a single process, distributing the environment across different processes.
 
 <center><img src=../../docs/images/multienvdp_detail.png width=360 height=320><br/>SingleLearnerSingleActorWithMultiEnvDP</center>
+
+### SingleLearnerSingleActorWithMultiEnvHeterDP
+
+SingleLearnerSingleActorWithMultiEnvHeterDP binds Actor and Learner to a single process, distributing the environment across different processes. Actor and Learner execute on the backend of GPU, and each environment execute on the backend of CPU. This distributed policy is suitable for situations where the environment is large or the environment node is a CPU node.
+
+<center><img src=../../docs/images/multienvheterdp_detail.png width=360 height=320><br/>SingleLearnerSingleActorWithMultiEnvHeterDP</center>
 
 ### DP & Template
 
@@ -105,7 +111,8 @@ deploy_config = {
 
 Finally, we can execute the following command by running [train.py](../../example/ppo/train.py), achieve distributed structure under the description of `MultiActorSingleLearnerDP`. By replace the parameter in `config.py` of `distribution_policy`, it can achieve switching between different distributed strategies under the same algorithm.
 
-> Currently, the ppo algorithm supports MultiActorSingleLearnerDP and SingleLearnerSingleActorWithMultiEnvDP, A3C supports AsyncSingleLearnerMultiActorDP, and other algorithms are under updating.
+> Currently, the ppo algorithm supports MultiActorSingleLearnerDP, SingleLearnerSingleActorWithMultiEnvDP and SingleLearnerSingleActorWithMultiEnvHeterDP, A3C supports AsyncSingleLearnerMultiActorDP, and other algorithms are under updating.
+> Attention: Change `auto_distribution` to `True` and choose a sutiable DP for `distribution_policy`  defined in depoly_config.
 
 ```bash
 mpirun -n 4 python train.py --enable_distribute True --worker_num 4

@@ -473,6 +473,11 @@ By now we have supported such distribution policies：
         <td align="left">structure of single actor leaner with multi envs</a></td>
         <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/ppo/train.py">ppo</td>
     </tr>
+    <tr>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/distribution_policies/single_actor_learner_with_multi_env_heterogeneous_dp">SingleActorLearnerWithMultEnvHeterDP</a></td>
+        <td align="left">structure of single actor leaner with multi heterogeneous envs</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/ppo/train.py">ppo</td>
+    </tr>
 <table>
 
 <table align="center">
@@ -492,7 +497,7 @@ By now we have supported such distribution policies：
         <td align="center">
             <center>
                 <img src=docs/images/singleactorlearnerwithmultienv.png width="100%">
-                </br><p><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/README.md">SingleActorLearnerWithMultEnvDP</a></p>
+                </br><p><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/README_CN.md">SingleActorLearnerWithMultEnvDP</a></br><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/README_CN.md">SingleActorLearnerWithMultEnvHeterDP</a></p>
             </center>
         </td>
     </tr>
