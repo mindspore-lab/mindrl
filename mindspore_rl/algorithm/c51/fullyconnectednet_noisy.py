@@ -1,22 +1,28 @@
 """c51 full connect layer"""
 
-import mindspore.nn as nn
 from mindspore import dtype as mstype
+from mindspore import nn
 from mindspore.ops import operations as P
 
 
 class FullyConnectedNet(nn.Cell):
     """full connect layer with noisy option"""
 
-    def __init__(self, input_size, hidden_size, output_size, action_dim, atoms_num, compute_type=mstype.float32):
-        super(FullyConnectedNet, self).__init__()
+    def __init__(
+        self,
+        input_size,
+        hidden_size,
+        output_size,
+        action_dim,
+        atoms_num,
+        compute_type=mstype.float32,
+    ):
+        super().__init__()
         self.linear1 = nn.Dense(
-            input_size,
-            hidden_size, weight_init="XavierUniform"
+            input_size, hidden_size, weight_init="XavierUniform", bias_init="zeros"
         ).to_float(compute_type)
         self.linear2 = nn.Dense(
-            hidden_size,
-            output_size, weight_init="XavierUniform"
+            hidden_size, output_size, weight_init="XavierUniform", bias_init="zeros"
         ).to_float(compute_type)
         self.relu1 = nn.ReLU()
         self.relu2 = nn.ReLU()
