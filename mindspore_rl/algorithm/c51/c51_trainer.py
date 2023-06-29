@@ -1,19 +1,21 @@
 """C51 Trainer"""
 
 import mindspore as ms
-from mindspore import Parameter, Tensor
+from mindspore import Parameter, Tensor, set_seed
 from mindspore.ops import operations as P
 
 from mindspore_rl.agent import trainer
 from mindspore_rl.agent.trainer import Trainer
 from mindspore_rl.utils.n_step_buffer import NStepBuffer
 
+set_seed(5)
+
 
 class CategoricalDQNTrainer(Trainer):
     """DQN Trainer"""
 
     def __init__(self, msrl, params):
-        super(CategoricalDQNTrainer, self).__init__(msrl)
+        super().__init__(msrl)
         self.zero = Tensor(0, ms.float32)
         self.squeeze = P.Squeeze()
         self.less = P.Less()

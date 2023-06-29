@@ -340,7 +340,7 @@ extern "C" int UpdateLeafNodeOutcome(int nparam, void **params, int *ndims,
   if (tree == nullptr) {
     return kErrorCode;
   }
-  int index = tree->visited_path().size() - 1;
+  int index = static_cast<int>(tree->visited_path().size() - 1);
   bool ret = tree->UpdateOutcome(return_value, index);
   tree->Memcpy(output, &ret, sizeof(bool));
   return 0;
@@ -385,7 +385,7 @@ extern "C" int UpdateLeafNodeTerminal(int nparam, void **params, int *ndims,
   if (tree == nullptr) {
     return kErrorCode;
   }
-  int index = tree->visited_path().size() - 1;
+  int index = static_cast<int>(tree->visited_path().size() - 1);
   bool ret = tree->UpdateTerminal(*terminal_host, index);
   tree->Memcpy(output, &ret, sizeof(bool));
   return 0;
@@ -427,7 +427,7 @@ extern "C" int UpdateLeafNodeState(int nparam, void **params, int *ndims,
   if (tree == nullptr) {
     return kErrorCode;
   }
-  int index = tree->visited_path().size() - 1;
+  int index = static_cast<int>(tree->visited_path().size() - 1);
   bool ret = tree->UpdateState(state, index);
   tree->Memcpy(output, &ret, sizeof(bool));
   return 0;
@@ -506,9 +506,9 @@ extern "C" int GetLastState(int nparam, void **params, int *ndims,
   if (tree == nullptr) {
     return kErrorCode;
   }
-  int index = tree->visited_path().size() - 2;
+  int index = static_cast<int>(tree->visited_path().size() - 2);
   if (index < 0) {
-    index += tree->visited_path().size();
+    index += static_cast<int>(tree->visited_path().size());
   }
   auto output_state = tree->GetState(index);
   tree->Memcpy(output, output_state, tree->state_size() * sizeof(float));
