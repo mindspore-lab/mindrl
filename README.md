@@ -73,10 +73,10 @@ Download [source code](https://github.com/mindspore-lab/mindrl), then enter the 
 git clone https://github.com/mindspore-lab/mindrl.git
 cd mindrl/
 bash build.sh
-pip install output/mindspore_rl-{Reinforcement_version}-py3-none-any.whl
+pip install output/mindspore_rl-{Reinforcement_version}-py3-none_{ARCH}.whl
 ```
 
-`build.sh` is the compiling script in `mindrl` directory. `Reinforcement_version` is the version of MindSpore Reinforcement.
+`build.sh` is the compiling script in `mindrl` directory. `Reinforcement_version` is the version of MindSpore Reinforcement, `ARCH` is the platform of your device, such as `x86_64` or `aarch64`.
 
 Install dependencies
 
