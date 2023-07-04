@@ -394,7 +394,7 @@ Evaluate for episode 10 total rewards is 9.600
         <td align="center">>= v0.6</td>
     </tr>
     <tr>
-        td align="center"><a href="https://pettingzoo.farama.org/environments/mpe/simple_spread/">PettingZoo-mpe</a></td>
+        <td align="center"><a href="https://pettingzoo.farama.org/environments/mpe/simple_spread/">PettingZoo-mpe</a></td>
         <td align="center">>= v0.6</td>
     </tr>
     <tr>
@@ -473,6 +473,11 @@ MindSpore Reinforcement 将强化学习的算法定义与算法如何并行或�
         <td align="left">单actor learner 多远端环境分布式策略</a></td>
         <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/ppo/train.py">ppo</td>
     </tr>
+    <tr>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/distribution_policies/single_actor_learner_with_multi_env_heterogeneous_dp">SingleActorLearnerWithMultEnvHeterDP</a></td>
+        <td align="left">单actor learner 多远端环境异构分布式策略</a></td>
+        <td align="center"><a href="https://github.com/mindspore-lab/mindrl/tree/master/example/ppo/train.py">ppo</td>
+    </tr>
 <table>
 
 <table align="center">
@@ -492,7 +497,7 @@ MindSpore Reinforcement 将强化学习的算法定义与算法如何并行或�
         <td align="center">
             <center>
                 <img src=docs/images/singleactorlearnerwithmultienv.png width="100%">
-                </br><p><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/README_CN.md">SingleActorLearnerWithMultEnvDP</a></p>
+                </br><p><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/README_CN.md">SingleActorLearnerWithMultEnvDP</a></br><a href="https://github.com/mindspore-lab/mindrl/tree/master/mindspore_rl/distribution/README_CN.md">SingleActorLearnerWithMultEnvHeterDP</a></p>
             </center>
         </td>
     </tr>

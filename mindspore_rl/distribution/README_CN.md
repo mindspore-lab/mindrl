@@ -29,9 +29,15 @@ MSRL提供了不同的分布式策略，用于将单机RL算法自动分布式�
 
 ### 单Learner单Actor多远端环境策略
 
-单Learner单Actor多远端环境策略将Actor和Learner绑定于一个进程，将环境分布于不同的进程。这种分布式策略适合于环境较大或者环境节点为CPU节点的情况。
+单Learner单Actor多远端环境策略将Actor和Learner绑定于一个进程，将环境分布于不同的进程。
 
 <center><img src=../../docs/images/multienvdp_detail.png width=360 height=320><br/>SingleLearnerSingleActorWithMultiEnvDP</center>
+
+### 单Learner单Actor异构多远端环境策略
+
+单Learner单Actor异构多远端环境策略将Actor和Learner绑定于一个进程，将环境分布于不同的进程。其中，Actor和Learner执行在GPU后端，环境执行在CPU后端，两者间通过RPC通信。这种分布式策略适合于环境较大或者环境节点为CPU节点的情况。
+
+<center><img src=../../docs/images/multienvheterdp_detail.png width=360 height=320><br/>SingleLearnerSingleActorWithMultiEnvHeterDP</center>
 
 ### 分布式策略与模板
 
@@ -106,6 +112,7 @@ deploy_config = {
 最后我们可以通过以下命令执行[train.py](../../example/ppo/train.py)文件，实现`MultiActorSingleLearnerDP`描述下的分布式结构。通过替换`config.py`中的`distribution_policy`，可以实现相同算法下的不同分布式策略的切换。
 
 > 目前ppo算法已支持MultiActorSingleLearnerDP 和 SingleLearnerSingleActorWithMultiEnvDP，A3C支持AsyncSingleLearnerMultiActorDP，其余算法正在更新支持中。
+> 注意： 将deploy_config中的`auto_distribution`改为`True`, 并为`distribution_policy`选择合适的DP。
 
 ```bash
 mpirun -n 4 python train.py --enable_distribute True --worker_num 4
