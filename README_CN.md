@@ -74,10 +74,10 @@ pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/{MindSpore_versi
 git clone https://github.com/mindspore-lab/mindrl.git
 cd mindrl/
 bash build.sh
-pip install output/mindspore_rl-{Reinforcement_version}-py3-none-any.whl
+pip install output/mindspore_rl-{Reinforcement_version}-py3-none_{ARCH}.whl
 ```
 
-其中，`build.sh`为`mindrl`目录下的编译脚本文件。`{Reinforcement_version}`表示MindSpore Reinforcement版本号。
+其中，`build.sh`为`mindrl`目录下的编译脚本文件。`{Reinforcement_version}`表示MindSpore Reinforcement版本号，`{ARCH}`表示系统架构，可选`x86_64`或`aarch64`。
 
 安装依赖项
 
