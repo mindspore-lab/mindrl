@@ -26,7 +26,7 @@ do
         export DEVICE=$OPTARG ;;
     *)
         echo "Unknown opt ${opt}!"
-        echo "Usage:" 
+        echo "Usage:"
         echo "bash build.sh [-d on|off] [-e gpu|cpu]"
         echo ""
         echo "Options:"
@@ -52,8 +52,22 @@ cd ${BUILD_PATH}
 cmake ${CMAKE_ARGS} ${BASEPATH}
 make && make install
 
+if [ $? -ne "0" ]; then
+  echo "Cmake failed, please check Error"
+  exit 1
+fi
+
 cd ${BASEPATH}
 python3 setup.py bdist_wheel -d ${BASEPATH}/output
+
+for file in `ls ${BASEPATH}/output/*.whl`
+do
+    file_name=$(basename $file)
+    prefix=`echo $file_name | cut -d '-' -f 1-2`
+    CUR_ARCH=`arch`
+    new_file_name="${prefix}-py3-none-linux_${CUR_ARCH}.whl"
+    mv $file ${BASEPATH}/output/${new_file_name}
+done
 
 if [ ! -d "${BASEPATH}/output" ]; then
     echo "The directory ${BASEPATH}/output dose not exist."
