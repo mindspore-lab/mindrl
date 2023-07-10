@@ -25,6 +25,7 @@ from mindspore_rl.utils.callback import (
     EvaluateCallback,
     LossCallback,
     TimeCallback,
+    WandBCallback
 )
 from mindspore_rl.utils.utils import update_config
 
@@ -67,5 +68,23 @@ class DQNSession(Session):
         )
         eval_cb = EvaluateCallback(config.trainer_params.get("eval_per_episode"))
         time_cb = TimeCallback()
-        cbs = [loss_cb, ckpt_cb, eval_cb, time_cb]
+
+        # WandB project details
+        authorization_key = "0c108d032f6db708d53d279c92e275b9833adee6"
+        project_name = "MSRL_auto_test"
+        name = "dqn"
+        log_config = {
+                    "learners_params": config.learner_params,
+                    "trainer_params": config.trainer_params,
+                    "collect_env_params": config.collect_env_params,
+                    "eval_env_params": config.eval_env_params,
+                    "policy_params": config.policy_params,
+                    "algorithm_config": config.algorithm_config,  
+        } # configuration of cofig to log into WandB
+
+        wandb_cb = WandBCallback(authorization_key=authorization_key, project=project_name, 
+                                 name=name, config=log_config)
+
+
+        cbs = [loss_cb, ckpt_cb, eval_cb, time_cb, wandb_cb]
         super().__init__(config.algorithm_config, None, params=params, callbacks=cbs)
