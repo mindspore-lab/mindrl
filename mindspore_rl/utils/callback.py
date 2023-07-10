@@ -285,7 +285,7 @@ class TimeCallback(Callback):
 
         step_seconds = epoch_secends / steps
         if self._print_rate != 0 and params.cur_episode % self._print_rate == 0:
-            print("Episode {} has {} steps, cost time: {:5.3f} ms, per step time: {:5.3f} ms" \
+            print("Episode {} has {} steps, cost time: {:5.3f} ms, per step time: {:5.6f} ms" \
                 .format(params.cur_episode, steps, epoch_secends, step_seconds), flush=True)
 
 
@@ -406,3 +406,77 @@ class EvaluateCallback(Callback):
             print("Evaluate for episode {} total rewards is {:5.3f}" \
                 .format(params.cur_episode, rewards.asnumpy()), flush=True)
             print("-----------------------------------------")
+
+class WandBCallback(Callback):
+    r'''
+    log metrics in WandB
+    Args:
+        authorization_key (str): Access key. Default: ``None`` (not saved).
+        project (str): Project namr. Default: ``None`` , saved  as ``Uncategorize`` in WandB dashboard.
+        name (str): Name of the current run. Default: ``None``. auto-generates name in Wandb
+
+    Examples:
+        >>> from mindspore_rl.utils.callback import WandBCallback
+        >>> from mindspore_rl.core import Session
+        >>> from mindspore_rl.algorithm.dqn import config
+        >>> wand_cb = WandBCallback()
+        >>> cbs = [wandb_cb]
+        >>> session = Session(config.algorithm_config, None, None, cbs)
+    '''
+    def __init__(self, authorization_key=None, project=None, name=None, config=None):
+        super(WandBCallback, self).__init__()
+        self.run = None
+
+        import wandb
+        if authorization_key==None:
+            raise "Please enter authorization key"
+        
+        try:
+            wandb.login(key=authorization_key)
+            self.run = wandb.init(config=config, project=project, name=name)
+        except:
+            raise 
+        
+    def episode_end(self, params):
+        '''
+        Save checkpoint in the end of episode.
+
+        Args:
+            params (CallbackParam): Parameters of the tarining.
+        '''
+
+        # log metrics into WandB
+
+        losses = params.loss
+        rewards = params.total_rewards
+        rewards_out, losses_out = [], []
+
+        # 1 Deal with rewards for both tuple and single.
+        if isinstance(rewards, (tuple, list)):
+            for reward in rewards:
+                if _is_tensor(reward):
+                    rewards_out.append(round(float(np.mean(reward.asnumpy())), 3))
+        if _is_tensor(rewards):
+            rewards_out.append(round(float(np.mean(rewards.asnumpy())), 3))
+
+        # 2 Deal with losses for both tuple and single.
+        if isinstance(losses, (tuple, list)):
+            for loss in losses:
+                if _is_tensor(loss):
+                    losses_out.append(round(float(np.mean(loss.asnumpy())), 3))
+        elif _is_tensor(losses):
+            losses_out.append(round(float(np.mean(losses.asnumpy())), 3))
+        else:
+            raise ValueError("Episode {}: losses should be tensor or tensor of list/tuple.".format(params.cur_episode))
+
+        # 3 Check loss value and stop if it is NAN or INF.
+        for loss in losses_out:
+            if isinstance(loss, float) and (np.isnan(loss) or np.isinf(loss)):
+                raise ValueError("Episode {}: Invalid loss {}, training stop.".format(params.cur_episode, loss))
+        
+        # log metrics into WandB project
+        self.run.log(step=params.cur_episode, data={"loss": losses_out[0], "rewards": rewards_out[0]})
+
+    def end(self, params):
+        self.run.finish() # finish WandB session
+        return super().end(params)
