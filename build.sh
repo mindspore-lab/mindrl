@@ -65,7 +65,7 @@ do
     file_name=$(basename $file)
     prefix=`echo $file_name | cut -d '-' -f 1-2`
     CUR_ARCH=`arch`
-    new_file_name="${prefix}-py3-none_${CUR_ARCH}.whl"
+    new_file_name="${prefix}-py3-none-linux_${CUR_ARCH}.whl"
     mv $file ${BASEPATH}/output/${new_file_name}
 done
 
