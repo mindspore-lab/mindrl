@@ -15,13 +15,12 @@
 """MonteCarloTreeSearch Class"""
 
 # pylint: disable=W0235
+# pylint: disable=C0209
 import os
 
 import mindspore as ms
-import mindspore.nn as nn
 import mindspore.nn.probability.distribution as msd
-import mindspore.ops as ops
-from mindspore import Parameter, Tensor
+from mindspore import Parameter, Tensor, nn, ops
 from mindspore.ops import CustomRegOp, DataType
 from mindspore.ops import operations as P
 
@@ -60,7 +59,7 @@ class MCTS(nn.Cell):
         args (Tensor): any values which will be the input of MctsCreation. Please following the table below
             to provide the input value. These value will not be reset after invoke `restore_tree_data`.
         has_init_reward (bool, optional): Whether pass the reward to each node during the node initialization.
-            Default: ``False``. 
+            Default: ``False``.
         max_action (float, optional): The max number of action in environment. If the `max_action` is ``-1.0`` ,
             the step in Environment will accept the last action. Otherwise, it will accept max_action number
             of action. Default: ``-1.0`` .
@@ -117,6 +116,8 @@ class MCTS(nn.Cell):
             )
 
         current_path = os.path.dirname(os.path.normpath(os.path.realpath(__file__)))
+        package_root_path = current_path.rsplit("/", 2)[0]
+        os.environ["MS_CUSTOM_AOT_WHITE_LIST"] = package_root_path
         so_path = current_path + "/libmcts_{}.so".format(device.lower())
         state_size = 1.0
         state_shape = env.observation_space.shape
