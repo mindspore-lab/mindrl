@@ -271,9 +271,12 @@ class Wrapper(Environment):
     def _create_batched_space(self, input_space):
         """To create batched space for batched environment"""
         num_environment = (self.num_environment,)
+        batch_shape = getattr(input_space, "_batch_shape")
+        if batch_shape is not None:
+            num_environment += batch_shape
         low, high = input_space.boundary
         space = Space(
-            input_space.shape,
+            feature_shape=getattr(input_space, "_feature_shape"),
             dtype=input_space.np_dtype,
             low=low,
             high=high,
