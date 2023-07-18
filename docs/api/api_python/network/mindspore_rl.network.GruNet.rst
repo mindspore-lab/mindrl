@@ -3,7 +3,7 @@
 
     GRU (门控递归单元)层。
     将GRU层应用于输入。
-    有关详细信息，请参见： `mindspore.nn.GRU <https://www.mindspore.cn/docs/zh-CN/master/api_python/nn/mindspore.nn.GRU.html>`_ 。
+    有关详细信息，请参见： `mindspore.nn.GRU <https://www.mindspore.cn/docs/zh-CN/r2.1/api_python/nn/mindspore.nn.GRU.html>`_ 。
 
     参数：
         - **input_size** (int) - 输入的特征数。

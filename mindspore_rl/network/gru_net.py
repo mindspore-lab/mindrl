@@ -32,7 +32,7 @@ class GruNet(nn.Cell):
     Apply GRU layer to the input.
 
     For detailed information, please refer to
-    `mindspore.nn.GRU <https://www.mindspore.cn/docs/en/master/api_python/nn/mindspore.nn.GRU.html>`_.
+    `mindspore.nn.GRU <https://www.mindspore.cn/docs/en/r2.1/api_python/nn/mindspore.nn.GRU.html>`_.
 
     Args:
         input_size (int): Number of features of input.
