@@ -72,8 +72,12 @@ public:
   BestActionPolicy(std::shared_ptr<MonteCarloTreeNode> child_node) const = 0;
 
   bool IsLeafNode() { return children_.empty(); }
-  void AddChild(std::shared_ptr<MonteCarloTreeNode> child) {
+  bool AddChild(std::shared_ptr<MonteCarloTreeNode> child) {
+    if (child == nullptr) {
+      return false;
+    }
     children_.emplace_back(child);
+    return true;
   }
   std::vector<std::shared_ptr<MonteCarloTreeNode>> children() {
     return children_;

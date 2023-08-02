@@ -33,6 +33,9 @@ bool CPUVanillaTreeNode::SelectionPolicy(float *uct_value,
 
   auto global_variable_vector =
       MonteCarloTreeFactory::GetInstance().GetTreeConstByHandle(tree_handle_);
+  if (global_variable_vector == nullptr) {
+    return false;
+  }
   auto uct_ptr = global_variable_vector[0];
   *uct_value = *total_reward_ / *explore_count_ +
                uct_ptr * std::sqrt(std::log(*(parent_->explore_count())) /
