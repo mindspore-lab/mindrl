@@ -2,6 +2,20 @@
 
 [查看中文](./RELEASE_CN.md)
 
+## MindSpore Reinforcement 0.7.0 Release Notes
+
+### Major Features and Improvements
+
+- [BETA]Refactor environment API, supporting sychronized and asynchronized API
+- [BETA]Provide environment wrappers, support exposing a python environment as an in-graph MS environment(PyFuncWrapper), action normalization(ActionNormWrapper) and other functionlities.
+
+
+### Contributors
+
+Thanks goes to these wonderful people:
+
+Pro. Peter, Huanzhou Zhu, Bo Zhao, Gang Chen, Weifeng Chen, Liang Shi, Yijie Chen.
+
 ## MindSpore Reinforcement 0.6.0 Release Notes
 
 ### Major Features and Improvements
