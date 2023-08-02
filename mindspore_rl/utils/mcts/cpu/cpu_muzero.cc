@@ -36,6 +36,14 @@ bool CPUMuzeroTreeNode::SelectionPolicy(float *uct_value,
   auto global_variable_vector =
       MonteCarloTreeFactory::GetInstance().GetTreeVariableByHandle(
           tree_handle_);
+  if (global_const_vector == nullptr || global_variable_vector == nullptr){
+    return false;
+  }
+  auto num_const = sizeof(global_const_vector) / sizeof(float);
+  auto num_variable = sizeof(global_variable_vector) / sizeof(float);
+  if (num_const < 2 || num_variable< 3) {
+    return false;
+  }
   float minimum = global_variable_vector[0];
   float maximum = global_variable_vector[1];
   float pb_c_base = global_const_vector[1];

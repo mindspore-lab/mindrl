@@ -31,6 +31,11 @@ bool GPUVanillaTreeNode::SelectionPolicy(float *uct_value,
 
   auto global_variable_vector =
       MonteCarloTreeFactory::GetInstance().GetTreeConstByHandle(tree_handle_);
+  if (global_variable_vector == nullptr)
+  {
+    return false;
+  }
+  
   auto uct_ptr = global_variable_vector;
 
   int *parent_explore_count = parent_->explore_count();

@@ -2,6 +2,21 @@
 
 [View English](./RELEASE.md)
 
+## MindSpore Reinforcement 0.7.0 Release Notes
+
+### 主要特性和增强
+
+- [BETA]重构环境接口，接口支持环境同步异步执行。
+- [BETA]提供环境Wrapper，提供将Python环境封装成MindSpore支持的环境 （PyFuncWrapper），动作归一化（ActionNormWrapper）等功能。
+
+### 贡献者
+
+感谢以下人员做出的贡献:
+
+Pro. Peter, Huanzhou Zhu, Bo Zhao, Gang Chen, Weifeng Chen, Liang Shi, Yijie Chen.
+
+欢迎以任何形式对项目提供贡献！
+
 ## MindSpore Reinforcement 0.6.0 Release Notes
 
 ### 主要特性和增强
