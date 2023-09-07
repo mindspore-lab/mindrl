@@ -15,7 +15,7 @@
 # ============================================================================
 
 export ENABLE_GPU="off"
-export DEBUG_MODE="off"
+export DEBUG_MODE="on"
 while getopts 'e:d:e' opt
 do
     OPTARG=$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')
