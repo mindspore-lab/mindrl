@@ -36,7 +36,7 @@ bool GPUMonteCarloTree::Expansion(std::string node_name, int *action,
       auto child_node = MonteCarloTreeFactory::GetInstance().CreateNode(
           node_name, action + i, prior + i, init_reward, player, tree_handle_,
           leaf_node, leaf_node->row() + 1, state_size);
-      return leaf_node->AddChild(child_node);
+      leaf_node->AddChild(child_node);
     }
   }
   return true;
