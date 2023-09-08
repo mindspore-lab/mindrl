@@ -533,20 +533,19 @@ extern "C" int DestroyTree(int nparam, void **params, int *ndims,
                            void *extra) {
   // Input Value
   // Unique tree handle
-  int64_t *tree_handle = static_cast<int64_t *>(params[0]);
+    AotExtra *extra_aot = static_cast<AotExtra *>(extra);
+  auto kernel_ptr = static_cast<DestroyTreeAttr *>(extra_aot->KernelData());
+  int64_t tree_handle_host = static_cast<int64_t>(kernel_ptr->tree_handle);
   // Output Value
   // Whether restore success
   bool *output = static_cast<bool *>(params[1]);
-  int64_t *tree_handle_host = new int64_t[sizeof(int64_t)];
-  cudaMemcpy(tree_handle_host, tree_handle, sizeof(int64_t),
-             cudaMemcpyDeviceToHost);
   auto tree =
-      MonteCarloTreeFactory::GetInstance().GetTreeByHandle(*tree_handle_host);
+      MonteCarloTreeFactory::GetInstance().GetTreeByHandle(tree_handle_host);
   if (tree == nullptr) {
     return kErrorCode;
   }
   bool ret_tree =
-      MonteCarloTreeFactory::GetInstance().DeleteTree(*tree_handle_host);
+      MonteCarloTreeFactory::GetInstance().DeleteTree(tree_handle_host);
   // Delete Tree Variable
   if (!ret_tree) {
     return kErrorCode;
@@ -574,15 +573,14 @@ extern "C" int RestoreTree(int nparam, void **params, int *ndims,
                            void *extra) {
   // Input Value
   // Unique tree handle
-  int64_t *tree_handle = static_cast<int64_t *>(params[0]);
+  AotExtra *extra_aot = static_cast<AotExtra *>(extra);
+  auto kernel_ptr = static_cast<RestoreTreeAttr *>(extra_aot->KernelData());
+  int64_t tree_handle_host = static_cast<int64_t>(kernel_ptr->tree_handle);
   // Output Value
   // Whether restore success
   bool *output = static_cast<bool *>(params[1]);
-  int64_t *tree_handle_host = new int64_t[sizeof(int64_t)];
-  cudaMemcpy(tree_handle_host, tree_handle, sizeof(int64_t),
-             cudaMemcpyDeviceToHost);
   auto tree =
-      MonteCarloTreeFactory::GetInstance().GetTreeByHandle(*tree_handle_host);
+      MonteCarloTreeFactory::GetInstance().GetTreeByHandle(tree_handle_host);
   if (tree == nullptr) {
     return kErrorCode;
   }
