@@ -94,6 +94,7 @@ extern "C" int MctsCreation(int nparam, void **params, int *ndims,
       tree_name, node_name, player, max_utility, state_size, total_num_player,
       input_global_const);
   if (tree == nullptr) {
+     printf("Unexpected value during getting tree in MctsCreation\n");
     return kErrorCode;
   }
   tree->Memcpy(output, &tree_handle, sizeof(int64_t));
@@ -144,6 +145,7 @@ extern "C" int MctsSelection(int nparam, void **params, int *ndims,
 
   auto tree = MonteCarloTreeFactory::GetInstance().GetTreeByHandle(tree_handle);
   if (tree == nullptr) {
+     printf("Unexpected value during getting tree in MctsSelection");
     return kErrorCode;
   }
   int size_of_action = max_action;
@@ -155,10 +157,11 @@ extern "C" int MctsSelection(int nparam, void **params, int *ndims,
   tree->Memset(action_list, -1, sizeof(int) * size_of_action);
   auto ret = tree->Selection(action_list, max_action, stream);
   if (!ret) {
+     printf("Unexpected value during selection in MctsSelection\n");
     return kErrorCode;
   }
   int64_t visited_handle = tree->placeholder_handle();
-  tree->Memcpy(visited_path_handle, &visited_handle, sizeof(int64_t));
+  cudaMemcpy(visited_path_handle,  &visited_handle, sizeof(int64_t), cudaMemcpyHostToDevice);
   tree->Memcpy(out_action, action_list, sizeof(int) * size_of_action);
   tree->Free(action_list);
   return 0;
@@ -209,6 +212,7 @@ extern "C" int MctsExpansion(int nparam, void **params, int *ndims,
   bool *output = static_cast<bool *>(params[4]);
   auto tree = MonteCarloTreeFactory::GetInstance().GetTreeByHandle(tree_handle);
   if (tree == nullptr) {
+     printf("Unexpected value during getting tree in MctsExpansion\n");
     return kErrorCode;
   }
   if (!has_init_reward) {
@@ -254,6 +258,7 @@ extern "C" int MctsBackpropagation(int nparam, void **params, int *ndims,
   bool *output = static_cast<bool *>(params[2]);
   auto tree = MonteCarloTreeFactory::GetInstance().GetTreeByHandle(tree_handle);
   if (tree == nullptr) {
+     printf("Unexpected value during getting tree in MctsBackpropagation\n");
     return kErrorCode;
   }
   bool ret = tree->Backpropagation(returns, stream);
@@ -290,6 +295,7 @@ extern "C" int BestAction(int nparam, void **params, int *ndims,
 
   auto tree = MonteCarloTreeFactory::GetInstance().GetTreeByHandle(tree_handle);
   if (tree == nullptr) {
+     printf("Unexpected value during getting tree in BestAction\n");
     return kErrorCode;
   }
   tree->Memcpy(output, tree->BestAction(), sizeof(int));
@@ -338,6 +344,7 @@ extern "C" int UpdateLeafNodeOutcome(int nparam, void **params, int *ndims,
   }
   auto tree = MonteCarloTreeFactory::GetInstance().GetTreeByHandle(tree_handle);
   if (tree == nullptr) {
+     printf("Unexpected value during getting tree in UpdateLeafNodeOutcome\n");
     return kErrorCode;
   }
   int index = tree->visited_path().size() - 1;
@@ -383,6 +390,7 @@ extern "C" int UpdateLeafNodeTerminal(int nparam, void **params, int *ndims,
 
   auto tree = MonteCarloTreeFactory::GetInstance().GetTreeByHandle(tree_handle);
   if (tree == nullptr) {
+     printf("Unexpected value during getting tree in UpdateLeafNodeTerminal\n");
     return kErrorCode;
   }
   int index = tree->visited_path().size() - 1;
@@ -425,6 +433,7 @@ extern "C" int UpdateLeafNodeState(int nparam, void **params, int *ndims,
 
   auto tree = MonteCarloTreeFactory::GetInstance().GetTreeByHandle(tree_handle);
   if (tree == nullptr) {
+     printf("Unexpected value during getting tree in UpdateLeafNodeState\n");
     return kErrorCode;
   }
   int index = tree->visited_path().size() - 1;
@@ -465,6 +474,7 @@ extern "C" int UpdateRootState(int nparam, void **params, int *ndims,
 
   auto tree = MonteCarloTreeFactory::GetInstance().GetTreeByHandle(tree_handle);
   if (tree == nullptr) {
+     printf("Unexpected value during getting tree in UpdateRootState\n");
     return kErrorCode;
   }
   tree->root()->set_state(state, tree->state_size());
@@ -504,6 +514,7 @@ extern "C" int GetLastState(int nparam, void **params, int *ndims,
 
   auto tree = MonteCarloTreeFactory::GetInstance().GetTreeByHandle(tree_handle);
   if (tree == nullptr) {
+     printf("Unexpected value during getting tree in GetLastState\n");
     return kErrorCode;
   }
   int index = tree->visited_path().size() - 2;
@@ -542,12 +553,14 @@ extern "C" int DestroyTree(int nparam, void **params, int *ndims,
   auto tree =
       MonteCarloTreeFactory::GetInstance().GetTreeByHandle(tree_handle_host);
   if (tree == nullptr) {
+     printf("Unexpected value during getting tree in DestroyTree\n");
     return kErrorCode;
   }
   bool ret_tree =
       MonteCarloTreeFactory::GetInstance().DeleteTree(tree_handle_host);
   // Delete Tree Variable
   if (!ret_tree) {
+     printf("Unexpected value during delete tree in DestroyTree\n");
     return kErrorCode;
   }
   bool ret = true;
@@ -582,6 +595,7 @@ extern "C" int RestoreTree(int nparam, void **params, int *ndims,
   auto tree =
       MonteCarloTreeFactory::GetInstance().GetTreeByHandle(tree_handle_host);
   if (tree == nullptr) {
+     printf("Unexpected value during getting tree in RestoreTree\n");
     return kErrorCode;
   }
   tree->Restore();
