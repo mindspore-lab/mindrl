@@ -33,14 +33,21 @@ install(TARGETS mcts_cpu DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/mindspore_rl/u
 redefine_file_macro(mcts_cpu)
 
 if(ENABLE_GPU)
+    message("Enable GPU")
     find_package(CUDA REQUIRED)
     include_directories((${CUDA_INCLUDE_DIRS}))
-    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -arch=sm_53 --expt-relaxed-constexpr")
+    list(APPEND CUDA_NVCC_FLAGS "--expt-relaxed-constexpr --use_fast_math ")
 
     if(DEBUG_MODE)
+        message("Enable debug mode")
         list(APPEND CUDA_NVCC_FLAGS "-g -G")
     endif()
 
+    list(APPEND CUDA_NVCC_FLAGS -gencode=arch=compute_70,code=sm_70)
+    list(APPEND CUDA_NVCC_FLAGS -gencode=arch=compute_80,code=sm_80)
+
+    message("CUDA_NVCC_FLAGS: ${CUDA_NVCC_FLAGS}")
+    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS})
     file(GLOB_RECURSE MCTS_SRC_GPU RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "utils/mcts/gpu/*.cc" "utils/mcts/gpu/*.cu")
     list(APPEND MCTS_SRC_GPU ${MCTS_COMMON_SRC})
     cuda_add_library(mcts_gpu SHARED ${MCTS_SRC_GPU})
