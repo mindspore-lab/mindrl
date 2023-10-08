@@ -36,7 +36,7 @@
         - 关键字: `networks`， 值： actor/learner使用的网络列表 (list)。
         - 关键字: `pass_environment`， 值： 如果为 ``True``， 用户需要传递环境实例给actor， 为 ``False`` 则不需要 (bool)。
 
-    .. py:method:: create_environment(config, env_type, deploy_config=None, need_batch=None)
+    .. py:method:: create_environments(config, env_type, deploy_config=None, need_batch=False)
 
         通过配置文件创建环境，并且返回环境实例和环境个数。
 
@@ -44,7 +44,7 @@
             - **config** (dict) - 算法的配置文件。
             - **env_type** (str) - 环境的类型，可以是 ``collect_environment`` 或 ``eval_environment``。
             - **deploy_config** (dict，可选) - 提供分布式配置。默认：``None``。
-            - **need_batched** (bool，可选) - 是否需要批量环境。默认：``None``。
+            - **need_batched** (bool，可选) - 是否需要批量环境。默认：``False``。
 
     .. py:method:: get_replay_buffer
 
