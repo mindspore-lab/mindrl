@@ -161,7 +161,7 @@ class DQNLearner(Learner):
         self.target_param = ParameterTuple(self.target_network.get_parameters())
 
         optimizer = nn.Adam(
-            self.policy_network.trainable_params(), learning_rate=params["lr"]
+            self.policy_network.trainable_params(), learning_rate=params["lr"], eps=1e-5
         )
         loss_fn = nn.MSELoss()
         loss_q_net = self.PolicyNetWithLossCell(self.policy_network, loss_fn)
