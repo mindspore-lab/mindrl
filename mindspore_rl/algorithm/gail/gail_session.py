@@ -50,7 +50,7 @@ class GAILSession(Session):
                                                   shapes=[obs_space.shape, action_space.shape],
                                                   dtypes=[obs_space.ms_dtype, action_space.ms_dtype])
 
-        policy_replay_buffer = UniformReplayBuffer(batch_size=policy_batch_size,
+        policy_replay_buffer = UniformReplayBuffer(sample_size=policy_batch_size,
                                                    capacity=policy_buffer_size,
                                                    shapes=[obs_space.shape, action_space.shape, obs_space.shape, (1,)],
                                                    types=[obs_space.ms_dtype, action_space.ms_dtype,
