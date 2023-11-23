@@ -432,10 +432,10 @@ class SACLearner(Learner):
             critic_net1.trainable_params() + critic_net2.trainable_params()
         )
         critic_optim = nn.Adam(
-            critic_trainable_params, learning_rate=params["critic_lr"]
+            critic_trainable_params, learning_rate=params["critic_lr"], eps=1e-5
         )
         actor_optim = nn.Adam(
-            actor_net.trainable_params(), learning_rate=params["actor_lr"]
+            actor_net.trainable_params(), learning_rate=params["actor_lr"], eps=1e-5
         )
 
         self.critic_train = nn.TrainOneStepCell(critic_loss_net, critic_optim)
@@ -449,7 +449,7 @@ class SACLearner(Learner):
                 params["alpha_loss_weight"],
                 actor_net,
             )
-            alpha_optim = nn.Adam([log_alpha], learning_rate=params["alpha_lr"])
+            alpha_optim = nn.Adam([log_alpha], learning_rate=params["alpha_lr"], eps=1e-5)
             self.alpha_train = nn.TrainOneStepCell(alpha_loss_net, alpha_optim)
 
         factor, interval = params["update_factor"], params["update_interval"]

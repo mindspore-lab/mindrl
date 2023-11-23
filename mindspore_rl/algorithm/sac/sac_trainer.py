@@ -30,7 +30,6 @@ class SACTrainer(Trainer):
         super(SACTrainer, self).__init__(msrl)
         self.inited = Parameter(Tensor([False], mindspore.bool_), name="init_flag")
         self.zero = Tensor([0], mindspore.float32)
-        self.fill_value = Tensor([10000], mindspore.float32)
         self.false = Tensor([False], mindspore.bool_)
         self.true = Tensor([True], mindspore.bool_)
         self.less = P.Less()
@@ -47,8 +46,8 @@ class SACTrainer(Trainer):
         """Initialize training"""
         state = self.msrl.collect_environment.reset()
         done = self.false
-        i = self.zero
-        while self.less(i, self.fill_value):
+        i = Tensor([0], mindspore.int32)
+        while self.less(i, Tensor([10000], mindspore.int32)):
             new_state, action, reward, done = self.msrl.agent_act(trainer.INIT, state)
             self.msrl.replay_buffer_insert([state, action, reward, new_state, done])
             state = new_state

@@ -60,7 +60,7 @@ algorithm_config = {
         "type": TD3Actor,
         "params": actor_params,
         "policies": [],
-        "networks": ["actor_net"],
+        "networks": ["actor_net", "init_policy"],
     },
     "learner": {
         "number": 1,

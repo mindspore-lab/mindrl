@@ -49,7 +49,7 @@ def train(episode=options.episode):
     if compute_type == mstype.float16 and options.device_target != 'Ascend':
         raise ValueError("Fp16 mode is supported by Ascend backend.")
 
-    context.set_context(mode=context.GRAPH_MODE)
+    context.set_context(mode=context.GRAPH_MODE, ascend_config={'precision_mode': 'allow_mix_precision'})
     sac_session = SACSession(options.env_yaml, options.algo_yaml)
     sac_session.run(class_type=SACTrainer, episode=episode)
 

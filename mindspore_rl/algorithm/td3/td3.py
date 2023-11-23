@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """TD3"""
+import numpy as np
 import mindspore
 import mindspore.nn.probability.distribution as msd
 from mindspore import Parameter, Tensor, nn
@@ -40,11 +41,10 @@ class GaussianNoise(nn.Cell):
 
     def __init__(self, mean, stddev, clip=None):
         super().__init__()
-        self.abs = P.Abs()
         self.clip = clip
         if self.clip is not None:
-            self.high_clip = self.abs(Tensor(self.clip))
-            self.low_clip = -self.high_clip
+            self.high_clip = Tensor(np.abs(self.clip))
+            self.low_clip = Tensor(-np.abs(self.clip))
         self.normal = msd.Normal(mean, stddev)
 
     def construct(self, actions):
@@ -164,6 +164,15 @@ class TD3Policy:
 
             return q
 
+    class RandomPolicy(nn.Cell):
+        def __init__(self, action_space_dim):
+            super(TD3Policy.RandomPolicy, self).__init__()
+            self.uniform = P.UniformReal()
+            self.shape = (action_space_dim,)
+
+        def construct(self):
+            return self.uniform(self.shape) * 2 - 1
+
     def __init__(self, params):
         self.actor_net = self.TD3ActorNet(
             params["state_space_dim"],
@@ -217,6 +226,7 @@ class TD3Policy:
             params["compute_type"],
             name="target_critic_net_2.",
         )
+        self.init_policy = self.RandomPolicy(params['action_space_dim'])
 
 
 class TD3Actor(Actor):
@@ -225,6 +235,7 @@ class TD3Actor(Actor):
     def __init__(self, params=None):
         super().__init__()
         self.actor_net = params["actor_net"]
+        self.init_policy = params["init_policy"]
         self.env = params["collect_environment"]
         self.expand_dims = P.ExpandDims()
         self.squeeze = P.Squeeze()
@@ -242,7 +253,7 @@ class TD3Actor(Actor):
 
     def get_action(self, phase, params):
         if phase == 1:
-            actions = Tensor(self.env.action_space.sample(), mindspore.float32)
+            return self.init_policy()
         else:
             obs = self.expand_dims(params, 0)
             actions = self.actor_net(obs)
@@ -353,10 +364,10 @@ class TD3Learner(Learner):
         # optimizer network
         critic_optimizer = nn.Adam(
             self.critic_net_1.trainable_params() + self.critic_net_2.trainable_params(),
-            learning_rate=params["critic_lr"],
+            learning_rate=params["critic_lr"], eps=1e-5
         )
         actor_optimizer = nn.Adam(
-            self.actor_net.trainable_params(), learning_rate=params["actor_lr"]
+            self.actor_net.trainable_params(), learning_rate=params["actor_lr"], eps=1e-5
         )
 
         # target networks and their initializations
