@@ -240,8 +240,8 @@ class MADDPGLearner(Learner):
         self.actor_net = params.get('actor_net')
 
         # optimizer network
-        critic_optimizer = nn.Adam(self.critic_net.trainable_params(), learning_rate=params.get('learning_rate'))
-        actor_optimizer = nn.Adam(self.actor_net.trainable_params(), learning_rate=params.get('learning_rate'))
+        critic_optimizer = nn.Adam(self.critic_net.trainable_params(), learning_rate=params.get('learning_rate'), eps=1e-5)
+        actor_optimizer = nn.Adam(self.actor_net.trainable_params(), learning_rate=params.get('learning_rate'), eps=1e-5)
 
         # loss network
         self.target_actor_net = params.get('target_actor_net')

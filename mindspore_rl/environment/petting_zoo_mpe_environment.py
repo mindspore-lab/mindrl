@@ -87,7 +87,7 @@ class PettingZooMPEEnvironment(PythonEnvironment):
         observation_space = gym2ms_adapter(list(self._env.observation_spaces.values()))
         env_action_space = self._env.action_spaces["agent_0"]
         action_space = Space(
-            (env_action_space.n,), env_action_space.dtype.type, batch_shape=(self._num,)
+            (env_action_space.n,), np.float32, batch_shape=(self._num,)
         )
         reward_space = Space((1,), np.float32, batch_shape=(self._num,))
         done_space = Space((1,), np.bool_, low=0, high=2, batch_shape=(self._num,))

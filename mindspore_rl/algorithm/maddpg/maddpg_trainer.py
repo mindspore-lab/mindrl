@@ -96,7 +96,7 @@ class MADDPGTrainer(Trainer):
                         and represent for `loss, rewards, steps, [optional]others.` in order"
                     )
                 episode_rewards.append(float(rewards.asnumpy()))
-                if i % 1000 == 0:
+                if (i % 1000 == 0) and (i != 0):
                     print("-----------------------------------------")
                     # pylint: disable=C0209
                     print(
