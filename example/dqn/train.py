@@ -43,7 +43,7 @@ def train(episode=options.episode):
         context.set_context(device_target=options.device_target)
     if context.get_context('device_target') in ['CPU']:
         context.set_context(enable_graph_kernel=True)
-    context.set_context(mode=context.GRAPH_MODE)
+    context.set_context(mode=context.GRAPH_MODE, ascend_config={"precision_mode": "allow_mix_precision"})
     compute_type = mstype.float32 if options.precision_mode == 'fp32' else mstype.float16
     config.algorithm_config['policy_and_network']['params']['compute_type'] = compute_type
     if compute_type == mstype.float16 and options.device_target != 'Ascend':
