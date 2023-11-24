@@ -813,7 +813,7 @@ class QMIXMPELearner(Learner):
         trainable_params = (
             self.policy_net.trainable_params() + self.mixer_net.trainable_params()
         )
-        optimizer = nn.Adam(trainable_params, learning_rate=params["lr"])
+        optimizer = nn.Adam(trainable_params, learning_rate=params["lr"], eps=1e-5)
 
         qmix_loss_cell = self.QMIXLossCell(
             params, self.policy_net, self.mixer_net, self.target_mixer_net

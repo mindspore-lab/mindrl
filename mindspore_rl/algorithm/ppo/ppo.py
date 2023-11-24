@@ -273,7 +273,7 @@ class PPOLearner(Learner):
         trainable_parameter = (
             self.critic_net.trainable_params() + self.actor_net.trainable_params()
         )
-        optimizer_ppo = nn.Adam(trainable_parameter, learning_rate=params["lr"])
+        optimizer_ppo = nn.Adam(trainable_parameter, learning_rate=params["lr"], eps=1e-5)
         ppo_loss_net = self.PPOLossCell(
             self.actor_net,
             self.critic_net,
