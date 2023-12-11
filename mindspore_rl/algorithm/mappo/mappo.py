@@ -230,6 +230,7 @@ class MAPPOPolicy():
         def __init__(self, actor_net):
             super().__init__()
             self.categorical_dist = msd.Categorical()
+            self.multinomial = P.Multinomial().add_prim_attr("primitive_target", "CPU")
             self.actor_net = actor_net
             self.expand_dims = P.ExpandDims()
             self.exp = P.Exp()
@@ -248,7 +249,7 @@ class MAPPOPolicy():
                 self.log(self.reduce_sum(categorical_x, -1))
             norm_action_prob = self.exp(norm_log_categorical_x)
 
-            actions = self.categorical_dist.sample((), norm_action_prob)
+            actions = self.multinomial(norm_action_prob, 1).squeeze(-1)
             log_prob = self.categorical_dist.log_prob(
                 actions, norm_action_prob)
 
@@ -510,19 +511,16 @@ class MAPPOLearner(Learner):
         value = reshape_tensor_2d(value[1:])
         norm_advantage = reshape_tensor_2d(norm_advantage)
         discounted_r = reshape_tensor_2d(discounted_r[1:])
-
         L, N = 10, 320
-        indices = ops.Randperm(N)(Tensor([N], ms.int32))
-        global_obs = F.gather(_reshape(global_obs, N, L), indices, 0)
-        local_obs = F.gather(_reshape(local_obs, N, L), indices, 0)
-        hn_actor = F.gather(hn_actor, indices, 0)
-        hn_critic = F.gather(hn_critic, indices, 0)
-        actions = F.gather(_reshape(actions, N, L), indices, 0)
-        value = F.gather(_reshape(value, N, L), indices, 0)
-        discounted_r = F.gather(_reshape(discounted_r, N, L), indices, 0)
-        mask = F.gather(_reshape(mask, N, L), indices, 0)
-        log_prob = F.gather(_reshape(log_prob, N, L), indices, 0)
-        norm_advantage = F.gather(_reshape(norm_advantage, N, L), indices, 0)
+
+        global_obs = _reshape(global_obs, N, L)
+        local_obs = _reshape(local_obs, N, L)
+        actions = _reshape(actions, N, L)
+        value = _reshape(value, N, L)
+        discounted_r = _reshape(discounted_r, N, L)
+        mask = _reshape(mask, N, L)
+        log_prob = _reshape(log_prob, N, L)
+        norm_advantage = _reshape(norm_advantage, N, L)
 
         global_obs = _cast1(global_obs)
         local_obs = _cast1(local_obs)

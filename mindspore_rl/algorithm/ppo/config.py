@@ -70,7 +70,7 @@ algorithm_config = {
     "policy_and_network": {"type": PPOPolicy, "params": policy_params},
     "collect_environment": {
         "number": 30,
-        "num_parallel": 30,
+        "num_parallel": 5,
         "type": GymEnvironment,
         "wrappers": [PyFuncWrapper, SyncParallelWrapper],
         "params": collect_env_params,

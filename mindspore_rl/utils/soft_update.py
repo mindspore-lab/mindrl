@@ -79,8 +79,12 @@ class SoftUpdate(nn.Cell):
         return target_param
 
     def construct(self):
-        if not self.mod(self.steps, self.update_interval):
+        if self.update_interval == 1:
             updater = F.partial(self._update, self.factor)
             self.hyper_map(updater, self.behavior_params, self.target_params)
+        else:
+            if not self.mod(self.steps, self.update_interval):
+                updater = F.partial(self._update, self.factor)
+                self.hyper_map(updater, self.behavior_params, self.target_params)
         self.steps += 1
         return self.steps

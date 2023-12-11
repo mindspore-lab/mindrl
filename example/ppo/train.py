@@ -66,6 +66,9 @@ parser.add_argument(
 parser.add_argument(
     "--worker_num", type=int, default=2, help="Worker num (Default: 2)."
 )
+parser.add_argument(
+    "--graph_op_run", type=int, default=1, help="Run kernel by kernel (Default: 1)."
+)
 options, _ = parser.parse_known_args()
 
 
@@ -75,7 +78,7 @@ def train(episode=options.episode):
         context.set_context(device_target=options.device_target)
     if context.get_context("device_target") in ["CPU"]:
         context.set_context(enable_graph_kernel=True)
-    if context.get_context("device_target") in ["Ascend"]:
+    if context.get_context("device_target") in ["Ascend"] and options.graph_op_run:
         os.environ["GRAPH_OP_RUN"] = "1"
 
     compute_type = (
