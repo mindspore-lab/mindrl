@@ -187,29 +187,27 @@ class MADDPGTrainer(Trainer):
             duration += 1
             training_reward += rew_n.sum()
 
-            # ----------------------------------------- learner -------------------------------------------
-            if self.train_step % 100 == 0:
-                (
+        # ----------------------------------------- learner -------------------------------------------
+        if self.train_step % 100 == 0:
+            (
+                obs_n_batch,
+                act_n_batch,
+                rew_n_batch,
+                obs_next_n_batch,
+                done_n_batch,
+            ) = self.msrl.replay_buffer_sample()
+            agent_id = 0
+            while agent_id < self.num_agent:
+                loss += self._learn(
+                    agent_id,
                     obs_n_batch,
                     act_n_batch,
                     rew_n_batch,
                     obs_next_n_batch,
                     done_n_batch,
-                ) = self.msrl.replay_buffer_sample()
-                agent_id = 0
-                while agent_id < self.num_agent:
-                    loss += self._learn(
-                        agent_id,
-                        obs_n_batch,
-                        act_n_batch,
-                        rew_n_batch,
-                        obs_next_n_batch,
-                        done_n_batch,
-                    )
-                    agent_id += 1
+                )
+                agent_id += 1
 
-            if dones:
-                break
         return loss, training_reward, duration
 
     def trainable_variables(self):
