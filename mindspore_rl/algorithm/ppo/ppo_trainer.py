@@ -14,12 +14,13 @@
 # ============================================================================
 """PPO Trainer"""
 import mindspore
-from mindspore import Tensor
+from mindspore import Tensor, set_seed
 from mindspore.ops import operations as P
 
 from mindspore_rl.agent import trainer
 from mindspore_rl.agent.trainer import Trainer
 
+set_seed(5)
 
 # pylint: disable=W0212
 class PPOTrainer(Trainer):
