@@ -241,10 +241,9 @@ class CategoricalDQNLearner(Learner):
         next_action = self.get_max_index(next_target_q_values)[0]
         next_qt_argmax = self.expand_dims(next_action, 1)
         next_qt_argmax = self.cast(next_qt_argmax, ms.int32)
-        batch_indices = self.get_range(
-            Tensor(0, ms.int32), Tensor(batch_size, ms.int32), Tensor(1, ms.int32)
-        )
+        batch_indices = self.get_range(0, batch_size, 1)
         batch_indices = self.expand_dims(batch_indices, 1).reshape(batch_size, 1)
+        batch_indices = ops.cast(batch_indices, ms.int32)
         next_qt_index = self.concat((batch_indices, next_qt_argmax))
         return self.gather_nd(next_target_probabilities, next_qt_index)
 
