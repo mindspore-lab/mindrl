@@ -56,6 +56,7 @@ def _mindspore_version_check():
         "0.5": "1.8",
         "0.6": "2.0",
         "0.7": "2.1",
+        "0.8": "2.2",
     }
 
     ms_version = ms.__version__[:3]
