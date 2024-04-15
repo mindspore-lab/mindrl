@@ -22,4 +22,4 @@ python mcts_demo.py
 
 ## Supported Platform
 
-MCTS supports GPU and CPU(Current in x86).
+MCTS supports GPU(sm70 and sm80) and CPU(Current in x86).
