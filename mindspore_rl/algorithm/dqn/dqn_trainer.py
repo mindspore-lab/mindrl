@@ -44,7 +44,7 @@ class DQNTrainer(Trainer):
         trainable_variables = {"policy_net": self.msrl.learner.policy_network}
         return trainable_variables
 
-    @ms.jit
+    @ms.jit(jit_config=JitConfig(jit_level="O2"))
     def init_training(self):
         """Initialize training"""
         state = self.msrl.collect_environment.reset()
@@ -62,7 +62,7 @@ class DQNTrainer(Trainer):
             i += 1
         return done
 
-    @ms.jit
+    @ms.jit(jit_config=JitConfig(jit_level="O2"))
     def train_one_episode(self):
         """Train one episode"""
         if not self.inited:
@@ -87,7 +87,7 @@ class DQNTrainer(Trainer):
                 self.msrl.learner.update()
         return loss, total_reward, steps
 
-    @ms.jit
+    @ms.jit(jit_config=JitConfig(jit_level="O2"))
     def evaluate(self):
         """Policy evaluate"""
         total_reward = self.zero_value
